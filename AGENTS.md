@@ -27,8 +27,7 @@ Laravel 13 (PHP 8.3) CRM application. Uses Laravel Tinker, Tailwind CSS 4, and V
 
 ## Testing
 
-- PHPUnit 12 is used (with Collision). Run `composer test` or `php artisan test` to verify changes.
-- When making changes, verify with tests before finishing.
+- Do not create any test files. Verify changes by running the existing suite with `composer test` or `php artisan test` when needed.
 
 ## Notes
 

@@ -6,4 +6,174 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-primary-50: var(--color-primary-50);
+    --color-primary-100: var(--color-primary-100);
+    --color-primary-200: var(--color-primary-200);
+    --color-primary-300: var(--color-primary-300);
+    --color-primary-400: var(--color-primary-400);
+    --color-primary-500: var(--color-primary-500);
+    --color-primary-600: var(--color-primary-600);
+    --color-primary-700: var(--color-primary-700);
+    --color-primary-800: var(--color-primary-800);
+    --color-primary-900: var(--color-primary-900);
+
+    --color-sidebar-bg: var(--color-sidebar-bg);
+    --color-sidebar-border: var(--color-sidebar-border);
+    --color-sidebar-text: var(--color-sidebar-text);
+    --color-sidebar-muted: var(--color-sidebar-muted);
+    --color-sidebar-hover: var(--color-sidebar-hover);
+    --color-sidebar-hover-text: var(--color-sidebar-hover-text);
+    --color-sidebar-active: var(--color-sidebar-active);
+    --color-sidebar-active-text: var(--color-sidebar-active-text);
+    --color-sidebar-icon: var(--color-sidebar-icon);
+    --color-sidebar-icon-hover: var(--color-sidebar-icon-hover);
+    --color-topbar-bg: var(--color-topbar-bg);
+    --color-topbar-border: var(--color-topbar-border);
+    --color-topbar-text: var(--color-topbar-text);
+    --color-topbar-muted: var(--color-topbar-muted);
+    --color-topbar-icon: var(--color-topbar-icon);
+    --color-page-bg: var(--color-page-bg);
+    --color-card-bg: var(--color-card-bg);
+    --color-card-border: var(--color-card-border);
+}
+
+:root,
+[data-theme='slate-orange'] {
+    --color-primary-50: #fff7ed;
+    --color-primary-100: #ffedd5;
+    --color-primary-200: #fed7aa;
+    --color-primary-300: #fdba74;
+    --color-primary-400: #fb923c;
+    --color-primary-500: #f97316;
+    --color-primary-600: #ea580c;
+    --color-primary-700: #c2410c;
+    --color-primary-800: #9a3412;
+    --color-primary-900: #7c2d12;
+
+    --color-sidebar-bg: #0f172a;
+    --color-sidebar-border: #1e293b;
+    --color-sidebar-text: #e2e8f0;
+    --color-sidebar-muted: #94a3b8;
+    --color-sidebar-hover: #1e293b;
+    --color-sidebar-hover-text: #ffffff;
+    --color-sidebar-active: #334155;
+    --color-sidebar-active-text: #ffffff;
+    --color-sidebar-icon: #f97316;
+    --color-sidebar-icon-hover: #ffffff;
+    --color-topbar-bg: #ffffff;
+    --color-topbar-border: #e2e8f0;
+    --color-topbar-text: #0f172a;
+    --color-topbar-muted: #64748b;
+    --color-topbar-icon: #64748b;
+    --color-page-bg: #f8fafc;
+    --color-card-bg: #ffffff;
+    --color-card-border: #e2e8f0;
+}
+
+[data-theme='slate-blue'] {
+    --color-primary-50: #eff6ff;
+    --color-primary-100: #dbeafe;
+    --color-primary-200: #bfdbfe;
+    --color-primary-300: #93c5fd;
+    --color-primary-400: #60a5fa;
+    --color-primary-500: #3b82f6;
+    --color-primary-600: #2563eb;
+    --color-primary-700: #1d4ed8;
+    --color-primary-800: #1e40af;
+    --color-primary-900: #1e3a8a;
+
+    --color-sidebar-bg: #172554;
+    --color-sidebar-border: #1e3a8a;
+    --color-sidebar-text: #dbeafe;
+    --color-sidebar-muted: #93c5fd;
+    --color-sidebar-hover: #1e3a8a;
+    --color-sidebar-hover-text: #ffffff;
+    --color-sidebar-active: #1d4ed8;
+    --color-sidebar-active-text: #ffffff;
+    --color-sidebar-icon: #60a5fa;
+    --color-sidebar-icon-hover: #ffffff;
+    --color-topbar-bg: #eff6ff;
+    --color-topbar-border: #dbeafe;
+    --color-topbar-text: #172554;
+    --color-topbar-muted: #2563eb;
+    --color-topbar-icon: #2563eb;
+    --color-page-bg: #eff6ff;
+    --color-card-bg: #ffffff;
+    --color-card-border: #dbeafe;
+}
+
+[data-theme='slate-teal'] {
+    --color-primary-50: #f0fdfa;
+    --color-primary-100: #ccfbf1;
+    --color-primary-200: #99f6e4;
+    --color-primary-300: #5eead4;
+    --color-primary-400: #2dd4bf;
+    --color-primary-500: #14b8a6;
+    --color-primary-600: #0d9488;
+    --color-primary-700: #0f766e;
+    --color-primary-800: #115e59;
+    --color-primary-900: #134e4a;
+
+    --color-sidebar-bg: #134e4a;
+    --color-sidebar-border: #115e59;
+    --color-sidebar-text: #ccfbf1;
+    --color-sidebar-muted: #5eead4;
+    --color-sidebar-hover: #115e59;
+    --color-sidebar-hover-text: #ffffff;
+    --color-sidebar-active: #0f766e;
+    --color-sidebar-active-text: #ffffff;
+    --color-sidebar-icon: #2dd4bf;
+    --color-sidebar-icon-hover: #ffffff;
+    --color-topbar-bg: #f0fdfa;
+    --color-topbar-border: #ccfbf1;
+    --color-topbar-text: #134e4a;
+    --color-topbar-muted: #0f766e;
+    --color-topbar-icon: #0f766e;
+    --color-page-bg: #f0fdfa;
+    --color-card-bg: #ffffff;
+    --color-card-border: #ccfbf1;
+}
+
+[data-theme='slate-violet'] {
+    --color-primary-50: #faf5ff;
+    --color-primary-100: #f3e8ff;
+    --color-primary-200: #e9d5ff;
+    --color-primary-300: #d8b4fe;
+    --color-primary-400: #c084fc;
+    --color-primary-500: #a855f7;
+    --color-primary-600: #9333ea;
+    --color-primary-700: #7e22ce;
+    --color-primary-800: #6b21a8;
+    --color-primary-900: #581c87;
+
+    --color-sidebar-bg: #581c87;
+    --color-sidebar-border: #6b21a8;
+    --color-sidebar-text: #f3e8ff;
+    --color-sidebar-muted: #d8b4fe;
+    --color-sidebar-hover: #6b21a8;
+    --color-sidebar-hover-text: #ffffff;
+    --color-sidebar-active: #7e22ce;
+    --color-sidebar-active-text: #ffffff;
+    --color-sidebar-icon: #e9d5ff;
+    --color-sidebar-icon-hover: #ffffff;
+    --color-topbar-bg: #faf5ff;
+    --color-topbar-border: #f3e8ff;
+    --color-topbar-text: #581c87;
+    --color-topbar-muted: #9333ea;
+    --color-topbar-icon: #9333ea;
+    --color-page-bg: #faf5ff;
+    --color-card-bg: #ffffff;
+    --color-card-border: #f3e8ff;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #fff inset;
+    -webkit-text-fill-color: #18181b;
+    caret-color: #18181b;
+    transition: background-color 9999s ease-in-out 0s;
 }
