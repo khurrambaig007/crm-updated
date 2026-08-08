@@ -9,7 +9,7 @@
             @csrf
 
             <div>
-                <label for="name" class="block text-sm font-medium text-topbar-text">Full name</label>
+                <label for="name" class="block text-sm font-medium text-topbar-text">Full name <span class="text-red-500">*</span></label>
                 <input
                     id="name"
                     name="name"
@@ -27,7 +27,7 @@
             </div>
 
             <div>
-                <label for="email" class="block text-sm font-medium text-topbar-text">Email address</label>
+                <label for="email" class="block text-sm font-medium text-topbar-text">Email address <span class="text-red-500">*</span></label>
                 <input
                     id="email"
                     name="email"
@@ -44,7 +44,7 @@
             </div>
 
             <div>
-                <label for="password" class="block text-sm font-medium text-topbar-text">Password</label>
+                <label for="password" class="block text-sm font-medium text-topbar-text">Password <span class="text-red-500">*</span></label>
                 <input
                     id="password"
                     name="password"
@@ -60,7 +60,7 @@
             </div>
 
             <div>
-                <label for="password_confirmation" class="block text-sm font-medium text-topbar-text">Confirm password</label>
+                <label for="password_confirmation" class="block text-sm font-medium text-topbar-text">Confirm password <span class="text-red-500">*</span></label>
                 <input
                     id="password_confirmation"
                     name="password_confirmation"

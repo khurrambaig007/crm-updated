@@ -12,8 +12,13 @@
 
     <div class="mx-auto max-w-3xl space-y-8">
         <div>
-            <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">Profile</h1>
-            <p class="mt-1 text-sm text-topbar-muted">Manage your account information and password.</p>
+            <div class="flex items-center gap-3">
+                @include('components.icons.user', ['classes' => 'h-7 w-7 text-primary-600'])
+                <div>
+                    <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">Profile</h1>
+                    <p class="mt-1 text-sm text-topbar-muted">Manage your account information and password.</p>
+                </div>
+            </div>
         </div>
 
         @if (session('status'))
@@ -50,7 +55,7 @@
                 {!! html()->form('PATCH', route('profile.update'))->class('mt-6 space-y-5')->open() !!}
 
                     <div>
-                        {!! html()->label('Full name', 'name')->class($labelClasses) !!}
+                        <label for="name" class="{{ $labelClasses }}">Full name <span class="text-red-500">*</span></label>
                         {!! html()->text('name', $user->name)
                             ->class($inputClasses)
                             ->required()
@@ -61,7 +66,7 @@
                     </div>
 
                     <div>
-                        {!! html()->label('Email address', 'email')->class($labelClasses) !!}
+                        <label for="email" class="{{ $labelClasses }}">Email address <span class="text-red-500">*</span></label>
                         {!! html()->email('email', $user->email)
                             ->class($inputClasses)
                             ->required()
@@ -84,7 +89,7 @@
                 {!! html()->form('PATCH', route('profile.password'))->class('mt-6 space-y-5')->open() !!}
 
                     <div>
-                        {!! html()->label('Current password', 'current_password')->class($labelClasses) !!}
+                        <label for="current_password" class="{{ $labelClasses }}">Current password <span class="text-red-500">*</span></label>
                         <div class="relative mt-1.5">
                             {!! html()->password('current_password')
                                 ->class($passwordInputClasses)
@@ -100,7 +105,7 @@
                     </div>
 
                     <div>
-                        {!! html()->label('New password', 'password')->class($labelClasses) !!}
+                        <label for="password" class="{{ $labelClasses }}">New password <span class="text-red-500">*</span></label>
                         <div class="relative mt-1.5">
                             {!! html()->password('password')
                                 ->class($passwordInputClasses)
@@ -125,7 +130,7 @@
                     </div>
 
                     <div>
-                        {!! html()->label('Confirm new password', 'password_confirmation')->class($labelClasses) !!}
+                        <label for="password_confirmation" class="{{ $labelClasses }}">Confirm new password <span class="text-red-500">*</span></label>
                         <div class="relative mt-1.5">
                             {!! html()->password('password_confirmation')
                                 ->class($passwordInputClasses)

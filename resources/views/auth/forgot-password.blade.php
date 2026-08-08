@@ -15,7 +15,7 @@
             @csrf
 
             <div>
-                <label for="email" class="block text-sm font-medium text-topbar-text">Email address</label>
+                <label for="email" class="block text-sm font-medium text-topbar-text">Email address <span class="text-red-500">*</span></label>
                 <input
                     id="email"
                     name="email"

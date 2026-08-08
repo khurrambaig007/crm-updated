@@ -33,3 +33,4 @@ Laravel 13 (PHP 8.3) CRM application. Uses Laravel Tinker, Tailwind CSS 4, and V
 
 - `post-update-cmd` republishes Laravel assets with `--force` on composer update.
 - Do not commit unless explicitly asked.
+- **Amount/Currency fields:** Always use `numeric` validation and `html()->number()` input type for amount and currency fields to ensure only numbers are allowed.

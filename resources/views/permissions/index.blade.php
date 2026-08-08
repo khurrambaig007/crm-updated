@@ -12,8 +12,13 @@
     <div class="mx-auto max-w-7xl space-y-8">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">Permissions</h1>
-                <p class="mt-1 text-sm text-topbar-muted">Control granular access for every screen in your CRM.</p>
+                <div class="flex items-center gap-3">
+                    @include('components.icons.key', ['classes' => 'h-7 w-7 text-primary-600'])
+                    <div>
+                        <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">Permissions</h1>
+                        <p class="mt-1 text-sm text-topbar-muted">Control granular access for every screen in your CRM.</p>
+                    </div>
+                </div>
             </div>
         </div>
 

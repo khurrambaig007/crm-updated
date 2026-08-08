@@ -2,8 +2,13 @@
     <div class="mx-auto max-w-7xl space-y-8">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">Roles</h1>
-                <p class="mt-1 text-sm text-topbar-muted">Manage the roles assigned to your team.</p>
+                <div class="flex items-center gap-3">
+                    @include('components.icons.shield', ['classes' => 'h-7 w-7 text-primary-600'])
+                    <div>
+                        <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">Roles</h1>
+                        <p class="mt-1 text-sm text-topbar-muted">Manage the roles assigned to your team.</p>
+                    </div>
+                </div>
             </div>
             <a href="{{ route('roles.create') }}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 hover:shadow-md hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 transition-all duration-200">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">

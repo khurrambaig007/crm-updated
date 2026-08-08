@@ -9,6 +9,30 @@
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <style>
+            .sidebar-children {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.25s ease-in-out;
+            }
+            .sidebar-children--open {
+                max-height: 500px;
+            }
+            #sidebar nav {
+                scrollbar-width: thin;
+                scrollbar-color: var(--color-sidebar-border) transparent;
+            }
+            #sidebar nav::-webkit-scrollbar {
+                width: 6px;
+            }
+            #sidebar nav::-webkit-scrollbar-thumb {
+                background: var(--color-sidebar-border);
+                border-radius: 9999px;
+            }
+            #sidebar nav::-webkit-scrollbar-track {
+                background: transparent;
+            }
+        </style>
     </head>
     <body class="h-full bg-page-bg font-sans antialiased" data-theme="{{ auth()->user()->theme ?? 'slate-orange' }}">
         <div class="min-h-screen">
@@ -32,7 +56,7 @@
                         </div>
                     </div>
 
-                    <nav class="flex-1 space-y-1 px-4 py-6">
+                    <nav class="flex-1 min-h-0 space-y-1 overflow-y-auto overflow-x-hidden px-4 py-6">
                         @foreach (config('system.navigation') as $section)
                             @php
                                 $visibleItems = collect($section['items'])->filter(function ($item) {
@@ -45,18 +69,71 @@
                                 <div class="text-xs font-semibold uppercase tracking-wider text-sidebar-muted px-2 mb-2">{{ $section['title'] }}</div>
 
                                 @foreach ($visibleItems as $item)
-                                    @php
-                                        $routePattern = str_ends_with($item['route'], '.index')
-                                            ? str_replace('.index', '.*', $item['route'])
-                                            : $item['route'];
-                                        $isActive = request()->routeIs($routePattern);
-                                        $iconClasses = 'h-5 w-5 ' . ($isActive ? 'text-primary-500' : 'text-sidebar-muted group-hover:text-sidebar-icon-hover');
-                                    @endphp
+                                    @if (! empty($item['children']))
+                                        @php
+                                            $hasChildren = true;
+                                            $visibleChildren = collect($item['children'])->filter(function ($child) {
+                                                if (auth()->user()->isSuperAdmin()) return true;
+                                                return auth()->user()->can($child['permission'] ?? '__none__');
+                                            });
+                                            $routePattern = str_ends_with($item['route'], '.index')
+                                                ? str_replace('.index', '.*', $item['route'])
+                                                : $item['route'];
+                                            $isParentActive = $visibleChildren->contains(function ($child) {
+                                                $routePattern = str_ends_with($child['route'], '.index')
+                                                    ? str_replace('.index', '.*', $child['route'])
+                                                    : $child['route'];
+                                                return request()->routeIs($routePattern);
+                                            });
+                                            $isParentCurrentPage = request()->routeIs($routePattern);
+                                            $isActive = $isParentActive || $isParentCurrentPage;
+                                            $menuKey = Str::slug($item['label']);
+                                        @endphp
 
-                                    <a href="{{ route($item['route']) }}" class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium {{ $isActive ? 'text-white bg-sidebar-active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} transition-colors">
-                                        @include('components.icons.' . $item['icon'], ['classes' => $iconClasses])
-                                        {{ $item['label'] }}
-                                    </a>
+                                        @if ($visibleChildren->isNotEmpty())
+                                            <div class="sidebar-parent" data-menu="{{ $menuKey }}">
+                                                <div class="flex items-center rounded-lg {{ $isActive ? 'bg-sidebar-active' : '' }}">
+                                                    <a href="{{ route($item['route']) }}" class="sidebar-nav-item flex-1 min-w-0 flex items-center gap-3 px-3 py-2.5 text-sm font-medium {{ $isActive ? 'text-white sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} transition-colors">
+                                                        @include('components.icons.' . $item['icon'], ['classes' => 'sidebar-nav-icon shrink-0 h-5 w-5 ' . ($isActive ? 'text-primary-500' : 'text-sidebar-muted group-hover:text-sidebar-icon-hover')])
+                                                        <span class="min-w-0 truncate">{{ $item['label'] }}</span>
+                                                    </a>
+                                                    <button type="button" onclick="toggleSidebarMenu('{{ $menuKey }}')" class="sidebar-parent-btn px-3 py-2.5 text-sm {{ $isActive ? 'text-white' : 'text-sidebar-text hover:text-sidebar-hover-text' }} transition-colors">
+                                                        <svg class="h-4 w-4 transition-transform duration-200 {{ $isActive ? 'rotate-0' : '-rotate-90' }}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="m6 9 6 6 6-6" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <div class="sidebar-children {{ $isActive ? 'sidebar-children--open' : '' }}">
+                                                    @foreach ($visibleChildren as $child)
+                                                        @php
+                                                            $childRoutePattern = str_ends_with($child['route'], '.index')
+                                                                ? str_replace('.index', '.*', $child['route'])
+                                                                : $child['route'];
+                                                            $isChildActive = request()->routeIs($childRoutePattern);
+                                                        @endphp
+                                                        <a href="{{ route($child['route']) }}" class="sidebar-child sidebar-nav-item flex min-w-0 items-center gap-2.5 pl-11 pr-3 py-2 text-xs font-medium rounded-lg transition-colors {{ $isChildActive ? 'text-primary-500 bg-primary-50 sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }}">
+                                                            @if (! empty($child['icon']))
+                                                                @include('components.icons.' . $child['icon'], ['classes' => 'sidebar-nav-icon shrink-0 h-4 w-4 ' . ($isChildActive ? 'text-primary-500' : 'text-sidebar-muted')])
+                                                            @endif
+                                                            <span class="min-w-0 truncate">{{ $child['label'] }}</span>
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @else
+                                        @php
+                                            $routePattern = str_ends_with($item['route'], '.index')
+                                                ? str_replace('.index', '.*', $item['route'])
+                                                : $item['route'];
+                                            $isActive = request()->routeIs($routePattern);
+                                            $iconClasses = 'h-5 w-5 ' . ($isActive ? 'text-primary-500' : 'text-sidebar-muted group-hover:text-sidebar-icon-hover');
+                                        @endphp
+                                        <a href="{{ route($item['route']) }}" class="sidebar-nav-item group flex min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium {{ $isActive ? 'text-white bg-sidebar-active sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} transition-colors">
+                                            @include('components.icons.' . $item['icon'], ['classes' => 'sidebar-nav-icon shrink-0 ' . $iconClasses])
+                                            <span class="min-w-0 truncate">{{ $item['label'] }}</span>
+                                        </a>
+                                    @endif
                                 @endforeach
                             @endif
                         @endforeach
@@ -199,7 +276,44 @@
                 if (backdrop) {
                     backdrop.addEventListener('click', () => setOpen(false));
                 }
+
+                // Sidebar sub-menu expand/collapse
+                const menuStates = JSON.parse(localStorage.getItem('sidebar-menus') || '{}');
+
+                document.querySelectorAll('.sidebar-parent[data-menu]').forEach(function (parent) {
+                    const key = parent.dataset.menu;
+                    const btn = parent.querySelector('.sidebar-parent-btn');
+                    const children = parent.querySelector('.sidebar-children');
+                    const chevron = btn.querySelector('svg:last-child');
+
+                    if (menuStates[key] === true) {
+                        children.classList.add('sidebar-children--open');
+                        chevron.classList.remove('-rotate-90');
+                        chevron.classList.add('rotate-0');
+                    } else if (menuStates[key] === false) {
+                        children.classList.remove('sidebar-children--open');
+                        chevron.classList.remove('rotate-0');
+                        chevron.classList.add('-rotate-90');
+                    }
+                });
             })();
+
+            function toggleSidebarMenu(menuKey) {
+                const parent = document.querySelector('.sidebar-parent[data-menu="' + menuKey + '"]');
+                if (!parent) return;
+
+                const children = parent.querySelector('.sidebar-children');
+                const chevron = parent.querySelector('.sidebar-parent-btn svg:last-child');
+                const isOpen = children.classList.contains('sidebar-children--open');
+
+                children.classList.toggle('sidebar-children--open');
+                chevron.classList.toggle('-rotate-90');
+                chevron.classList.toggle('rotate-0');
+
+                const menuStates = JSON.parse(localStorage.getItem('sidebar-menus') || '{}');
+                menuStates[menuKey] = !isOpen;
+                localStorage.setItem('sidebar-menus', JSON.stringify(menuStates));
+            }
         </script>
     </body>
 </html>

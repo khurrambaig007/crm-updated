@@ -8,9 +8,12 @@
 
     <div class="mx-auto max-w-3xl space-y-8">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">Edit role</h1>
-                <p class="mt-1 text-sm text-topbar-muted">Update the details and permissions for {{ $role->name }}.</p>
+            <div class="flex items-center gap-3">
+                @include('components.icons.shield', ['classes' => 'h-7 w-7 text-primary-600'])
+                <div>
+                    <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">Edit role</h1>
+                    <p class="mt-1 text-sm text-topbar-muted">Update the details and permissions for {{ $role->name }}.</p>
+                </div>
             </div>
             <a href="{{ route('roles.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
@@ -25,7 +28,7 @@
             {!! html()->form('PATCH', route('roles.update', $role))->class('space-y-5')->open() !!}
 
                 <div>
-                    {!! html()->label('Role name', 'name')->class($labelClasses) !!}
+                    <label for="name" class="{{ $labelClasses }}">Role name <span class="text-red-500">*</span></label>
                     {!! html()->text('name', $role->name)->class($inputClasses)->required()->attribute('autocomplete', 'off')->attributeIf($isSuperAdmin, 'disabled', '') !!}
                     @error('name')
                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -40,7 +43,7 @@
 
                 @include('roles._permissions', ['checkedPermissions' => $isSuperAdmin ? collect(config('system.screens'))->flatMap(fn ($s, $k) => collect($s['permissions'])->map(fn ($a) => $k.'.'.$a))->all() : $rolePermissions])
 
-                <div class="flex items-center justify-end gap-3 pt-6">
+                <div class="flex items-center justify-between gap-3 pt-6">
                     <a href="{{ route('roles.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <path d="m12 19-7-7 7-7" />
@@ -49,7 +52,7 @@
                         Cancel
                     </a>
                     @if (!$isSuperAdmin)
-                        {!! html()->submit('Save changes')->class($submitClasses) !!}
+                        {!! html()->submit('Save changes')->class($submitClasses . ' w-auto px-6 py-2') !!}
                     @endif
                 </div>
 

@@ -14,9 +14,12 @@
 
     <div class="mx-auto max-w-2xl space-y-8">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">Edit user</h1>
-                <p class="mt-1 text-sm text-topbar-muted">Update the account details for {{ $user->name }}.</p>
+            <div class="flex items-center gap-3">
+                @include('components.icons.users', ['classes' => 'h-7 w-7 text-primary-600'])
+                <div>
+                    <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">Edit user</h1>
+                    <p class="mt-1 text-sm text-topbar-muted">Update the account details for {{ $user->name }}.</p>
+                </div>
             </div>
             <a href="{{ route('users.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
@@ -31,7 +34,7 @@
             {!! html()->form('PATCH', route('users.update', $user))->class('space-y-5')->open() !!}
 
                 <div>
-                    {!! html()->label('Full name', 'name')->class($labelClasses) !!}
+                    <label for="name" class="{{ $labelClasses }}">Full name <span class="text-red-500">*</span></label>
                     {!! html()->text('name', $user->name)->class($inputClasses)->required()->attribute('autocomplete', 'name') !!}
                     @error('name')
                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -39,7 +42,7 @@
                 </div>
 
                 <div>
-                    {!! html()->label('Email address', 'email')->class($labelClasses) !!}
+                    <label for="email" class="{{ $labelClasses }}">Email address <span class="text-red-500">*</span></label>
                     {!! html()->email('email', $user->email)->class($inputClasses)->required()->attribute('autocomplete', 'username') !!}
                     @error('email')
                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -69,7 +72,7 @@
                 </div>
 
                 <div>
-                    {!! html()->label('Theme', 'theme')->class($labelClasses) !!}
+                    <label for="theme" class="{{ $labelClasses }}">Theme <span class="text-red-500">*</span></label>
                     <div class="relative">
                         {!! html()->select('theme', $themes, $user->theme ?? 'slate-orange')->class($selectClasses . ' appearance-none cursor-pointer') !!}
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-topbar-muted">
@@ -98,7 +101,7 @@
                     @enderror
                 </div>
 
-                <div class="flex items-center justify-end gap-3 pt-6">
+                <div class="flex items-center justify-between gap-3 pt-6">
                     <a href="{{ route('users.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
                             <path d="m12 19-7-7 7-7" />
