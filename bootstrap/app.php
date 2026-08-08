@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Middleware\PermissionMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Spatie\Permission\Middleware\RoleMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,8 +16,30 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(fn () => route('login'));
-        $middleware->redirectUsersTo(fn () => route('dashboard'));
+        $middleware->redirectUsersTo(function (Request $request) {
+            $user = $request->user();
+
+            if ($user->isSuperAdmin() || $user->can('dashboard.view')) {
+                return route('dashboard');
+            }
+
+            foreach (config('system.navigation') as $section) {
+                foreach ($section['items'] as $item) {
+                    if ($user->can($item['permission'] ?? '__none__') && Route::has($item['route'])) {
+                        return route($item['route']);
+                    }
+                }
+            }
+
+            return route('logout');
+        });
+
+        $middleware->alias([
+            'permission' => PermissionMiddleware::class,
+            'role' => RoleMiddleware::class,
+        ]);
     })
+    ->withEvents(discover: __DIR__.'/../app/Listeners')
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),

@@ -8,6 +8,7 @@
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     </head>
     <body class="h-full bg-page-bg font-sans antialiased" data-theme="{{ auth()->user()->theme ?? 'slate-orange' }}">
         <div class="min-h-screen">
@@ -23,70 +24,42 @@
                                 <path d="M20 8v6m3-3h-6" />
                             </svg>
                         </div>
-                        <span class="text-lg font-semibold tracking-tight text-white">{{ config('app.name', 'Laravel') }}</span>
+                        <div class="min-w-0">
+                            <span class="block text-lg font-semibold tracking-tight text-white">{{ config('app.name', 'Laravel') }}</span>
+                            @if(config('app.subtitle'))
+                                <span class="block text-xs text-sidebar-muted">{{ config('app.subtitle') }}</span>
+                            @endif
+                        </div>
                     </div>
 
                     <nav class="flex-1 space-y-1 px-4 py-6">
-                        <div class="text-xs font-semibold uppercase tracking-wider text-sidebar-muted px-2 mb-2">Workspace</div>
+                        @foreach (config('system.navigation') as $section)
+                            @php
+                                $visibleItems = collect($section['items'])->filter(function ($item) {
+                                    if (auth()->user()->isSuperAdmin()) return true;
+                                    return auth()->user()->can($item['permission'] ?? '__none__');
+                                });
+                            @endphp
 
-                        <a href="{{ route('dashboard') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white bg-sidebar-active">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-primary-500">
-                                <rect width="18" height="18" x="3" y="3" rx="2" />
-                                <path d="M9 3v18" />
-                                <path d="M15 3v18" />
-                                <path d="M3 9h18" />
-                                <path d="M3 15h18" />
-                            </svg>
-                            Dashboard
-                        </a>
+                            @if ($visibleItems->isNotEmpty())
+                                <div class="text-xs font-semibold uppercase tracking-wider text-sidebar-muted px-2 mb-2">{{ $section['title'] }}</div>
 
-                        <a href="#" class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-sidebar-muted group-hover:text-sidebar-icon-hover">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                <circle cx="9" cy="7" r="4" />
-                                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                            </svg>
-                            Contacts
-                        </a>
+                                @foreach ($visibleItems as $item)
+                                    @php
+                                        $routePattern = str_ends_with($item['route'], '.index')
+                                            ? str_replace('.index', '.*', $item['route'])
+                                            : $item['route'];
+                                        $isActive = request()->routeIs($routePattern);
+                                        $iconClasses = 'h-5 w-5 ' . ($isActive ? 'text-primary-500' : 'text-sidebar-muted group-hover:text-sidebar-icon-hover');
+                                    @endphp
 
-                        <a href="#" class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-sidebar-muted group-hover:text-sidebar-icon-hover">
-                                <path d="M6 22V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v14" />
-                                <path d="M6 12h12" />
-                                <path d="M6 17h12" />
-                                <path d="M6 7h12" />
-                            </svg>
-                            Deals
-                        </a>
-
-                        <div class="text-xs font-semibold uppercase tracking-wider text-sidebar-muted px-2 mt-8 mb-2">Account</div>
-
-                        <a href="{{ route('profile.edit') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-sidebar-muted group-hover:text-sidebar-icon-hover">
-                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                                <circle cx="12" cy="7" r="4" />
-                            </svg>
-                            Profile
-                        </a>
-
-                        <div class="text-xs font-semibold uppercase tracking-wider text-sidebar-muted px-2 mt-8 mb-2">Insights</div>
-
-                        <a href="#" class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-sidebar-muted group-hover:text-sidebar-icon-hover">
-                                <path d="M3 3v18h18" />
-                                <path d="m19 9-5 5-4-4-3 3" />
-                            </svg>
-                            Reports
-                        </a>
-
-                        <a href="#" class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5 text-sidebar-muted group-hover:text-sidebar-icon-hover">
-                                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.74l-.7.4a2 2 0 0 1-2 0l-.49-.28a2 2 0 0 0-2.74.73l-.23.38a2 2 0 0 0 .73 2.73l.49.28a2 2 0 0 1 1 1.74V17a2 2 0 0 1-1 1.74l-.49.28a2 2 0 0 0-.73 2.73l.23.38a2 2 0 0 0 2.74.73l.49-.28a2 2 0 0 1 2 0l.7.4a2 2 0 0 1 1 1.74V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.74l.7-.4a2 2 0 0 1 2 0l.49.28a2 2 0 0 0 2.74-.73l.23-.38a2 2 0 0 0-.73-2.73l-.49-.28a2 2 0 0 1-1-1.74V7a2 2 0 0 1 1-1.74l.49-.28a2 2 0 0 0 .73-2.73l-.23-.38a2 2 0 0 0-2.74-.73l-.49.28a2 2 0 0 1-2 0l-.7-.4a2 2 0 0 1-1-1.74V4a2 2 0 0 0-2-2Z" />
-                                <circle cx="12" cy="12" r="3" />
-                            </svg>
-                            Settings
-                        </a>
+                                    <a href="{{ route($item['route']) }}" class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium {{ $isActive ? 'text-white bg-sidebar-active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} transition-colors">
+                                        @include('components.icons.' . $item['icon'], ['classes' => $iconClasses])
+                                        {{ $item['label'] }}
+                                    </a>
+                                @endforeach
+                            @endif
+                        @endforeach
                     </nav>
 
                     <div class="border-t border-sidebar-border p-4">
