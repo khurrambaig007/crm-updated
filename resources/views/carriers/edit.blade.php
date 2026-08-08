@@ -25,7 +25,6 @@
         </div>
 
         <div class="rounded-2xl bg-card-bg p-6 shadow-sm ring-1 ring-card-border sm:p-8">
-            {!! html()->model($carrier) !!}
             {!! html()->form('PATCH', route('carriers.update', $carrier))->class('grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3')->open() !!}
 
                 <div class="sm:col-span-2 lg:col-span-3">

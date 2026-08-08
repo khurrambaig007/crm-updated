@@ -28,7 +28,6 @@
         </div>
 
         <div class="rounded-2xl bg-card-bg p-6 shadow-sm ring-1 ring-card-border sm:p-8">
-            {!! html()->model($shipperBp) !!}
             {!! html()->form('PATCH', route('shipper-bps.update', $shipperBp))->class('grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3')->open() !!}
 
                 <div>

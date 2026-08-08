@@ -43,6 +43,7 @@ return [
                         ['label' => 'Commodity', 'route' => 'commodities.index', 'icon' => 'tag', 'permission' => 'commodities.view'],
                         ['label' => 'Vessel Voyage', 'route' => 'vessel-voyages.index', 'icon' => 'ship-wheel', 'permission' => 'vessel_voyages.view'],
                         ['label' => 'Charge', 'route' => 'charges.index', 'icon' => 'badge-dollar-sign', 'permission' => 'charges.view'],
+                        ['label' => 'Currency Exchange Rate', 'route' => 'currency-exchange-rates.index', 'icon' => 'coins', 'permission' => 'currencies.view'],
                         ['label' => 'Slot', 'route' => 'slots.index', 'icon' => 'list', 'permission' => 'slots.view'],
                         ['label' => 'Investor', 'route' => 'investors.index', 'icon' => 'wallet', 'permission' => 'investors.view'],
                         ['label' => 'PA Party', 'route' => 'parties.index', 'icon' => 'building', 'permission' => 'parties.view'],
@@ -180,6 +181,10 @@ return [
         'charges' => [
             'label' => 'Charge',
             'permissions' => ['view', 'add', 'edit', 'delete'],
+        ],
+        'currencies' => [
+            'label' => 'Currency Exchange Rate',
+            'permissions' => ['view', 'add', 'edit'],
         ],
         'slots' => [
             'label' => 'Slot',

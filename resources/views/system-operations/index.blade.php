@@ -12,7 +12,7 @@
             </div>
         </div>
 
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
             @if ($user->isSuperAdmin() || $user->can('container_sizes.view'))
                 <a href="{{ route('container-sizes.index') }}" class="group rounded-2xl bg-card-bg p-6 shadow-sm ring-1 ring-card-border transition-all hover:shadow-md hover:-translate-y-0.5">
                     <div class="flex flex-col items-center text-center gap-3">
@@ -169,6 +169,24 @@
                         <div>
                             <div class="text-sm font-semibold text-topbar-text">Charge</div>
                             <div class="mt-1 text-xs text-topbar-muted">{{ $stats['charges'] }} records</div>
+                        </div>
+                        <span class="text-xs font-medium text-primary-600 transition-colors group-hover:text-primary-700">View Details &rarr;</span>
+                    </div>
+                </a>
+            @endif
+
+            @if ($user->isSuperAdmin() || $user->can('currencies.view'))
+                <a href="{{ route('currency-exchange-rates.index') }}" class="group rounded-2xl bg-card-bg p-6 shadow-sm ring-1 ring-card-border transition-all hover:shadow-md hover:-translate-y-0.5">
+                    <div class="flex flex-col items-center text-center gap-3">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-green-400 to-green-600 text-white shadow-lg transition-transform group-hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-7 w-7">
+                                <circle cx="8" cy="8" r="6" /><path d="M18.09 10.37A6 6 0 1 1 10.34 18" />
+                                <path d="M7 6h1v4" /><path d="m16.71 13.88.7.71-2.82 2.82" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-semibold text-topbar-text">Currency Exchange Rate</div>
+                            <div class="mt-1 text-xs text-topbar-muted">{{ $stats['currencies'] }} records</div>
                         </div>
                         <span class="text-xs font-medium text-primary-600 transition-colors group-hover:text-primary-700">View Details &rarr;</span>
                     </div>

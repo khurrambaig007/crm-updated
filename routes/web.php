@@ -10,6 +10,7 @@ use App\Http\Controllers\CommodityController;
 use App\Http\Controllers\ContainerKindController;
 use App\Http\Controllers\ContainerSizeController;
 use App\Http\Controllers\ContainerTypeController;
+use App\Http\Controllers\CurrencyExchangeRateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\PartyController;
@@ -193,6 +194,15 @@ Route::middleware('auth')->group(function () {
             Route::patch('charges/{charge}', [ChargeController::class, 'update'])->name('charges.update');
         });
         Route::middleware('permission:charges.delete')->delete('charges/{charge}', [ChargeController::class, 'destroy'])->name('charges.destroy');
+
+        Route::middleware('permission:currencies.view')->group(function () {
+            Route::get('currency-exchange-rates', [CurrencyExchangeRateController::class, 'index'])->name('currency-exchange-rates.index');
+        });
+        Route::middleware('permission:currencies.add')->post('currency-exchange-rates/fetch', [CurrencyExchangeRateController::class, 'fetch'])->name('currency-exchange-rates.fetch');
+        Route::middleware('permission:currencies.edit')->group(function () {
+            Route::get('currency-exchange-rates/{currency}/edit', [CurrencyExchangeRateController::class, 'edit'])->name('currency-exchange-rates.edit');
+            Route::patch('currency-exchange-rates/{currency}', [CurrencyExchangeRateController::class, 'update'])->name('currency-exchange-rates.update');
+        });
 
         Route::middleware('permission:settlement_types.view')->group(function () {
             Route::get('settlement-types', [SettlementTypeController::class, 'index'])->name('settlement-types.index');
