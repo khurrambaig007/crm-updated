@@ -13,8 +13,10 @@ use App\Http\Controllers\ContainerTypeController;
 use App\Http\Controllers\CurrencyExchangeRateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvestorController;
+use App\Http\Controllers\MaintenanceRepairEntryController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PurchaseInvoiceController;
 use App\Http\Controllers\PolController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
@@ -48,6 +50,34 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:dashboard.view')->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
     });
+
+    Route::middleware('permission:maintenance_repair_entries.view')->group(function () {
+        Route::get('maintenance-repair-entries', [MaintenanceRepairEntryController::class, 'index'])->name('maintenance-repair-entries.index');
+    });
+    Route::middleware('permission:maintenance_repair_entries.add')->group(function () {
+        Route::get('maintenance-repair-entries/create', [MaintenanceRepairEntryController::class, 'create'])->name('maintenance-repair-entries.create');
+        Route::post('maintenance-repair-entries', [MaintenanceRepairEntryController::class, 'store'])->name('maintenance-repair-entries.store');
+    });
+    Route::middleware('permission:maintenance_repair_entries.edit')->group(function () {
+        Route::get('maintenance-repair-entries/{maintenanceRepairEntry}/edit', [MaintenanceRepairEntryController::class, 'edit'])->name('maintenance-repair-entries.edit');
+        Route::patch('maintenance-repair-entries/{maintenanceRepairEntry}', [MaintenanceRepairEntryController::class, 'update'])->name('maintenance-repair-entries.update');
+    });
+    Route::middleware('permission:maintenance_repair_entries.delete')->delete('maintenance-repair-entries/{maintenanceRepairEntry}', [MaintenanceRepairEntryController::class, 'destroy'])->name('maintenance-repair-entries.destroy');
+
+    Route::middleware('permission:purchase_invoices.view')->get('purchase-invoices', [PurchaseInvoiceController::class, 'index'])->name('purchase-invoices.index');
+    Route::middleware('permission:purchase_invoices.add')->group(function () {
+        Route::get('purchase-invoices/create', [PurchaseInvoiceController::class, 'create'])->name('purchase-invoices.create');
+        Route::post('purchase-invoices', [PurchaseInvoiceController::class, 'store'])->name('purchase-invoices.store');
+    });
+    Route::middleware('permission:purchase_invoices.edit')->group(function () {
+        Route::get('purchase-invoices/{purchaseInvoice}/edit', [PurchaseInvoiceController::class, 'edit'])->name('purchase-invoices.edit');
+        Route::patch('purchase-invoices/{purchaseInvoice}', [PurchaseInvoiceController::class, 'update'])->name('purchase-invoices.update');
+        Route::get('purchase-invoices/{purchaseInvoice}/navigate', [PurchaseInvoiceController::class, 'navigate'])->name('purchase-invoices.navigate');
+        Route::post('purchase-invoices/{purchaseInvoice}/details', [PurchaseInvoiceController::class, 'storeDetail'])->name('purchase-invoices.details.store');
+        Route::patch('purchase-invoices/{purchaseInvoice}/details/{detail}', [PurchaseInvoiceController::class, 'updateDetail'])->name('purchase-invoices.details.update');
+        Route::delete('purchase-invoices/{purchaseInvoice}/details/{detail}', [PurchaseInvoiceController::class, 'destroyDetail'])->name('purchase-invoices.details.destroy');
+    });
+    Route::middleware('permission:purchase_invoices.delete')->delete('purchase-invoices/{purchaseInvoice}', [PurchaseInvoiceController::class, 'destroy'])->name('purchase-invoices.destroy');
 
     Route::middleware('permission:system_operations.view')->get('system-operations', SystemOperationsController::class)->name('system-operations.index');
 

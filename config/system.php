@@ -29,6 +29,18 @@ return [
                     'permission' => 'users.view',
                 ],
                 [
+                    'label' => 'Maintenance & Repair',
+                    'route' => 'maintenance-repair-entries.index',
+                    'icon' => 'wrench',
+                    'permission' => 'maintenance_repair_entries.view',
+                ],
+                [
+                    'label' => 'Purchase Invoices',
+                    'route' => 'purchase-invoices.index',
+                    'icon' => 'receipt',
+                    'permission' => 'purchase_invoices.view',
+                ],
+                [
                     'label' => 'System Operations',
                     'route' => 'system-operations.index',
                     'icon' => 'cpu',
@@ -120,6 +132,14 @@ return [
         ],
         'users' => [
             'label' => 'Users',
+            'permissions' => ['view', 'add', 'edit', 'delete'],
+        ],
+        'maintenance_repair_entries' => [
+            'label' => 'Maintenance & Repair',
+            'permissions' => ['view', 'add', 'edit', 'delete'],
+        ],
+        'purchase_invoices' => [
+            'label' => 'Purchase Invoices',
             'permissions' => ['view', 'add', 'edit', 'delete'],
         ],
         'roles' => [

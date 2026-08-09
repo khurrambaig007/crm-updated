@@ -4,3 +4,4 @@ import './sweetalert';
 import './phone-mask';
 import './party';
 import './shipper-bp';
+import './purchase-invoice-grid';
