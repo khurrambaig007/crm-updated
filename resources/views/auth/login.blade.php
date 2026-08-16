@@ -44,7 +44,7 @@
 
             <div class="flex items-center justify-between">
                 <label for="remember" class="flex items-center gap-2 text-sm text-topbar-muted">
-                    <input id="remember" name="remember" type="checkbox" class="h-4 w-4 rounded border-card-border text-primary-500 focus:ring-primary-500 transition">
+                    <input id="remember" name="remember" type="checkbox" value="1" @checked(old('remember')) class="h-4 w-4 rounded border-card-border text-primary-500 focus:ring-primary-500 transition">
                     Remember me
                 </label>
                 <a href="{{ route('password.request') }}" class="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline transition">Forgot password?</a>

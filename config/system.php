@@ -41,6 +41,18 @@ return [
                     'permission' => 'purchase_invoices.view',
                 ],
                 [
+                    'label' => 'Agent Receipt Payment',
+                    'route' => 'agent-receipt-payments.index',
+                    'icon' => 'wallet',
+                    'permission' => 'agent_receipt_payments.view',
+                ],
+                [
+                    'label' => 'Cost',
+                    'route' => 'costs.index',
+                    'icon' => 'badge-dollar-sign',
+                    'permission' => 'costs.view',
+                ],
+                [
                     'label' => 'System Operations',
                     'route' => 'system-operations.index',
                     'icon' => 'cpu',
@@ -140,6 +152,14 @@ return [
         ],
         'purchase_invoices' => [
             'label' => 'Purchase Invoices',
+            'permissions' => ['view', 'add', 'edit', 'delete'],
+        ],
+        'agent_receipt_payments' => [
+            'label' => 'Agent Receipt Payment',
+            'permissions' => ['view', 'add', 'edit', 'delete'],
+        ],
+        'costs' => [
+            'label' => 'Cost',
             'permissions' => ['view', 'add', 'edit', 'delete'],
         ],
         'roles' => [

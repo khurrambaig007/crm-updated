@@ -19,7 +19,6 @@ use App\Models\SlotTerm;
 use App\Models\SubCompany;
 use App\Models\Supplier;
 use App\Models\VesselVoyage;
-use App\Services\ExchangeRateService;
 use Illuminate\Database\Seeder;
 
 class SystemOperationsSeeder extends Seeder

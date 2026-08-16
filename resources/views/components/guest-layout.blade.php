@@ -117,5 +117,7 @@
                 </div>
             </div>
         </div>
+
+        <x-alerts />
     </body>
 </html>

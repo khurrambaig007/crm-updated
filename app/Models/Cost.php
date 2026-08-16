@@ -5,8 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['pol_id', 'pod_id', 'feeder_id', 'agent_id', 'term', 'total', 'slot', 'pol_agent', 'dthc', 'wrr', 'lss', 'dg', 'pod_agent', 'of', 'lthc', 'pod_r', 'free_days', 'total_collection', 'net_total', 'container_type_id', 'container_size_id', 'slot_term_id', 'pol_commission_id', 'pod_commission_id'])]
+#[Fillable(['pol_id', 'pod_id', 'container_type_id', 'feeder_id', 'container_size_id', 'slot_term_id', 'pod_agent_id', 'pol_agent_id', 'slot', 'dthc', 'wrr', 'ts_thc', 'ts_commission', 'of', 'pod_rebate', 'free_days', 'total_cost', 'total_collection', 'net_shipping'])]
 class Cost extends Model
 {
     public function pol(): BelongsTo
@@ -16,22 +17,17 @@ class Cost extends Model
 
     public function pod(): BelongsTo
     {
-        return $this->belongsTo(Pol::class, 'pod_id');
-    }
-
-    public function feeder(): BelongsTo
-    {
-        return $this->belongsTo(Feeder::class);
-    }
-
-    public function agent(): BelongsTo
-    {
-        return $this->belongsTo(Agent::class);
+        return $this->belongsTo(Pod::class);
     }
 
     public function containerType(): BelongsTo
     {
         return $this->belongsTo(ContainerType::class);
+    }
+
+    public function feeder(): BelongsTo
+    {
+        return $this->belongsTo(Feeder::class);
     }
 
     public function containerSize(): BelongsTo
@@ -44,13 +40,23 @@ class Cost extends Model
         return $this->belongsTo(SlotTerm::class);
     }
 
-    public function polCommission(): BelongsTo
+    public function podAgent(): BelongsTo
     {
-        return $this->belongsTo(Agent::class, 'pol_commission_id');
+        return $this->belongsTo(Agent::class, 'pod_agent_id');
     }
 
-    public function podCommission(): BelongsTo
+    public function polAgent(): BelongsTo
     {
-        return $this->belongsTo(Agent::class, 'pod_commission_id');
+        return $this->belongsTo(Agent::class, 'pol_agent_id');
+    }
+
+    public function labels(): HasMany
+    {
+        return $this->hasMany(Label::class);
+    }
+
+    public function labelCollections(): HasMany
+    {
+        return $this->hasMany(LabelCollection::class);
     }
 }

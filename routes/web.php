@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AgentController;
+use App\Http\Controllers\AgentReceiptPaymentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -10,15 +11,16 @@ use App\Http\Controllers\CommodityController;
 use App\Http\Controllers\ContainerKindController;
 use App\Http\Controllers\ContainerSizeController;
 use App\Http\Controllers\ContainerTypeController;
+use App\Http\Controllers\CostController;
 use App\Http\Controllers\CurrencyExchangeRateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\MaintenanceRepairEntryController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\PurchaseInvoiceController;
 use App\Http\Controllers\PolController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PurchaseInvoiceController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettlementTypeController;
 use App\Http\Controllers\ShipperBpController;
@@ -78,6 +80,30 @@ Route::middleware('auth')->group(function () {
         Route::delete('purchase-invoices/{purchaseInvoice}/details/{detail}', [PurchaseInvoiceController::class, 'destroyDetail'])->name('purchase-invoices.details.destroy');
     });
     Route::middleware('permission:purchase_invoices.delete')->delete('purchase-invoices/{purchaseInvoice}', [PurchaseInvoiceController::class, 'destroy'])->name('purchase-invoices.destroy');
+
+    Route::middleware('permission:agent_receipt_payments.view')->get('agent-receipt-payments', [AgentReceiptPaymentController::class, 'index'])->name('agent-receipt-payments.index');
+    Route::middleware('permission:agent_receipt_payments.add')->group(function () {
+        Route::get('agent-receipt-payments/create', [AgentReceiptPaymentController::class, 'create'])->name('agent-receipt-payments.create');
+        Route::post('agent-receipt-payments', [AgentReceiptPaymentController::class, 'store'])->name('agent-receipt-payments.store');
+    });
+    Route::middleware('permission:agent_receipt_payments.edit')->group(function () {
+        Route::get('agent-receipt-payments/{arp}/edit', [AgentReceiptPaymentController::class, 'edit'])->name('agent-receipt-payments.edit');
+        Route::patch('agent-receipt-payments/{arp}', [AgentReceiptPaymentController::class, 'update'])->name('agent-receipt-payments.update');
+        Route::get('agent-receipt-payments/{arp}/navigate', [AgentReceiptPaymentController::class, 'navigate'])->name('agent-receipt-payments.navigate');
+        Route::post('agent-receipt-payments/{arp}/approve', [AgentReceiptPaymentController::class, 'approve'])->name('agent-receipt-payments.approve');
+    });
+    Route::middleware('permission:agent_receipt_payments.delete')->delete('agent-receipt-payments/{arp}', [AgentReceiptPaymentController::class, 'destroy'])->name('agent-receipt-payments.destroy');
+
+    Route::middleware('permission:costs.view')->get('costs', [CostController::class, 'index'])->name('costs.index');
+    Route::middleware('permission:costs.add')->group(function () {
+        Route::get('costs/create', [CostController::class, 'create'])->name('costs.create');
+        Route::post('costs', [CostController::class, 'store'])->name('costs.store');
+    });
+    Route::middleware('permission:costs.edit')->group(function () {
+        Route::get('costs/{cost}/edit', [CostController::class, 'edit'])->name('costs.edit');
+        Route::patch('costs/{cost}', [CostController::class, 'update'])->name('costs.update');
+    });
+    Route::middleware('permission:costs.delete')->delete('costs/{cost}', [CostController::class, 'destroy'])->name('costs.destroy');
 
     Route::middleware('permission:system_operations.view')->get('system-operations', SystemOperationsController::class)->name('system-operations.index');
 

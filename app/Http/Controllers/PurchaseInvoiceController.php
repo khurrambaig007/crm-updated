@@ -36,7 +36,7 @@ class PurchaseInvoiceController extends Controller
 
     public function create(): View
     {
-        $invoice = new PurchaseInvoice();
+        $invoice = new PurchaseInvoice;
         $total = PurchaseInvoice::count();
         $current = $total + 1;
         $firstId = PurchaseInvoice::orderBy('id')->value('id');

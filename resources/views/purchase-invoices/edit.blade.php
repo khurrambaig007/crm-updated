@@ -25,7 +25,7 @@
                 @include('components.icons.receipt', ['classes' => 'h-7 w-7 text-primary-600'])
                 <div>
                     <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">Purchase Invoice</h1>
-                    <p class="mt-1 text-sm text-topbar-muted">Record <span id="nav-current">{{ $current }}</span> of <span id="nav-total">{{ $total }}</span></p>
+                    <p class="mt-1 text-sm text-topbar-muted">Create and manage purchase invoices and their details.</p>
                 </div>
             </div>
         </div>
@@ -47,6 +47,9 @@
                 <button type="button" id="nav-last" class="nav-btn {{ $navBtnClasses }}" title="Last" data-direction="last" {{ $lastId ? '' : 'disabled' }}>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5"><path d="m13 17 5-5-5-5"/><path d="m6 17 5-5-5-5"/></svg>
                 </button>
+                <span class="ml-3 text-sm font-medium text-topbar-muted">
+                    <span id="nav-current">{{ $current }}</span> of <span id="nav-total">{{ $total }}</span>
+                </span>
             </div>
 
             {!! html()->form($isNew ? 'POST' : 'PATCH', $isNew ? route('purchase-invoices.store') : route('purchase-invoices.update', $invoice))->id('header-form')->class('grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4')->open() !!}

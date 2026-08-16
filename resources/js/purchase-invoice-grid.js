@@ -139,6 +139,7 @@ export function initPurchaseInvoiceGrid(el, cfg) {
 
     try {
         gridApi = createGrid(el, {
+            theme: 'legacy',
             columnDefs: buildColumnDefs(),
             rowData: cfg.details || [],
             defaultColDef: {
@@ -216,11 +217,12 @@ export async function saveRow(params) {
                 node.setData({ ...node.data, id: result.detail.id });
             }
             flashRow(node);
+            window.Alerts.toast('Detail saved.');
         } else {
-            alert('Error: ' + (result.message || 'Failed to save'));
+            window.Alerts.error(result.message || 'Failed to save');
         }
     } catch (e) {
-        alert('Network error: ' + e.message);
+        window.Alerts.error('Network error: ' + e.message);
     }
 }
 
@@ -235,7 +237,12 @@ export async function deleteRow(params) {
         return;
     }
 
-    if (!confirm('Delete this detail row?')) return;
+    const confirmed = await window.Alerts.confirm({
+        title: 'Delete detail row?',
+        text: 'This will permanently delete this detail row.',
+        confirmText: 'Yes, delete it!',
+    });
+    if (!confirmed) return;
 
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
@@ -249,12 +256,13 @@ export async function deleteRow(params) {
         });
         if (resp.ok) {
             gridApi.applyTransaction({ remove: [node.data] });
+            window.Alerts.toast('Detail deleted.');
         } else {
             const result = await resp.json();
-            alert('Error: ' + (result.message || 'Failed to delete'));
+            window.Alerts.error(result.message || 'Failed to delete');
         }
     } catch (e) {
-        alert('Network error: ' + e.message);
+        window.Alerts.error('Network error: ' + e.message);
     }
 }
 

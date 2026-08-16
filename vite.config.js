@@ -19,7 +19,7 @@ export default defineConfig({
     server: {
         host: '127.0.0.1',
         cors: {
-            origin: ['http://crm-updated.cdev', 'http://localhost', 'http://127.0.0.1'],
+            origin: ['http://crm-updated.cdev', 'http://localhost', 'http://127.0.0.1', "*"],
             credentials: true,
         },
         watch: {

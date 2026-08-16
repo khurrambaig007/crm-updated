@@ -15,4 +15,9 @@ class AgentReceiptPayment extends Model
             'cheque_date' => 'date',
         ];
     }
+
+    public function agentName(): ?string
+    {
+        return $this->agent;
+    }
 }

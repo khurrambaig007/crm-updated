@@ -255,6 +255,8 @@
             </div>
         </div>
 
+        <x-alerts />
+
         <script>
             (function () {
                 const sidebar = document.getElementById('sidebar');
