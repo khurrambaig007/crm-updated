@@ -39,7 +39,7 @@ class CostsDataTable extends DataTable
     {
         return $this->builder()
             ->setTableId('costs-table')
-            ->addTableClass('display min-w-full text-sm')
+            ->addTableClass('display text-sm w-full border-collapse')
             ->columns($this->getColumns())
             ->minifiedAjax(ajaxParameters: ['headers' => ['Accept' => 'application/json, text/javascript, */*; q=0.01']])
             ->orderBy(0, 'asc')
@@ -60,6 +60,12 @@ class CostsDataTable extends DataTable
                         'previous' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="m15 18-6-6 6-6"/></svg>',
                         'next' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="m9 18 6-6-6-6"/></svg>',
                     ],
+                ],
+                'columnDefs' => [
+                    // Always visible: route + totals + created + actions (indices 0-23)
+                    ['targets' => [0, 1, 17, 18, 19, 20, 23], 'responsivePriority' => 1],
+                    // Collapse on tablet and below
+                    ['targets' => [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22], 'visible' => false, 'responsivePriority' => -1],
                 ],
             ]);
     }

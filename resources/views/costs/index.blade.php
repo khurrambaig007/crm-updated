@@ -21,11 +21,11 @@
             @endif
         </div>
 
-        <div class="overflow-hidden rounded-2xl bg-card-bg shadow-lg ring-1 ring-card-border">
-            <div class="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-6 py-4 sm:px-8">
+        <div class="mx-auto max-w-full overflow-hidden rounded-2xl bg-card-bg shadow-lg ring-1 ring-card-border">
+            <div class="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-4 py-4 sm:px-6 sm:py-4">
                 <h2 class="text-lg font-semibold text-gray-800">All Costs</h2>
             </div>
-            <div class="p-6 sm:p-8">
+            <div class="px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-6">
                 {!! $dataTable->table() !!}
             </div>
         </div>

@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CarrierController;
 use App\Http\Controllers\ChargeController;
 use App\Http\Controllers\CommodityController;
+use App\Http\Controllers\ContainerActivityController;
 use App\Http\Controllers\ContainerKindController;
 use App\Http\Controllers\ContainerSizeController;
 use App\Http\Controllers\ContainerTypeController;
@@ -80,6 +81,18 @@ Route::middleware('auth')->group(function () {
         Route::delete('purchase-invoices/{purchaseInvoice}/details/{detail}', [PurchaseInvoiceController::class, 'destroyDetail'])->name('purchase-invoices.details.destroy');
     });
     Route::middleware('permission:purchase_invoices.delete')->delete('purchase-invoices/{purchaseInvoice}', [PurchaseInvoiceController::class, 'destroy'])->name('purchase-invoices.destroy');
+
+    Route::middleware('permission:container_activities.view')->get('container-activities', [ContainerActivityController::class, 'index'])->name('container-activities.index');
+    Route::middleware('permission:container_activities.add')->group(function () {
+        Route::get('container-activities/create', [ContainerActivityController::class, 'create'])->name('container-activities.create');
+        Route::post('container-activities', [ContainerActivityController::class, 'store'])->name('container-activities.store');
+    });
+    Route::middleware('permission:container_activities.edit')->group(function () {
+        Route::get('container-activities/{containerActivity}/edit', [ContainerActivityController::class, 'edit'])->name('container-activities.edit');
+        Route::patch('container-activities/{containerActivity}', [ContainerActivityController::class, 'update'])->name('container-activities.update');
+        Route::get('container-activities/{containerActivity}/navigate', [ContainerActivityController::class, 'navigate'])->name('container-activities.navigate');
+    });
+    Route::middleware('permission:container_activities.delete')->delete('container-activities/{containerActivity}', [ContainerActivityController::class, 'destroy'])->name('container-activities.destroy');
 
     Route::middleware('permission:agent_receipt_payments.view')->get('agent-receipt-payments', [AgentReceiptPaymentController::class, 'index'])->name('agent-receipt-payments.index');
     Route::middleware('permission:agent_receipt_payments.add')->group(function () {

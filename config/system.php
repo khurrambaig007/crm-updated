@@ -41,6 +41,12 @@ return [
                     'permission' => 'purchase_invoices.view',
                 ],
                 [
+                    'label' => 'Container Activity',
+                    'route' => 'container-activities.index',
+                    'icon' => 'box',
+                    'permission' => 'container_activities.view',
+                ],
+                [
                     'label' => 'Agent Receipt Payment',
                     'route' => 'agent-receipt-payments.index',
                     'icon' => 'wallet',
@@ -152,6 +158,10 @@ return [
         ],
         'purchase_invoices' => [
             'label' => 'Purchase Invoices',
+            'permissions' => ['view', 'add', 'edit', 'delete'],
+        ],
+        'container_activities' => [
+            'label' => 'Container Activity',
             'permissions' => ['view', 'add', 'edit', 'delete'],
         ],
         'agent_receipt_payments' => [
