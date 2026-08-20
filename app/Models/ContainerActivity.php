@@ -25,11 +25,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'location',
     'carrier',
     'ts_1_port',
+    'ts_1_port_id',
     'ts_1_agent',
+    'ts_1_agent_id',
     'ts_2_port',
+    'ts_2_port_id',
     'ts_2_agent',
+    'ts_2_agent_id',
     'ts_3_port',
+    'ts_3_port_id',
     'ts_3_agent',
+    'ts_3_agent_id',
     'remarks',
 ])]
 class ContainerActivity extends Model
@@ -38,9 +44,9 @@ class ContainerActivity extends Model
     {
         return [
             'activity_date' => 'date',
-            'sailing_date'  => 'date',
-            'free_days'     => 'integer',
-            'thru_bl'       => 'boolean',
+            'sailing_date' => 'date',
+            'free_days' => 'integer',
+            'thru_bl' => 'boolean',
         ];
     }
 

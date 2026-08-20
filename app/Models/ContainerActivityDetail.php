@@ -11,9 +11,7 @@ class ContainerActivityDetail extends Model
 {
     protected function casts(): array
     {
-        return [
-            'one_door_open' => 'boolean',
-        ];
+        return [];
     }
 
     public function containerActivity(): BelongsTo

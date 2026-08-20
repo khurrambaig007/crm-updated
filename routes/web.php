@@ -91,8 +91,15 @@ Route::middleware('auth')->group(function () {
         Route::get('container-activities/{containerActivity}/edit', [ContainerActivityController::class, 'edit'])->name('container-activities.edit');
         Route::patch('container-activities/{containerActivity}', [ContainerActivityController::class, 'update'])->name('container-activities.update');
         Route::get('container-activities/{containerActivity}/navigate', [ContainerActivityController::class, 'navigate'])->name('container-activities.navigate');
+
+        // Detail rows (one physical container per row) — agGrid-backed CRUD.
+        Route::post('container-activities/{containerActivity}/details', [ContainerActivityController::class, 'storeDetail'])->name('container-activities.details.store');
+        Route::patch('container-activities/{containerActivity}/details/{detail}', [ContainerActivityController::class, 'updateDetail'])->name('container-activities.details.update');
     });
-    Route::middleware('permission:container_activities.delete')->delete('container-activities/{containerActivity}', [ContainerActivityController::class, 'destroy'])->name('container-activities.destroy');
+    Route::middleware('permission:container_activities.delete')->group(function () {
+        Route::delete('container-activities/{containerActivity}', [ContainerActivityController::class, 'destroy'])->name('container-activities.destroy');
+        Route::delete('container-activities/{containerActivity}/details/{detail}', [ContainerActivityController::class, 'destroyDetail'])->name('container-activities.details.destroy');
+    });
 
     Route::middleware('permission:agent_receipt_payments.view')->get('agent-receipt-payments', [AgentReceiptPaymentController::class, 'index'])->name('agent-receipt-payments.index');
     Route::middleware('permission:agent_receipt_payments.add')->group(function () {

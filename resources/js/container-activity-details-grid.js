@@ -15,23 +15,26 @@ function ActionsRenderer(params) {
     this.saveBtn.type = 'button';
     this.saveBtn.className = 'inline-flex items-center justify-center rounded p-1 text-emerald-600 hover:bg-emerald-50';
     this.saveBtn.title = 'Save';
-    this.saveBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';
+    this.saveBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8 15 8"/></svg>';
 
     this.delBtn = document.createElement('button');
     this.delBtn.type = 'button';
     this.delBtn.className = 'inline-flex items-center justify-center rounded p-1 text-red-500 hover:bg-red-50';
     this.delBtn.title = 'Delete';
-    this.delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+    this.delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a4 2 0 0 1 2 2v2"/></svg>';
 
-    // Look up click handlers via the window global namespace — see
-    // container-activity-details-grid.js for the bundler-rationale.
+    // Look up the click handlers via the window global namespace. Using a
+    // property name unique to this module ('__cad_save' etc.) ensures the
+    // bundler/minifier cannot alias it to the property name on another
+    // module's window object (e.g. window.__pig_save). Direct property
+    // access on a global object survives module merging.
     this.saveBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        window['__pig_save'](this);
+        window['__cad_save'](this);
     });
     this.delBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        window['__pig_delete'](this);
+        window['__cad_delete'](this);
     });
 
     this.eGui.appendChild(this.saveBtn);
@@ -46,97 +49,112 @@ ActionsRenderer.prototype.refresh = function () {
     return true;
 };
 
-function recalcRow(node) {
-    const data = node.data;
-    const amount = parseFloat(data.amount) || 0;
-    const rate = parseFloat(data.exchange_rate) || 0;
-    const vatPct = parseFloat(data.vat_percentage) || 0;
-
-    data.amount_dollar = +(amount * rate).toFixed(2);
-    data.vat_amount = +(amount * (vatPct / 100)).toFixed(2);
-    data.vat_amount_dollar = +(data.vat_amount * rate).toFixed(2);
-
-    node.setData(data);
-}
-
+/**
+ * When the user picks a Vessel in any TS column, auto-fill the adjacent
+ * Voyage column with the voyage_number from the matching vessel_voyages row.
+ * Vessels are exposed to the grid as a flat list of vessel_name strings (the
+ * shape agSelectCellEditor wants), with a separate lookup map for voyage.
+ */
 function onCellValueChanged(event) {
-    if (['amount', 'exchange_rate', 'vat_percentage'].includes(event.colDef.field)) {
-        recalcRow(event.node);
-    }
-    if (event.colDef.field === 'currency') {
-        const code = event.newValue;
-        if (code && config && config.rates && config.rates[code]) {
-            event.node.setDataValue('exchange_rate', config.rates[code]);
-        }
+    const field = event.colDef.field;
+    if (
+        field === 'vessel_ts1' ||
+        field === 'vessel_ts2' ||
+        field === 'vessel_ts3'
+    ) {
+        const voyageField = field.replace('vessel_', 'voyage_');
+        const lookup = config && config.vesselVoyageLookup ? config.vesselVoyageLookup : {};
+        event.node.setDataValue(voyageField, lookup[event.newValue] || '');
     }
 }
 
 function buildColumnDefs() {
-    const selectEditor = {
+    const vesselOptions = config ? config.vesselNames : [];
+
+    const select = (values) => ({
         cellEditor: 'agSelectCellEditor',
-        cellEditorParams: { values: [] },
-    };
+        cellEditorParams: { values },
+    });
 
     return [
         {
             field: 'actions',
             headerName: 'Actions',
-            width: 160,
+            width: 140,
             sortable: false,
             filter: false,
             editable: false,
             cellRenderer: ActionsRenderer,
             pinned: 'left',
         },
+        { field: 'containe_no',    headerName: 'Container #',     width: 180 },
+        { field: 'size_type',      headerName: 'Size/Type',        width: 140 },
+        { field: 'principle',      headerName: 'Principle',        width: 160 },
+        { field: 'bl_number',      headerName: 'BL #',             width: 160 },
+        { field: 'booking_number', headerName: 'Booking #',        width: 160 },
         {
-            field: 'charges',
-            headerName: 'Charges',
-            width: 260,
-            ...selectEditor,
-            cellEditorParams: { values: config ? config.charges : [] },
-        },
-        {
-            field: 'type',
-            headerName: 'Type',
-            width: 200,
-            ...selectEditor,
-            cellEditorParams: { values: config ? config.types : [] },
-        },
-        { field: 'm_r_number', headerName: 'M & R #', width: 200 },
-        { field: 'bl_number', headerName: 'BL #', width: 200 },
-        { field: 'container_number', headerName: 'Container #', width: 240 },
-        {
-            field: 'size',
-            headerName: 'Size',
-            width: 160,
-            ...selectEditor,
-            cellEditorParams: { values: config ? config.sizes : [] },
-        },
-        {
-            field: 'size_type',
-            headerName: 'Type',
-            width: 220,
-            ...selectEditor,
-            cellEditorParams: { values: config ? config.containerTypes : [] },
-        },
-        { field: 'amount', headerName: 'Amount', width: 200 },
-        {
-            field: 'currency',
-            headerName: 'Currency',
+            field: 'status',
+            headerName: 'Status',
             width: 180,
-            ...selectEditor,
-            cellEditorParams: { values: config ? config.currencyCodes : [] },
+            ...select(config ? config.statuses : []),
         },
-        { field: 'exchange_rate', headerName: 'Exch. Rate', width: 180 },
-        { field: 'amount_dollar', headerName: 'Amount ($)', width: 200, editable: false },
-        { field: 'vat_percentage', headerName: 'VAT %', width: 140, type: 'rightAligned' },
-        { field: 'vat_amount', headerName: 'VAT Amt', width: 180, type: 'rightAligned', editable: false },
-        { field: 'vat_amount_dollar', headerName: 'VAT Amt ($)', width: 200, type: 'rightAligned', editable: false },
-        { field: 'remarks', headerName: 'Remarks', width: 260 },
+        {
+            field: 'cargo_type',
+            headerName: 'Cargo Type',
+            width: 160,
+            ...select(config ? config.cargoTypes : []),
+        },
+        {
+            field: 'one_door_open',
+            headerName: 'One Door Open',
+            width: 150,
+            ...select(['Yes', 'No']),
+        },
+        { field: 'last_activity', headerName: 'Last Activity',    width: 180 },
+        { field: 'system_remarks', headerName: 'System Remarks',  width: 220 },
+        {
+            field: 'vessel_ts1',
+            headerName: 'Vessel (TS1)',
+            width: 180,
+            ...select(vesselOptions),
+        },
+        { field: 'voyage_ts1',     headerName: 'Voyage (TS1)',     width: 160 },
+        {
+            field: 'sailing_date_ts1',
+            headerName: 'Sailing Date (TS1)',
+            width: 180,
+            cellEditor: 'agDateStringCellEditor',
+        },
+        {
+            field: 'vessel_ts2',
+            headerName: 'Vessel (TS2)',
+            width: 180,
+            ...select(vesselOptions),
+        },
+        { field: 'voyage_ts2',     headerName: 'Voyage (TS2)',     width: 160 },
+        {
+            field: 'sailing_date_ts2',
+            headerName: 'Sailing Date (TS2)',
+            width: 180,
+            cellEditor: 'agDateStringCellEditor',
+        },
+        {
+            field: 'vessel_ts3',
+            headerName: 'Vessel (TS3)',
+            width: 180,
+            ...select(vesselOptions),
+        },
+        { field: 'voyage_ts3',     headerName: 'Voyage (TS3)',     width: 160 },
+        {
+            field: 'sailing_date_ts3',
+            headerName: 'Sailing Date (TS3)',
+            width: 180,
+            cellEditor: 'agDateStringCellEditor',
+        },
     ];
 }
 
-export function initPurchaseInvoiceGrid(el, cfg) {
+export function initContainerActivityDetailsGrid(el, cfg) {
     config = cfg;
 
     try {
@@ -187,15 +205,18 @@ export function getRowData() {
     return rows;
 }
 
-export async function savePurchaseInvoiceDetailRow(rendererOrParams) {
+export async function saveContainerActivityDetailRow(rendererOrParams) {
     if (!gridApi || !config) return;
 
+    // Accept either the renderer instance (from the click handler) or a
+    // plain ICellRendererParams object (e.g. when called from outside the
+    // grid). Either way, params.node must be reachable.
     const params = rendererOrParams && rendererOrParams.params
         ? rendererOrParams.params
         : rendererOrParams;
     const node = params && params.node;
     if (!node) {
-        console.warn('savePurchaseInvoiceDetailRow: missing node', rendererOrParams);
+        console.warn('saveContainerActivityDetailRow: missing node', rendererOrParams);
         return;
     }
 
@@ -206,8 +227,8 @@ export async function savePurchaseInvoiceDetailRow(rendererOrParams) {
 
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const url = detailId
-        ? `/purchase-invoices/${config.invoiceId}/details/${detailId}`
-        : `/purchase-invoices/${config.invoiceId}/details`;
+        ? `/container-activities/${config.activityId}/details/${detailId}`
+        : `/container-activities/${config.activityId}/details`;
     const method = detailId ? 'PATCH' : 'POST';
 
     try {
@@ -236,7 +257,7 @@ export async function savePurchaseInvoiceDetailRow(rendererOrParams) {
     }
 }
 
-export async function deletePurchaseInvoiceDetailRow(rendererOrParams) {
+export async function deleteContainerActivityDetailRow(rendererOrParams) {
     if (!gridApi || !config) return;
 
     const params = rendererOrParams && rendererOrParams.params
@@ -244,7 +265,7 @@ export async function deletePurchaseInvoiceDetailRow(rendererOrParams) {
         : rendererOrParams;
     const node = params && params.node;
     if (!node) {
-        console.warn('deletePurchaseInvoiceDetailRow: missing node', rendererOrParams);
+        console.warn('deleteContainerActivityDetailRow: missing node', rendererOrParams);
         return;
     }
 
@@ -265,7 +286,7 @@ export async function deletePurchaseInvoiceDetailRow(rendererOrParams) {
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
     try {
-        const resp = await fetch(`/purchase-invoices/${config.invoiceId}/details/${detailId}`, {
+        const resp = await fetch(`/container-activities/${config.activityId}/details/${detailId}`, {
             method: 'DELETE',
             headers: {
                 'Accept': 'application/json',
@@ -293,12 +314,14 @@ function flashRow(node) {
     }
 }
 
-window.PIG = {
-    init: initPurchaseInvoiceGrid,
+window.CAD = {
+    init: initContainerActivityDetailsGrid,
     setData: setGridData,
     addRow,
     getRowData,
 };
 
-window['__pig_save'] = savePurchaseInvoiceDetailRow;
-window['__pig_delete'] = deletePurchaseInvoiceDetailRow;
+// Populate the unique window property handlers — see ActionsRenderer for
+// why these names are prefixed to defeat bundler cross-module aliasing.
+window['__cad_save'] = saveContainerActivityDetailRow;
+window['__cad_delete'] = deleteContainerActivityDetailRow;
