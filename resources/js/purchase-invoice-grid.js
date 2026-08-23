@@ -11,7 +11,7 @@ function ActionsRenderer(params) {
     // its RETURNED element; the `this` binding is not preserved. Capture params
     // (incl. node) via closure instead of via `this`.
     const container = document.createElement('div');
-    container.className = 'flex items-center gap-1';
+    container.className = 'flex items-center gap-1 h-full';
 
     const saveBtn = document.createElement('button');
     saveBtn.type = 'button';

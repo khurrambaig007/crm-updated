@@ -118,6 +118,12 @@ return [
             'PKR' => 'PKR',
             'AFN' => 'AFN',
         ],
+        'approval_status' => [
+            1 => 'Draft',
+            2 => 'RFA',
+            3 => 'Cancelled',
+            4 => 'Approved',
+        ],
     ],
 
 ];

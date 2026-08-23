@@ -18,7 +18,7 @@ let activityIdOverride = null;
  */
 function ActionsRenderer(params) {
     const container = document.createElement('div');
-    container.className = 'flex items-center gap-1';
+    container.className = 'flex items-center gap-1 h-full';
 
     const saveBtn = document.createElement('button');
     saveBtn.type = 'button';

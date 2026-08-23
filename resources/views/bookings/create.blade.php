@@ -42,12 +42,13 @@
                     </ul>
                 </div>
 
-                {!! html()->form('POST', route('bookings.store'))->id('booking-form')->open() !!}
-                    @csrf
+                
 
                     {{-- Basic Info Tab --}}
                     <div id="basic-info" class="tab-pane space-y-5">
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        {!! html()->form('POST', route('bookings.store'))->id('booking-form')->open() !!}
+                        @csrf    
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 <label for="booking_no" class="{{ $labelClasses }}">Booking # <span class="text-red-500">*</span></label>
                                 {!! html()->text('booking_no', old('booking_no'))->class($inputClasses)->required() !!}
@@ -70,7 +71,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('Carrier', 'carrier')->class($labelClasses) !!}
                                 <div class="relative">
@@ -112,7 +113,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('Commodity', 'commodity')->class($labelClasses) !!}
                                 <div class="relative">
@@ -161,7 +162,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('POL', 'pol')->class($labelClasses) !!}
                                 <div class="relative">
@@ -200,7 +201,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('POFD', 'pofd')->class($labelClasses) !!}
                                 <div class="relative">
@@ -239,7 +240,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('POT (1)', 'pot_1')->class($labelClasses) !!}
                                 <div class="relative">
@@ -278,7 +279,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('POT (2)', 'pot_2')->class($labelClasses) !!}
                                 <div class="relative">
@@ -317,7 +318,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('Shipper/BP', 'shipper_bp')->class($labelClasses) !!}
                                 <div class="relative">
@@ -366,7 +367,7 @@
                             </div>                            
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('Consignee', 'consignee')->class($labelClasses) !!}
                                 <div class="relative">
@@ -392,11 +393,22 @@
                                 {{-- Empty --}}
                             </div>
                         </div>
+                        <div class="col-span-full flex items-center justify-between gap-3 pt-8">
+                            <a href="{{ route('bookings.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                    <path d="m12 19-7-7 7-7" />
+                                    <path d="M19 12H5" />
+                                </svg>
+                                Cancel
+                            </a>
+                            {!! html()->submit('Save Booking')->class($submitClasses . ' w-auto') !!}
+                        </div>
+                        {!! html()->form()->close() !!}                    
                     </div>
 
                     {{-- Other Info Tab --}}
                     <div id="other-info" class="tab-pane hidden">
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div class="sm:col-span-2 lg:col-span-4">
                                 {!! html()->label('Special Request', 'special_req')->class($labelClasses) !!}
                                 {!! html()->textarea('special_req', old('special_req'))->class($inputClasses . ' min-h-24') !!}
@@ -444,18 +456,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-span-full flex items-center justify-between gap-3 pt-8">
-                        <a href="{{ route('bookings.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                <path d="m12 19-7-7 7-7" />
-                                <path d="M19 12H5" />
-                            </svg>
-                            Cancel
-                        </a>
-                        {!! html()->submit('Save Booking')->class($submitClasses . ' w-auto') !!}
-                    </div>
-                {!! html()->form()->close() !!}
             </div>
         </div>
     </div>

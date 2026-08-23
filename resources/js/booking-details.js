@@ -1,4 +1,32 @@
 jQuery(document).ready(function ($) {
+    $('.tab-link:not(.tab-link-disabled)').on('click', function (e) {
+        e.preventDefault();
+        var target = $(this).attr('href').substring(1);
+
+        $('.tab-pane').addClass('hidden');
+        $('#' + target).removeClass('hidden');
+
+        $('.tab-link').removeClass('border-primary-600 text-primary-600').addClass('border-transparent text-gray-500');
+        $(this).removeClass('border-transparent text-gray-500').addClass('border-primary-600 text-primary-600');
+    });
+
+    $('.sub-tab-link').on('click', function (e) {
+        e.preventDefault();
+        var target = $(this).attr('href').substring(1);
+
+        $('.sub-tab-pane').addClass('hidden');
+        $('#' + target).removeClass('hidden');
+
+        $('.sub-tab-link').removeClass('border-primary-600 text-primary-600').addClass('border-transparent text-gray-500');
+        $(this).removeClass('border-transparent text-gray-500').addClass('border-primary-600 text-primary-600');
+    });
+
+    var urlParams = new URLSearchParams(window.location.search);
+    var activeTab = urlParams.get('tab');
+    if (activeTab) {
+        $('.tab-link[href="#' + activeTab + '"]').trigger('click');
+    }
+
     var $bookingForm = $('#booking-form');
     if ($bookingForm.length === 0) {
         return;

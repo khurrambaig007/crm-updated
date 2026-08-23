@@ -391,6 +391,25 @@
             {!! html()->form()->close() !!}
         </div>
 
+        <style>
+            #details-grid.ag-theme-quartz {
+                --ag-row-height: 44px !important;
+                --ag-cell-horizontal-padding: 10px;
+                --ag-font-size: 13px;
+                --ag-font-family: inherit;
+                --ag-background-color: var(--color-card-bg);
+                --ag-odd-row-background-color: color-mix(in srgb, var(--color-primary-50) 40%, transparent);
+                --ag-row-hover-color: var(--color-primary-50);
+                --ag-border-color: var(--color-card-border);
+                --ag-header-background-color: var(--color-primary-900);
+                --ag-header-foreground-color: #ffffff;
+                --ag-header-column-resize-handle-color: rgba(255, 255, 255, 0.4);
+                --ag-header-cell-hover-background-color: var(--color-primary-700);
+                --ag-header-cell-moving-background-color: var(--color-primary-800);
+                --ag-selected-row-background-color: var(--color-primary-100);
+            }
+        </style>
+
         <div id="details-section" class="rounded-2xl bg-card-bg p-6 shadow-sm ring-1 ring-card-border sm:p-8 @if($isNew) hidden @endif">
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="text-lg font-semibold text-gray-800">Container Details</h2>
@@ -400,7 +419,7 @@
                 </button>
             </div>
 
-            <div id="details-grid" class="ag-theme-quartz" style="width: 100%; height: 400px;"></div>
+            <div id="details-grid" class="ag-theme-quartz overflow-hidden rounded-xl ring-1 ring-card-border shadow-sm" style="width: 100%; height: 400px;"></div>
         </div>
     </div>
 

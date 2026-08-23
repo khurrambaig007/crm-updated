@@ -77,6 +77,11 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:bookings.edit')->group(function () {
         Route::get('bookings/{booking}/edit', [BookingController::class, 'edit'])->name('bookings.edit');
         Route::patch('bookings/{booking}', [BookingController::class, 'update'])->name('bookings.update');
+        Route::patch('bookings/{booking}/other-info', [BookingController::class, 'updateOtherInfo'])->name('bookings.other-info.update');
+        Route::patch('bookings/{booking}/message', [BookingController::class, 'updateMessage'])->name('bookings.message.update');
+        Route::post('bookings/{booking}/equipments', [BookingController::class, 'storeEquipment'])->name('bookings.equipments.store');
+        Route::patch('bookings/{booking}/equipments/{equipment}', [BookingController::class, 'updateEquipment'])->name('bookings.equipments.update');
+        Route::delete('bookings/{booking}/equipments/{equipment}', [BookingController::class, 'destroyEquipment'])->name('bookings.equipments.destroy');
     });
     Route::middleware('permission:bookings.delete')->delete('bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
 

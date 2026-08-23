@@ -42,12 +42,11 @@
                     </ul>
                 </div>
 
-                {!! html()->form('PATCH', route('bookings.update', $booking))->id('booking-form')->open() !!}
-                    @csrf
-
                     {{-- Basic Info Tab --}}
                     <div id="basic-info" class="tab-pane space-y-5">
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        {!! html()->form('PATCH', route('bookings.update', $booking))->id('booking-form')->open() !!}
+                        @csrf
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 <label for="booking_no" class="{{ $labelClasses }}">Booking # <span class="text-red-500">*</span></label>
                                 {!! html()->text('booking_no', old('booking_no', $booking->booking_no))->class($inputClasses)->required() !!}
@@ -70,7 +69,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('Carrier', 'carrier')->class($labelClasses) !!}
                                 <div class="relative">
@@ -112,7 +111,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('Commodity', 'commodity')->class($labelClasses) !!}
                                 <div class="relative">
@@ -156,12 +155,12 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="vessel_voyage_detail" class="{{ $labelClasses . ' hidden' }}">&nbsp;</label>
-                                <input type="text" id="vessel_voyage_detail" class="{{ $disabledClasses }}" disabled value="{{ $booking->vesselVoyage?->voyage_number }}">
+                                <label for="vessel_voyage_detail" class="{{ $labelClasses }}">&nbsp;</label>
+                                <input type="text" id="vessel_voyage_detail" class="{{ $disabledClasses }}" disabled>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('POL', 'pol')->class($labelClasses) !!}
                                 <div class="relative">
@@ -177,9 +176,8 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="pol_detail" class="{{ $labelClasses . ' hidden' }}">&nbsp;</label>
-                                <input type="text" id="pol_detail" class="{{ $disabledClasses }}" disabled
-                                    value="{{ $booking->polPol ? ($booking->polPol->city . ', ' . $booking->polPol->country) : '' }}">
+                                <label for="pol_detail" class="{{ $labelClasses }}">&nbsp;</label>
+                                <input type="text" id="pol_detail" class="{{ $disabledClasses }}" disabled>
                             </div>
                             <div>
                                 {!! html()->label('Agent POL', 'agent_pol')->class($labelClasses) !!}
@@ -196,12 +194,12 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="agent_pol_detail" class="{{ $labelClasses . ' hidden' }}">&nbsp;</label>
-                                <input type="text" id="agent_pol_detail" class="{{ $disabledClasses }}" disabled value="{{ $booking->agentPol?->name }}">
+                                <label for="agent_pol_detail" class="{{ $labelClasses }}">&nbsp;</label>
+                                <input type="text" id="agent_pol_detail" class="{{ $disabledClasses }}" disabled>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('POFD', 'pofd')->class($labelClasses) !!}
                                 <div class="relative">
@@ -217,9 +215,8 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="pofd_detail" class="{{ $labelClasses . ' hidden' }}">&nbsp;</label>
-                                <input type="text" id="pofd_detail" class="{{ $disabledClasses }}" disabled
-                                    value="{{ $booking->podPofd ? ($booking->podPofd->city . ', ' . $booking->podPofd->country) : '' }}">
+                                <label for="pofd_detail" class="{{ $labelClasses }}">&nbsp;</label>
+                                <input type="text" id="pofd_detail" class="{{ $disabledClasses }}" disabled>
                             </div>
                             <div>
                                 {!! html()->label('Agent POFD', 'agent_pofd')->class($labelClasses) !!}
@@ -236,12 +233,12 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="agent_pofd_detail" class="{{ $labelClasses . ' hidden' }}">&nbsp;</label>
-                                <input type="text" id="agent_pofd_detail" class="{{ $disabledClasses }}" disabled value="{{ $booking->agentPofd?->name }}">
+                                <label for="agent_pofd_detail" class="{{ $labelClasses }}">&nbsp;</label>
+                                <input type="text" id="agent_pofd_detail" class="{{ $disabledClasses }}" disabled>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('POT (1)', 'pot_1')->class($labelClasses) !!}
                                 <div class="relative">
@@ -257,9 +254,8 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="pot_1_detail" class="{{ $labelClasses . ' hidden' }}">&nbsp;</label>
-                                <input type="text" id="pot_1_detail" class="{{ $disabledClasses }}" disabled
-                                    value="{{ $booking->polPot1 ? ($booking->polPot1->city . ', ' . $booking->polPot1->country) : '' }}">
+                                <label for="pot_1_detail" class="{{ $labelClasses }}">&nbsp;</label>
+                                <input type="text" id="pot_1_detail" class="{{ $disabledClasses }}" disabled>
                             </div>
                             <div>
                                 {!! html()->label('Agent 1', 'agent_1')->class($labelClasses) !!}
@@ -276,12 +272,12 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="agent_1_detail" class="{{ $labelClasses . ' hidden' }}">&nbsp;</label>
-                                <input type="text" id="agent_1_detail" class="{{ $disabledClasses }}" disabled value="{{ $booking->agent1?->name }}">
+                                <label for="agent_1_detail" class="{{ $labelClasses }}">&nbsp;</label>
+                                <input type="text" id="agent_1_detail" class="{{ $disabledClasses }}" disabled>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('POT (2)', 'pot_2')->class($labelClasses) !!}
                                 <div class="relative">
@@ -297,9 +293,8 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="pot_2_detail" class="{{ $labelClasses . ' hidden' }}">&nbsp;</label>
-                                <input type="text" id="pot_2_detail" class="{{ $disabledClasses }}" disabled
-                                    value="{{ $booking->polPot2 ? ($booking->polPot2->city . ', ' . $booking->polPot2->country) : '' }}">
+                                <label for="pot_2_detail" class="{{ $labelClasses }}">&nbsp;</label>
+                                <input type="text" id="pot_2_detail" class="{{ $disabledClasses }}" disabled>
                             </div>
                             <div>
                                 {!! html()->label('Agent 2', 'agent_2')->class($labelClasses) !!}
@@ -316,12 +311,12 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="agent_2_detail" class="{{ $labelClasses . ' hidden' }}">&nbsp;</label>
-                                <input type="text" id="agent_2_detail" class="{{ $disabledClasses }}" disabled value="{{ $booking->agent2?->name }}">
+                                <label for="agent_2_detail" class="{{ $labelClasses }}">&nbsp;</label>
+                                <input type="text" id="agent_2_detail" class="{{ $disabledClasses }}" disabled>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('Shipper/BP', 'shipper_bp')->class($labelClasses) !!}
                                 <div class="relative">
@@ -337,8 +332,8 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="shipper_bp_detail" class="{{ $labelClasses . ' hidden' }}">&nbsp;</label>
-                                <input type="text" id="shipper_bp_detail" class="{{ $disabledClasses }}" disabled value="{{ $booking->shipperBp?->name }}">
+                                <label for="shipper_bp_detail" class="{{ $labelClasses }}">&nbsp;</label>
+                                <input type="text" id="shipper_bp_detail" class="{{ $disabledClasses }}" disabled>
                             </div>
                             <div>
                                 {!! html()->label('Freight Type', 'freight_type')->class($labelClasses) !!}
@@ -368,12 +363,9 @@
                                     </div>
                                 </div>
                             </div>
-                            <div>
-                                <label for="" class="block text-sm font-medium text-topbar-text">&nbsp;</label>
-                            </div>
                         </div>
 
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('Consignee', 'consignee')->class($labelClasses) !!}
                                 <div class="relative">
@@ -389,8 +381,8 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="consignee_detail" class="{{ $labelClasses . ' hidden' }}">&nbsp;</label>
-                                <input type="text" id="consignee_detail" class="{{ $disabledClasses }}" disabled value="{{ $booking->consignee ? ($parties->firstWhere('id', $booking->consignee)?->name ?? '') : '' }}">
+                                <label for="consignee_detail" class="{{ $labelClasses }}">&nbsp;</label>
+                                <input type="text" id="consignee_detail" class="{{ $disabledClasses }}" disabled>
                             </div>
                             <div>
                                 {{-- Empty --}}
@@ -399,11 +391,27 @@
                                 {{-- Empty --}}
                             </div>
                         </div>
+
+                        <div class="flex items-center justify-between gap-3 pt-8">
+                            <a href="{{ route('bookings.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                    <path d="m12 19-7-7 7-7" />
+                                    <path d="M19 12H5" />
+                                </svg>
+                                Cancel
+                            </a>
+                            {!! html()->submit('Save Booking')->class($submitClasses . ' w-auto') !!}
+                        </div>
+                        {!! html()->form()->close() !!}
+                        @include('bookings._booking-details')
                     </div>
 
                     {{-- Other Info Tab --}}
-                    <div id="other-info" class="tab-pane hidden">
-                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                    <div id="other-info" class="tab-pane hidden space-y-5">
+                        <form method="POST" action="{{ route('bookings.other-info.update', $booking) }}">
+                            @csrf
+                            @method('PATCH')
+                        <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div class="sm:col-span-2 lg:col-span-4">
                                 {!! html()->label('Special Request', 'special_req')->class($labelClasses) !!}
                                 {!! html()->textarea('special_req', old('special_req', $booking->otherInfo?->special_req))->class($inputClasses . ' min-h-24')->required() !!}
@@ -440,60 +448,46 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="flex items-center justify-between gap-3 pt-8">
+                            <a href="{{ route('bookings.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                    <path d="m12 19-7-7 7-7" />
+                                    <path d="M19 12H5" />
+                                </svg>
+                                Cancel
+                            </a>
+                            {!! html()->submit('Save Booking')->class($submitClasses . ' w-auto') !!}
+                        </div>
+                        </form>
                     </div>
 
                     {{-- Message Tab --}}
-                    <div id="message" class="tab-pane hidden">
+                    <div id="message" class="tab-pane hidden space-y-5">
+                        <form method="POST" action="{{ route('bookings.message.update', $booking) }}">
+                            @csrf
+                            @method('PATCH')
                         <div class="grid grid-cols-1 gap-5">
                             <div>
                                 {!! html()->label('Message', 'message')->class($labelClasses) !!}
                                 {!! html()->textarea('message', old('message', $booking->otherInfo?->message))->class($inputClasses . ' min-h-32') !!}
                             </div>
                         </div>
+
+                        <div class="flex items-center justify-between gap-3 pt-8">
+                            <a href="{{ route('bookings.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                                    <path d="m12 19-7-7 7-7" />
+                                    <path d="M19 12H5" />
+                                </svg>
+                                Cancel
+                            </a>
+                            {!! html()->submit('Save Booking')->class($submitClasses . ' w-auto') !!}
+                        </div>
+                        </form>
                     </div>
-
-                    <div class="flex items-center justify-between gap-3 pt-8">
-                        <a href="{{ route('bookings.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-                                <path d="m12 19-7-7 7-7" />
-                                <path d="M19 12H5" />
-                            </svg>
-                            Cancel
-                        </a>
-                        {!! html()->submit('Save Booking')->class($submitClasses . ' w-auto') !!}
-                    </div>
-
-
-                {!! html()->form()->close() !!}
             </div>
         </div>
     </div>
-
-    @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const tabs = document.querySelectorAll('.tab-pane');
-            const links = document.querySelectorAll('.tab-link');
-
-            links.forEach(link => {
-                link.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = this.getAttribute('href').substring(1);
-
-                    tabs.forEach(tab => tab.classList.add('hidden'));
-                    document.getElementById(target).classList.remove('hidden');
-
-                    links.forEach(l => {
-                        l.classList.remove('border-primary-600', 'text-primary-600');
-                        l.classList.add('border-transparent', 'text-gray-500');
-                    });
-                    this.classList.remove('border-transparent', 'text-gray-500');
-                    this.classList.add('border-primary-600', 'text-primary-600');
-                });
-            });
-        });
-
-    </script>
-    @endpush
 </x-app-layout>
 
