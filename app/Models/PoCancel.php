@@ -1,13 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable(['doc_no', 'transaction_date', 'trans_no'])]
-class PoCancel extends Model
+final class PoCancel extends Model
 {
+    use HasFactory;
+
     protected function casts(): array
     {
         return [

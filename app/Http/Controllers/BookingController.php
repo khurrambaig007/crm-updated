@@ -29,25 +29,43 @@ class BookingController extends Controller
     }
 
     public function create(): View
-    {        
+    {
         return view('bookings.create', $this->formData());
     }
 
     public function store(BookingRequest $request): RedirectResponse
     {
-        Booking::create($request->validated());
+        $validated = $request->validated();
+
+        $otherInfoData = collect($validated)->only([
+            'special_req', 'free_days_pol', 'detention_free_pofd',
+            'detention_tariff', 'detention_currency', 'message',
+        ])->toArray();
+
+        $booking = Booking::create(collect($validated)->except(array_keys($otherInfoData))->toArray());
+        $booking->otherInfo()->create($otherInfoData);
 
         return redirect()->route('bookings.index')->with('status', 'Booking created successfully.');
     }
 
     public function edit(Booking $booking): View
     {
+        $booking->load('otherInfo', 'polPol', 'podPofd', 'polPot1', 'polPot2', 'agentPol', 'agentPofd', 'agent1', 'agent2', 'shipperBp', 'vesselVoyage', 'bookingCommodity');
+
         return view('bookings.edit', array_merge(['booking' => $booking], $this->formData()));
     }
 
     public function update(BookingRequest $request, Booking $booking): RedirectResponse
     {
-        $booking->update($request->validated());
+        $validated = $request->validated();
+
+        $otherInfoData = collect($validated)->only([
+            'special_req', 'free_days_pol', 'detention_free_pofd',
+            'detention_tariff', 'detention_currency', 'message',
+        ])->toArray();
+
+        $booking->update(collect($validated)->except(array_keys($otherInfoData))->toArray());
+        $booking->otherInfo()->updateOrCreate(['booking_id' => $booking->id], $otherInfoData);
 
         return redirect()->route('bookings.index')->with('status', 'Booking updated successfully.');
     }
@@ -70,15 +88,11 @@ class BookingController extends Controller
             'agents' => Agent::orderBy('name')->get(),
             'shipperBps' => ShipperBp::orderBy('name')->get(),
             'parties' => Party::orderBy('name')->get(),
-            'cntrOwners' => [
-                1 => 'Shipper',
-                2 => 'Carrier',
-                3 => 'Consignee',
-            ],
-            'freightTypes' => [
-                1 => 'Collect',
-                2 => 'Prepaid',
-            ],
+            'cntrOwners' => config('dropdowns.bookings.cntr_owner'),
+            'freightTypes' => config('dropdowns.bookings.freight_type'),
+            'freightTypeSubs' => config('dropdowns.bookings.freight_type_sub'),
+            'nonDgs' => config('dropdowns.bookings.non_dg'),
+            'currencies' => config('dropdowns.bookings.detention_currency'),
         ];
     }
 }

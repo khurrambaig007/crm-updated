@@ -1,14 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['booking_no', 'approval_no', 'reference_no', 'booking_date', 'carrier', 'cntr_owner', 'sailing_date', 'commodity', 'non_dg', 'vessel_voyage', 'pol', 'pofd', 'pot_1', 'pot_2', 'shipper_bp', 'agent_pol', 'agent_pofd', 'agent_1', 'agent_2', 'act_shipper', 'freight_type', 'freight_type_sub', 'consignee', 'srr', 'services', 'services_sub', 'thru_bl', 'booking_status', 'is_split_booking'])]
-class Booking extends Model
+final class Booking extends Model
 {
+    use HasFactory;
+
     protected function casts(): array
     {
         return [
@@ -24,39 +30,44 @@ class Booking extends Model
         return $this->belongsTo(Carrier::class);
     }
 
-    public function commodity(): BelongsTo
+    // Commodity model + commodity field = bookingCommodity (avoids column collision)
+    public function bookingCommodity(): BelongsTo
     {
-        return $this->belongsTo(Commodity::class);
+        return $this->belongsTo(Commodity::class, 'commodity');
     }
 
     public function vesselVoyage(): BelongsTo
     {
-        return $this->belongsTo(VesselVoyage::class);
+        return $this->belongsTo(VesselVoyage::class, 'vessel_voyage');
     }
 
-    public function pol(): BelongsTo
+    // Pol model + pol field = polPol
+    public function polPol(): BelongsTo
     {
-        return $this->belongsTo(Pol::class);
+        return $this->belongsTo(Pol::class, 'pol');
     }
 
-    public function pofd(): BelongsTo
+    // Pod model + pofd field = podPofd
+    public function podPofd(): BelongsTo
     {
-        return $this->belongsTo(Pod::class);
+        return $this->belongsTo(Pod::class, 'pofd');
     }
 
-    public function pot1(): BelongsTo
+    // Pol model + pot_1 field = polPot1
+    public function polPot1(): BelongsTo
     {
         return $this->belongsTo(Pol::class, 'pot_1');
     }
 
-    public function pot2(): BelongsTo
+    // Pol model + pot_2 field = polPot2
+    public function polPot2(): BelongsTo
     {
         return $this->belongsTo(Pol::class, 'pot_2');
     }
 
     public function shipperBp(): BelongsTo
     {
-        return $this->belongsTo(ShipperBp::class);
+        return $this->belongsTo(ShipperBp::class, 'shipper_bp');
     }
 
     public function agentPol(): BelongsTo
@@ -77,5 +88,10 @@ class Booking extends Model
     public function agent2(): BelongsTo
     {
         return $this->belongsTo(Agent::class, 'agent_2');
+    }
+
+    public function otherInfo(): HasOne
+    {
+        return $this->hasOne(BookingOtherInfo::class);
     }
 }

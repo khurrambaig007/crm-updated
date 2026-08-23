@@ -87,4 +87,37 @@ return [
         'OK',
     ],
 
+    'bookings' => [
+        'non_dg' => [
+            0 => 'NON DG',
+            1 => 'DG',
+        ],
+        'cntr_owner' => [
+            1 => 'Shipper',
+            2 => 'Carrier',
+            3 => 'Consignee',
+        ],
+        'freight_type' => [
+            1 => 'Regular',
+            2 => 'Zero',
+            3 => 'Negative',
+        ],
+        'freight_type_sub' => [
+            1 => 'Sub to Both THC',
+            2 => 'FRT Incl LTHC Sub to TDHC',
+            3 => 'FRT Incl DTHC Sub to LTHC',
+            4 => 'FRT Incl LTHC & DTHC',
+        ],
+        'detention_currency' => [
+            'USD' => 'USD',
+            'EUR' => 'EUR',
+            'GBP' => 'GBP',
+            'AED' => 'AED',
+            'SGD' => 'SGD',
+            'INR' => 'INR',
+            'PKR' => 'PKR',
+            'AFN' => 'AFN',
+        ],
+    ],
+
 ];

@@ -1,17 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['transaction_date', 'transaction_number', 'status', 'purchase_invoice_date', 'invoice_number', 'period_from', 'period_to', 'vendor_id', 'port_id', 'payment_center', 'settlement_type_id', 'sub_company_id', 'attachments', 'total', 'vat', 'net_amount', 'approved_by', 'approved_on'])]
-class PurchaseInvoice extends Model
+final class PurchaseInvoice extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected function casts(): array
     {

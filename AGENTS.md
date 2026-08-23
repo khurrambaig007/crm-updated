@@ -89,14 +89,12 @@ Rules:
 The `components/app-layout.blade.php` component includes `@stack('scripts')` before `</body>`.
 To add page-specific JavaScript in a view:
 
+**All JavaScript in this application MUST use jQuery, not vanilla JS.**
+
 ```blade
 @push('scripts')
 <script>
-    function myFunction() {
-        // ...
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
+    $(document).ready(function () {
         // ...
     });
 </script>
@@ -112,6 +110,94 @@ To add page-specific JavaScript in a view:
   top level (not inside `DOMContentLoaded`).
 - Use `@stack('scripts')` for page-specific scripts; avoid inline `<script>` tags
   scattered in the view content.
+
+## Empty labels in forms
+
+When a form row needs an empty placeholder cell (e.g., to maintain the 4-column
+grid layout or to preserve vertical rhythm next to other fields), use the
+following empty label markup instead of leaving the cell blank:
+
+```html
+<label for="" class="block text-sm font-medium text-topbar-text">&nbsp;</label>
+```
+
+**With `spatie/laravel-html`**, prefer the fluent helper so the class comes
+from the shared `$labelClasses` variable (keeps spacing/typography consistent
+across the form):
+
+```blade
+{!! html()->label('&nbsp;', 'field_name')->class($labelClasses) !!}
+```
+
+Then wrap any following control (select, input, etc.) in a `relative`
+container so absolute-positioned chrome (e.g. the chevron SVG) anchors to it:
+
+```blade
+<div>
+    {!! html()->label('&nbsp;', 'field_name')->class($labelClasses) !!}
+    <div class="relative">
+        <select name="field_name" id="field_name" class="{{ $selectClasses }}">
+            <option value="">Select ...</option>
+            @foreach ($options as $value => $label)
+                <option value="{{ $value }}">{{ $label }}</option>
+            @endforeach
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-topbar-muted">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+    </div>
+</div>
+```
+
+This ensures:
+- The cell matches the height of its sibling labels.
+- The grid layout remains visually aligned.
+- The label is non-breaking (uses `&nbsp;`) so it doesn't collapse.
+- A `relative`-positioned wrapper can host any control (select, input,
+  textbox, etc.) plus the standard right-side chevron / icon chrome.
+
+If the label should be hidden visually but the cell still needs to exist,
+add the `hidden` class to the label (the `&nbsp;` keeps the height intact):
+
+```html
+<label for="" class="block text-sm font-medium text-topbar-text hidden">&nbsp;</label>
+```
+
+## Static dropdown values — config/dropdowns.php
+
+Dropdown options whose values do **NOT** come from a backend model (no
+Eloquent table backing the choices) MUST be defined in
+`config/dropdowns.php`, keyed by `{screen}.{field}`:
+
+```php
+// config/dropdowns.php
+return [
+    'bookings' => [
+        'non_dg' => [
+            0 => 'NON DG',
+            1 => 'DG',
+        ],
+        'cntr_owner' => [
+            1 => 'Shipper',
+            2 => 'Carrier',
+            3 => 'Consignee',
+        ],
+        'freight_type' => [
+            1 => 'Regular',
+            2 => 'Zero',
+            3 => 'Negative',
+        ],
+    ],
+];
+```
+
+**Rules:**
+- Use this file ONLY for static options (no backing model).
+- Always key entries by `{screen}.{field}` (e.g. `bookings.freight_type`).
+- In controllers, read with `config('dropdowns.bookings.freight_type')`.
+- In views, iterate with `@foreach (config('dropdowns.{screen}.{field}') as $value => $label)`.
+- For model-backed dropdowns (Carriers, Commodities, Ports, Agents, etc.),
+  continue to query the corresponding Eloquent model in the controller.
 
 ## Verification
 

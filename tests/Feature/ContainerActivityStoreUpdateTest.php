@@ -347,14 +347,14 @@ class ContainerActivityStoreUpdateTest extends BaseTestCase
         ]);
         $act->details()->create([
             'containe_no' => 'MSCU111',
-            'status'      => 'OK',
+            'status' => 'OK',
         ]);
 
         $nav = $this->getJson(route('container-activities.navigate', $act));
         $nav->assertOk();
         $nav->assertJsonStructure([
             'activity' => ['id', 'doc_no'],
-            'details'  => [['id', 'containe_no', 'status', 'container_activity_id']],
+            'details' => [['id', 'containe_no', 'status', 'container_activity_id']],
         ]);
         $nav->assertJsonPath('details.0.containe_no', 'MSCU111');
     }
@@ -367,14 +367,14 @@ class ContainerActivityStoreUpdateTest extends BaseTestCase
         $detail = $act->details()->create(['containe_no' => 'MSCU-DEL']);
 
         $resp = $this->withHeaders([
-            'Accept'         => 'application/json',
-            'X-CSRF-TOKEN'   => 'test-token',
+            'Accept' => 'application/json',
+            'X-CSRF-TOKEN' => 'test-token',
         ])->deleteJson(
             route('container-activities.details.destroy', [$act, $detail])
         );
 
         $resp->assertOk();
-        $this->assertSame(0, \App\Models\ContainerActivityDetail::count(), 'detail must be deleted');
+        $this->assertSame(0, ContainerActivityDetail::count(), 'detail must be deleted');
         $this->assertSame(1, ContainerActivity::count(), 'parent must remain');
     }
 
@@ -384,11 +384,11 @@ class ContainerActivityStoreUpdateTest extends BaseTestCase
         $act->details()->create(['containe_no' => 'MSCU-C1']);
         $act->details()->create(['containe_no' => 'MSCU-C2']);
 
-        $this->assertSame(2, \App\Models\ContainerActivityDetail::count());
+        $this->assertSame(2, ContainerActivityDetail::count());
 
         $this->deleteJson(route('container-activities.destroy', $act))->assertRedirect();
 
-        $this->assertSame(0, \App\Models\ContainerActivityDetail::count(), 'details must cascade');
+        $this->assertSame(0, ContainerActivityDetail::count(), 'details must cascade');
         $this->assertSame(0, ContainerActivity::count(), 'parent must be deleted');
     }
 }

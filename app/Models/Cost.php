@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['pol_id', 'pod_id', 'container_type_id', 'feeder_id', 'container_size_id', 'slot_term_id', 'pod_agent_id', 'pol_agent_id', 'slot', 'dthc', 'wrr', 'ts_thc', 'ts_commission', 'of', 'pod_rebate', 'free_days', 'total_cost', 'total_collection', 'net_shipping'])]
-class Cost extends Model
+final class Cost extends Model
 {
+    use HasFactory;
+
     public function pol(): BelongsTo
     {
         return $this->belongsTo(Pol::class);

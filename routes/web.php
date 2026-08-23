@@ -1,11 +1,11 @@
 <?php
 
-use App\Http\Controllers\BookingController;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AgentReceiptPaymentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CarrierController;
 use App\Http\Controllers\ChargeController;
 use App\Http\Controllers\CommodityController;
@@ -32,8 +32,8 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SystemOperationsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VesselVoyageController;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : redirect()->route('login'));
 
@@ -41,10 +41,11 @@ Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : redi
 Route::get('/temp-console/{command}', function ($command) {
     try {
         Artisan::call($command);
+
         return response(Artisan::output(), 200)
             ->header('Content-Type', 'text/plain');
-    } catch (\Exception $e) {
-        return response("Error executing command: " . $e->getMessage(), 500)
+    } catch (Exception $e) {
+        return response('Error executing command: '.$e->getMessage(), 500)
             ->header('Content-Type', 'text/plain');
     }
 });

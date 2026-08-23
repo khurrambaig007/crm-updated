@@ -1,14 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['doc_no', 'invoice_id', 'settlement_type_id', 'payment_agent_id', 'currency_id', 'amount', 'supplier_id', 'location_id', 'sub_company_id', 'container_purchase_detail_id', 'currency_exchange_rate', 'currency_code', 'total_amount'])]
-class DebiteNote extends Model
+final class DebiteNote extends Model
 {
+    use HasFactory;
+
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);

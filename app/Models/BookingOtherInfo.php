@@ -1,14 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['special_req', 'free_days_pol', 'detention_free_pofd', 'detention_tariff', 'detention_currency', 'message', 'booking_id'])]
-class BookingOtherInfo extends Model
+final class BookingOtherInfo extends Model
 {
+    use HasFactory;
+
     protected function casts(): array
     {
         return [

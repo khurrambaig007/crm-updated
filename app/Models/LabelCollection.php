@@ -1,14 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['key', 'value', 'cost_id', 'user_id'])]
-class LabelCollection extends Model
+final class LabelCollection extends Model
 {
+    use HasFactory;
+
     public function cost(): BelongsTo
     {
         return $this->belongsTo(Cost::class);

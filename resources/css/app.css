@@ -338,3 +338,9 @@ table.dataTable td.dataTables_empty {
     opacity: 1;
     transform: scaleY(1);
 }
+
+/* TEST: force all text to text-xs (0.75rem) — remove when testing done */
+body,
+body *:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6) {
+    font-size: 0.75rem !important;
+}

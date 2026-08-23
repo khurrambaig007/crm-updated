@@ -34,15 +34,15 @@
                             <a href="#basic-info" class="inline-block p-4 border-b-2 border-primary-600 text-primary-600 rounded-t-lg tab-link active">Basic Info</a>
                         </li>
                         <li class="mr-2">
-                            <a href="#other-info" class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300 rounded-t-lg tab-link">Other Info</a>
+                            <a href="#other-info" class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300 rounded-t-lg tab-link tab-link-disabled" data-disabled="true">Other Info</a>
                         </li>
                         <li class="mr-2">
-                            <a href="#message" class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300 rounded-t-lg tab-link">Message</a>
+                            <a href="#message" class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300 rounded-t-lg tab-link tab-link-disabled" data-disabled="true">Message</a>
                         </li>
                     </ul>
                 </div>
 
-                {!! html()->form('POST', route('bookings.store'))->open() !!}
+                {!! html()->form('POST', route('bookings.store'))->id('booking-form')->open() !!}
                     @csrf
 
                     {{-- Basic Info Tab --}}
@@ -74,7 +74,7 @@
                             <div>
                                 {!! html()->label('Carrier', 'carrier')->class($labelClasses) !!}
                                 <div class="relative">
-                                    <select name="carrier" id="carrier" class="{{ $selectClasses }}" onchange="syncDetail(this, 'carrier_detail')">
+                                    <select name="carrier" id="carrier" class="{{ $selectClasses }}">
                                         <option value="">Select Carrier</option>
                                         @foreach ($carriers as $carrier)
                                             <option value="{{ $carrier->id }}" data-detail="{{ $carrier->name }}" {{ old('carrier') == $carrier->id ? 'selected' : '' }}>{{ $carrier->name }}</option>
@@ -84,12 +84,6 @@
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="flex items-end pb-1">
-                                <label class="flex items-center gap-2 text-sm font-medium text-topbar-text">
-                                    {!! html()->checkbox('thru_bl', old('thru_bl', false)) !!}
-                                    Thru BL
-                                </label>
                             </div>
                             <div>
                                 {!! html()->label('Cntr Owner', 'cntr_owner')->class($labelClasses) !!}
@@ -110,13 +104,19 @@
                                 {!! html()->date('sailing_date', old('sailing_date'))->class($inputClasses)->required() !!}
                                 @error('sailing_date')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                             </div>
+                            <div class="flex items-center justify-start">
+                                <label class="flex items-center gap-2 text-sm font-medium text-topbar-text">
+                                    {!! html()->checkbox('thru_bl', old('thru_bl', false)) !!}
+                                    Thru BL
+                                </label>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('Commodity', 'commodity')->class($labelClasses) !!}
                                 <div class="relative">
-                                    <select name="commodity" id="commodity" class="{{ $selectClasses }}" onchange="syncDetail(this, 'commodity_detail')">
+                                    <select name="commodity" id="commodity" class="{{ $selectClasses }}">
                                         <option value="">Select Commodity</option>
                                         @foreach ($commodities as $commodity)
                                             <option value="{{ $commodity->id }}" data-detail="{{ $commodity->commodity_number }}" {{ old('commodity') == $commodity->id ? 'selected' : '' }}>{{ $commodity->commodity_number }}</option>
@@ -132,8 +132,9 @@
                                 <div class="relative">
                                     <select name="non_dg" id="non_dg" class="{{ $selectClasses }}">
                                         <option value="">Select Status</option>
-                                        <option value="0" {{ old('non_dg') == '0' ? 'selected' : '' }}>NON DG</option>
-                                        <option value="1" {{ old('non_dg') == '1' ? 'selected' : '' }}>DG</option>
+                                        @foreach (config('dropdowns.bookings.non_dg') as $value => $label)
+                                            <option value="{{ $value }}" {{ old('non_dg') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
                                     </select>
                                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-topbar-muted">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>
@@ -143,7 +144,7 @@
                             <div>
                                 {!! html()->label('Vessel / Voyage', 'vessel_voyage')->class($labelClasses) !!}
                                 <div class="relative">
-                                    <select name="vessel_voyage" id="vessel_voyage" class="{{ $selectClasses }}" onchange="syncDetail(this, 'vessel_voyage_detail')">
+                                    <select name="vessel_voyage" id="vessel_voyage" class="{{ $selectClasses }}">
                                         <option value="">Select Vessel / Voyage</option>
                                         @foreach ($vesselVoyages as $vv)
                                             <option value="{{ $vv->id }}" data-detail="{{ $vv->voyage_number }}" {{ old('vessel_voyage') == $vv->id ? 'selected' : '' }}>{{ $vv->vessel_name }}</option>
@@ -164,7 +165,7 @@
                             <div>
                                 {!! html()->label('POL', 'pol')->class($labelClasses) !!}
                                 <div class="relative">
-                                    <select name="pol" id="pol" class="{{ $selectClasses }}" onchange="syncDetail(this, 'pol_detail')">
+                                    <select name="pol" id="pol" class="{{ $selectClasses }}">
                                         <option value="">Select POL</option>
                                         @foreach ($pols as $pol)
                                             <option value="{{ $pol->id }}" data-detail="{{ $pol->city }}, {{ $pol->country }}" {{ old('pol') == $pol->id ? 'selected' : '' }}>{{ $pol->port_code }}</option>
@@ -182,7 +183,7 @@
                             <div>
                                 {!! html()->label('Agent POL', 'agent_pol')->class($labelClasses) !!}
                                 <div class="relative">
-                                    <select name="agent_pol" id="agent_pol" class="{{ $selectClasses }}" onchange="syncDetail(this, 'agent_pol_detail')">
+                                    <select name="agent_pol" id="agent_pol" class="{{ $selectClasses }}">
                                         <option value="">Select Agent POL</option>
                                         @foreach ($agents as $agent)
                                             <option value="{{ $agent->id }}" data-detail="{{ $agent->name }}" {{ old('agent_pol') == $agent->id ? 'selected' : '' }}>{{ $agent->code }}</option>
@@ -203,7 +204,7 @@
                             <div>
                                 {!! html()->label('POFD', 'pofd')->class($labelClasses) !!}
                                 <div class="relative">
-                                    <select name="pofd" id="pofd" class="{{ $selectClasses }}" onchange="syncDetail(this, 'pofd_detail')">
+                                    <select name="pofd" id="pofd" class="{{ $selectClasses }}">
                                         <option value="">Select POFD</option>
                                         @foreach ($pofds as $pod)
                                             <option value="{{ $pod->id }}" data-detail="{{ $pod->city }}, {{ $pod->country }}" {{ old('pofd') == $pod->id ? 'selected' : '' }}>{{ $pod->location_code }}</option>
@@ -221,7 +222,7 @@
                             <div>
                                 {!! html()->label('Agent POFD', 'agent_pofd')->class($labelClasses) !!}
                                 <div class="relative">
-                                    <select name="agent_pofd" id="agent_pofd" class="{{ $selectClasses }}" onchange="syncDetail(this, 'agent_pofd_detail')">
+                                    <select name="agent_pofd" id="agent_pofd" class="{{ $selectClasses }}">
                                         <option value="">Select Agent POFD</option>
                                         @foreach ($agents as $agent)
                                             <option value="{{ $agent->id }}" data-detail="{{ $agent->name }}" {{ old('agent_pofd') == $agent->id ? 'selected' : '' }}>{{ $agent->code }}</option>
@@ -242,7 +243,7 @@
                             <div>
                                 {!! html()->label('POT (1)', 'pot_1')->class($labelClasses) !!}
                                 <div class="relative">
-                                    <select name="pot_1" id="pot_1" class="{{ $selectClasses }}" onchange="syncDetail(this, 'pot_1_detail')">
+                                    <select name="pot_1" id="pot_1" class="{{ $selectClasses }}">
                                         <option value="">Select POT (1)</option>
                                         @foreach ($pols as $pol)
                                             <option value="{{ $pol->id }}" data-detail="{{ $pol->city }}, {{ $pol->country }}" {{ old('pot_1') == $pol->id ? 'selected' : '' }}>{{ $pol->port_code }}</option>
@@ -260,7 +261,7 @@
                             <div>
                                 {!! html()->label('Agent 1', 'agent_1')->class($labelClasses) !!}
                                 <div class="relative">
-                                    <select name="agent_1" id="agent_1" class="{{ $selectClasses }}" onchange="syncDetail(this, 'agent_1_detail')">
+                                    <select name="agent_1" id="agent_1" class="{{ $selectClasses }}">
                                         <option value="">Select Agent 1</option>
                                         @foreach ($agents as $agent)
                                             <option value="{{ $agent->id }}" data-detail="{{ $agent->name }}" {{ old('agent_1') == $agent->id ? 'selected' : '' }}>{{ $agent->code }}</option>
@@ -281,7 +282,7 @@
                             <div>
                                 {!! html()->label('POT (2)', 'pot_2')->class($labelClasses) !!}
                                 <div class="relative">
-                                    <select name="pot_2" id="pot_2" class="{{ $selectClasses }}" onchange="syncDetail(this, 'pot_2_detail')">
+                                    <select name="pot_2" id="pot_2" class="{{ $selectClasses }}">
                                         <option value="">Select POT (2)</option>
                                         @foreach ($pols as $pol)
                                             <option value="{{ $pol->id }}" data-detail="{{ $pol->city }}, {{ $pol->country }}" {{ old('pot_2') == $pol->id ? 'selected' : '' }}>{{ $pol->port_code }}</option>
@@ -299,7 +300,7 @@
                             <div>
                                 {!! html()->label('Agent 2', 'agent_2')->class($labelClasses) !!}
                                 <div class="relative">
-                                    <select name="agent_2" id="agent_2" class="{{ $selectClasses }}" onchange="syncDetail(this, 'agent_2_detail')">
+                                    <select name="agent_2" id="agent_2" class="{{ $selectClasses }}">
                                         <option value="">Select Agent 2</option>
                                         @foreach ($agents as $agent)
                                             <option value="{{ $agent->id }}" data-detail="{{ $agent->name }}" {{ old('agent_2') == $agent->id ? 'selected' : '' }}>{{ $agent->code }}</option>
@@ -320,7 +321,7 @@
                             <div>
                                 {!! html()->label('Shipper/BP', 'shipper_bp')->class($labelClasses) !!}
                                 <div class="relative">
-                                    <select name="shipper_bp" id="shipper_bp" class="{{ $selectClasses }}" onchange="syncDetail(this, 'shipper_bp_detail')">
+                                    <select name="shipper_bp" id="shipper_bp" class="{{ $selectClasses }}">
                                         <option value="">Select Shipper/BP</option>
                                         @foreach ($shipperBps as $shipperBp)
                                             <option value="{{ $shipperBp->id }}" data-detail="{{ $shipperBp->name }}" {{ old('shipper_bp') == $shipperBp->id ? 'selected' : '' }}>{{ $shipperBp->code }}</option>
@@ -350,15 +351,26 @@
                                 </div>
                             </div>
                             <div>
-                                {{-- Empty --}}
-                            </div>
+                                {!! html()->label('&nbsp;', 'freight_type_sub')->class($labelClasses) !!}
+                                <div class="relative">
+                                    <select name="freight_type_sub" id="freight_type_sub" class="{{ $selectClasses }}">
+                                        <option value="">Select Freight Type Sub</option>
+                                        @foreach ($freightTypeSubs as $value => $label)
+                                            <option value="{{ $value }}" {{ old('freight_type_sub') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-topbar-muted">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>
+                                    </div>
+                                </div>
+                            </div>                            
                         </div>
 
                         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 {!! html()->label('Consignee', 'consignee')->class($labelClasses) !!}
                                 <div class="relative">
-                                    <select name="consignee" id="consignee" class="{{ $selectClasses }}" onchange="syncDetail(this, 'consignee_detail')">
+                                    <select name="consignee" id="consignee" class="{{ $selectClasses }}">
                                         <option value="">Select Consignee</option>
                                         @foreach ($parties as $party)
                                             <option value="{{ $party->id }}" data-detail="{{ $party->name }}" {{ old('consignee') == $party->id ? 'selected' : '' }}>{{ $party->code }}</option>
@@ -386,7 +398,7 @@
                     <div id="other-info" class="tab-pane hidden">
                         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div class="sm:col-span-2 lg:col-span-4">
-                                {!! html()->label('Special Requirements', 'special_req')->class($labelClasses) !!}
+                                {!! html()->label('Special Request', 'special_req')->class($labelClasses) !!}
                                 {!! html()->textarea('special_req', old('special_req'))->class($inputClasses . ' min-h-24') !!}
                             </div>
                             <div>
@@ -394,8 +406,31 @@
                                 {!! html()->number('free_days_pol', old('free_days_pol'))->class($inputClasses)->attribute('min', 0) !!}
                             </div>
                             <div>
-                                {!! html()->label('Detention Free POFD', 'detention_free_pofd')->class($labelClasses) !!}
+                                {!! html()->label('Detention Free Days POFD', 'detention_free_pofd')->class($labelClasses) !!}
                                 {!! html()->number('detention_free_pofd', old('detention_free_pofd'))->class($inputClasses)->attribute('min', 0) !!}
+                            </div>
+                            <div>
+                                <label class="{{ $labelClasses }}">&nbsp;</label>
+                                <div class="mt-1.5 flex items-center gap-2">
+                                    <label for="detention_tariff" class="flex items-center gap-2 cursor-pointer">
+                                        {!! html()->checkbox('detention_tariff', old('detention_tariff'))->id('detention_tariff')->class('rounded border-gray-300 text-primary-600 focus:ring-primary-500') !!}
+                                        <span class="text-sm text-topbar-text">Detention Tariff: Special</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                {!! html()->label('Detention Currency', 'detention_currency')->class($labelClasses) !!}
+                                <div class="relative">
+                                    <select name="detention_currency" id="detention_currency" class="{{ $selectClasses }}">
+                                        <option value="">Select Currency</option>
+                                        @foreach ($currencies as $code => $label)
+                                            <option value="{{ $code }}" {{ old('detention_currency') == $code ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-topbar-muted">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -424,37 +459,5 @@
             </div>
         </div>
     </div>
-
-    @push('scripts')
-    <script>
-        function syncDetail(select, targetId) {
-            const target = document.getElementById(targetId);
-            if (!target) return;
-            const selected = select.options[select.selectedIndex];
-            target.value = selected ? (selected.getAttribute('data-detail') || '') : '';
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const tabs = document.querySelectorAll('.tab-pane');
-            const links = document.querySelectorAll('.tab-link');
-
-            links.forEach(link => {
-                link.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = this.getAttribute('href').substring(1);
-
-                    tabs.forEach(tab => tab.classList.add('hidden'));
-                    document.getElementById(target).classList.remove('hidden');
-
-                    links.forEach(l => {
-                        l.classList.remove('border-primary-600', 'text-primary-600');
-                        l.classList.add('border-transparent', 'text-gray-500');
-                    });
-                    this.classList.remove('border-transparent', 'text-gray-500');
-                    this.classList.add('border-primary-600', 'text-primary-600');
-                });
-            });
-        });
-    </script>
-    @endpush
 </x-app-layout>
+

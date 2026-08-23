@@ -1,14 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['trans_id', 'agent_id', 'agent_id_2', 'container_no', 'ca_doc_no', 'activity', 'vessel_voyage_id', 'owner', 'load_port', 'location', 'liable_party_id', 'vendor_id', 'status', 'trans_date', 'depot', 'depot_open', 'size', 'type', 'activity_date', 'loc_status', 'vessel_date', 'kind', 'estimate_ref', 'work_order_ref', 'currency', 'ex_rate', 'approved_status', 'total_cost_fc', 'total_cost_lc', 'remarks', 'approved_by', 'approved_on', 'approved'])]
-class MaintenanceRepairEntry extends Model
+final class MaintenanceRepairEntry extends Model
 {
+    use HasFactory;
+
     protected function casts(): array
     {
         return [
