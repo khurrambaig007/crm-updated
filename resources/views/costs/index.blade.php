@@ -1,5 +1,5 @@
 <x-app-layout :title="'Costs'">
-    <div class="mx-auto max-w-7xl space-y-8">
+    <div class="mx-auto max-w-full space-y-8">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <div class="flex items-center gap-3">
@@ -21,7 +21,7 @@
             @endif
         </div>
 
-        <div class="mx-auto max-w-full overflow-hidden rounded-2xl bg-card-bg shadow-lg ring-1 ring-card-border">
+        <div class="overflow-hidden rounded-2xl bg-card-bg shadow-lg ring-1 ring-card-border">
             <div class="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-4 py-4 sm:px-6 sm:py-4">
                 <h2 class="text-lg font-semibold text-gray-800">All Costs</h2>
             </div>

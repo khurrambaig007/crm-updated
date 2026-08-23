@@ -58,18 +58,22 @@ Flash messages (`session('status')` / `session('error')`) and validation errors 
 
 Delete forms use the `.delete-form` class (with optional `data-confirm`); the global submit handler in `sweetalert.js` shows the confirmation automatically.
 
-## Cost screen form layout — grid convention
+## Form layout — grid convention
 
-The Cost create/edit screens follow a strict grid layout. Form elements are
-displayed in 4-column rows using the exact classes:
+All create/edit form screens (Cost, Booking, etc.) follow a strict grid layout.
+Form elements are displayed in 4-column rows using the exact classes:
 
 ```
 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4
 ```
 
 Rules:
-- Each logical row is a 4-column grid; the card/form container uses `space-y-5`
-  to separate rows (do NOT use `mt-*` on rows).
+- **Each logical row is its OWN 4-column grid container.** Do NOT put multiple
+  rows' worth of cells into one big grid and rely on auto-wrapping. Every row is
+  a separate `<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">`
+  containing exactly 4 cells (use empty `<div></div>` for blank cells).
+- The card/form container uses `space-y-5` to separate rows (do NOT use `mt-*`
+  on rows).
 - Dynamic fields ("Add Field") create a new 4-column row per click, using a
   `.dyn-row` marker class for JS reindexing. Rows contain: Label, Value, Remove
   button, empty 4th column. The ADD FIELD button lives in the 4th column of an
@@ -79,6 +83,35 @@ Rules:
 - Collection section heading uses `text-xl font-semibold text-gray-800`.
 - Divider rows using `border-card-border` must use **equal** padding/margin on
   top and bottom (e.g. `py-5` / `py-6`), never just `pt-*`.
+
+## JavaScript in Blade views — using @push and @stack
+
+The `components/app-layout.blade.php` component includes `@stack('scripts')` before `</body>`.
+To add page-specific JavaScript in a view:
+
+```blade
+@push('scripts')
+<script>
+    function myFunction() {
+        // ...
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // ...
+    });
+</script>
+@endpush
+```
+
+**Important:**
+- `@push('scripts')` only works if the parent layout has `@stack('scripts')`.
+- Inline event handlers (e.g., `onchange="myFunction()"`) require the function to be
+  defined **before** the element is interacted with. Since `@stack` renders at the
+  end of `<body>`, functions are available globally after the page loads.
+- For inline handlers to work immediately, ensure the function is declared at the
+  top level (not inside `DOMContentLoaded`).
+- Use `@stack('scripts')` for page-specific scripts; avoid inline `<script>` tags
+  scattered in the view content.
 
 ## Verification
 

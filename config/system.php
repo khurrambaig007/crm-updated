@@ -29,6 +29,12 @@ return [
                     'permission' => 'users.view',
                 ],
                 [
+                    'label' => 'Booking',
+                    'route' => 'bookings.index',
+                    'icon' => 'calendar',
+                    'permission' => 'bookings.view',
+                ],
+                [
                     'label' => 'Maintenance & Repair',
                     'route' => 'maintenance-repair-entries.index',
                     'icon' => 'wrench',
@@ -147,6 +153,10 @@ return [
         'dashboard' => [
             'label' => 'Dashboard',
             'permissions' => ['view'],
+        ],
+        'bookings' => [
+            'label' => 'Booking',
+            'permissions' => ['view', 'add', 'edit', 'delete'],
         ],
         'users' => [
             'label' => 'Users',

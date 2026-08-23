@@ -1,5 +1,5 @@
 <x-app-layout :title="'Users'">
-    <div class="mx-auto max-w-7xl space-y-8">
+    <div class="mx-auto max-w-full space-y-8">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <div class="flex items-center gap-3">

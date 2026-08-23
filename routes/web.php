@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AgentReceiptPaymentController;
 use App\Http\Controllers\Auth\LoginController;
@@ -66,6 +67,17 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:dashboard.view')->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
     });
+
+    Route::middleware('permission:bookings.view')->get('bookings', [BookingController::class, 'index'])->name('bookings.index');
+    Route::middleware('permission:bookings.add')->group(function () {
+        Route::get('bookings/create', [BookingController::class, 'create'])->name('bookings.create');
+        Route::post('bookings', [BookingController::class, 'store'])->name('bookings.store');
+    });
+    Route::middleware('permission:bookings.edit')->group(function () {
+        Route::get('bookings/{booking}/edit', [BookingController::class, 'edit'])->name('bookings.edit');
+        Route::patch('bookings/{booking}', [BookingController::class, 'update'])->name('bookings.update');
+    });
+    Route::middleware('permission:bookings.delete')->delete('bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
 
     Route::middleware('permission:maintenance_repair_entries.view')->group(function () {
         Route::get('maintenance-repair-entries', [MaintenanceRepairEntryController::class, 'index'])->name('maintenance-repair-entries.index');

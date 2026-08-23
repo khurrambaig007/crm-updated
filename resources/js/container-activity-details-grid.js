@@ -5,49 +5,52 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 let gridApi = null;
 let config = null;
 let rowCounter = 0;
+// Allows the page to redirect a batch save to a newly-created activity id
+// after the header form has been stored (see saveAll / setActivityId).
+let activityIdOverride = null;
 
+/**
+ * Function cell renderer for the Actions column. ag-grid v36 invokes a plain
+ * function renderer as a plain function (not `new`), wraps the DOM element it
+ * RETURNS, and drops the `this` binding. So we must return the element and
+ * capture the ICellRendererParams via closure (params.node is needed by the
+ * save/delete handlers).
+ */
 function ActionsRenderer(params) {
-    this.params = params;
-    this.eGui = document.createElement('div');
-    this.eGui.className = 'flex items-center gap-1';
+    const container = document.createElement('div');
+    container.className = 'flex items-center gap-1';
 
-    this.saveBtn = document.createElement('button');
-    this.saveBtn.type = 'button';
-    this.saveBtn.className = 'inline-flex items-center justify-center rounded p-1 text-emerald-600 hover:bg-emerald-50';
-    this.saveBtn.title = 'Save';
-    this.saveBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8 15 8"/></svg>';
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.className = 'inline-flex items-center justify-center rounded p-1 text-emerald-600 hover:bg-emerald-50';
+    saveBtn.title = 'Save';
+    saveBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8 15 8"/></svg>';
 
-    this.delBtn = document.createElement('button');
-    this.delBtn.type = 'button';
-    this.delBtn.className = 'inline-flex items-center justify-center rounded p-1 text-red-500 hover:bg-red-50';
-    this.delBtn.title = 'Delete';
-    this.delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a4 2 0 0 1 2 2v2"/></svg>';
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'inline-flex items-center justify-center rounded p-1 text-red-500 hover:bg-red-50';
+    delBtn.title = 'Delete';
+    delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a4 2 0 0 1 2 2v2"/></svg>';
 
     // Look up the click handlers via the window global namespace. Using a
     // property name unique to this module ('__cad_save' etc.) ensures the
     // bundler/minifier cannot alias it to the property name on another
     // module's window object (e.g. window.__pig_save). Direct property
     // access on a global object survives module merging.
-    this.saveBtn.addEventListener('click', (e) => {
+    saveBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        window['__cad_save'](this);
+        window['__cad_save'](params);
     });
-    this.delBtn.addEventListener('click', (e) => {
+    delBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        window['__cad_delete'](this);
+        window['__cad_delete'](params);
     });
 
-    this.eGui.appendChild(this.saveBtn);
-    this.eGui.appendChild(this.delBtn);
+    container.appendChild(saveBtn);
+    container.appendChild(delBtn);
+
+    return container;
 }
-
-ActionsRenderer.prototype.getGui = function () {
-    return this.eGui;
-};
-
-ActionsRenderer.prototype.refresh = function () {
-    return true;
-};
 
 /**
  * When the user picks a Vessel in any TS column, auto-fill the adjacent
@@ -205,6 +208,85 @@ export function getRowData() {
     return rows;
 }
 
+/**
+ * Redirect subsequent batch saves to the given activity id. Used after a new
+ * header record is stored so grid rows created before the store get attached
+ * to the newly-created activity rather than a stale/empty id.
+ */
+export function setActivityId(id) {
+    activityIdOverride = id != null ? id : null;
+}
+
+/**
+ * Persist every unsaved grid row via the same per-row save endpoint.
+ * Used by the page's main "Save changes" submit so in-editor rows are not
+ * silently lost when the header form is submitted.
+ */
+export async function saveAll() {
+    if (!gridApi || !config) return true;
+
+    const activityId = activityIdOverride != null ? activityIdOverride : config.activityId;
+    if (!activityId) return true;
+
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const results = await Promise.all(
+        getRowData().map(async (row) => {
+            const detailId = row.id;
+            const data = { ...row };
+            delete data.id;
+            delete data._rowId;
+
+            const url = detailId
+                ? `/container-activities/${activityId}/details/${detailId}`
+                : `/container-activities/${activityId}/details`;
+            const method = detailId ? 'PATCH' : 'POST';
+
+            const resp = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                },
+                body: JSON.stringify(data),
+            });
+            return { resp, row, detailId };
+        }),
+    );
+
+    const failures = results.filter((r) => !r.resp.ok);
+    const okCount = results.length - failures.length;
+
+    if (failures.length > 0) {
+        const first = await failures[0].resp.json();
+        window.Alerts.error(first.message || 'Failed to save some detail rows.');
+        return false;
+    }
+
+    // Back-fill the new ids so later edits/delete work on the persisted rows.
+    for (const r of results) {
+        if (!r.detailId && r.resp.ok) {
+            const detail = await r.resp.json();
+            const node = getNodeById(r.row._rowId || r.row.id);
+            if (node && detail && detail.detail) {
+                node.setData({ ...node.data, id: detail.detail.id });
+            }
+        }
+    }
+
+    if (okCount > 0) window.Alerts.toast(`${okCount} detail row(s) saved.`);
+    return true;
+}
+
+function getNodeById(rowId) {
+    let found = null;
+    if (!gridApi) return found;
+    gridApi.forEachNode((node) => {
+        if (node.data.id === rowId || node.data._rowId === rowId) found = node;
+    });
+    return found;
+}
+
 export async function saveContainerActivityDetailRow(rendererOrParams) {
     if (!gridApi || !config) return;
 
@@ -319,6 +401,8 @@ window.CAD = {
     setData: setGridData,
     addRow,
     getRowData,
+    saveAll,
+    setActivityId,
 };
 
 // Populate the unique window property handlers — see ActionsRenderer for

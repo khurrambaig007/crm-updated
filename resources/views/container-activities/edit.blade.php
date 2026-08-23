@@ -10,7 +10,7 @@
         $navBtnClasses = 'inline-flex items-center justify-center rounded-lg p-1.5 text-topbar-muted transition-all hover:bg-primary-50 hover:text-primary-600 disabled:opacity-40 disabled:cursor-not-allowed';
     @endphp
 
-    <div class="mx-auto max-w-7xl space-y-8">
+    <div class="mx-auto max-w-full space-y-8">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-center gap-3">
                 @include('components.icons.box', ['classes' => 'h-7 w-7 text-primary-600'])
@@ -409,6 +409,11 @@
 
         const activityId = {{ $record->id ?? 'null' }};
         const isNew = {{ $isNew ? 'true' : 'false' }};
+        // Mutable flags mirror the header form state (New vs editing an existing
+        // record). `isNew` above is baked in at render time, so the runtime path
+        // uses these instead.
+        let createMode = isNew;
+        let currentActivityId = activityId;
         const navData = {
             total:   {{ $total }},
             current: {{ $current }},
@@ -436,9 +441,32 @@
                 if (m) syncTsDescription(sel, `${m[1]}_${m[2]}`, `${m[1]}_${m[2]}_desc`);
             });
             // Initialise the container-details agGrid (only when a record exists;
-            // the section is hidden on the create screen).
+            // the section is hidden on the create screen). Guard against a missing
+            // global so a script load failure degrades to a logged warning instead
+            // of silently breaking the screen.
             const gridEl = document.getElementById('details-grid');
-            if (gridEl) window.CAD.init(gridEl, gridConfig);
+            if (gridEl && window.CAD && !isNew) {
+                try {
+                    window.CAD.init(gridEl, gridConfig);
+                } catch (e) {
+                    console.error('Container details grid failed to initialise:', e);
+                }
+            }
+
+            // Persist any in-editor grid rows when the header form is submitted so
+            // rows are not silently lost. Exposes the grid's batch-save on CAD.
+            const form = document.getElementById('header-form');
+            if (form && window.CAD && typeof window.CAD.saveAll === 'function') {
+                form.addEventListener('submit', async function (e) {
+                    // On the create screen there is no persisted activity yet, so grid
+                    // rows cannot be saved until after the header is stored. Skip the
+                    // batch save here; the post-store handler attaches them afterwards.
+                    if (!createMode && currentActivityId && typeof window.CAD.saveAll === 'function') {
+                        const ok = await window.CAD.saveAll();
+                        if (ok === false) e.preventDefault();
+                    }
+                });
+            }
         });
 
         function updateVesselVoyage(select, targetId) {
@@ -491,6 +519,13 @@
             form.method = 'POST';
             const methodInput = form.querySelector('input[name="_method"]');
             if (methodInput) methodInput.remove();
+
+            // Runtime state now reflects a fresh (create) record.
+            createMode = true;
+            currentActivityId = null;
+            if (window.CAD && typeof window.CAD.setActivityId === 'function') {
+                window.CAD.setActivityId(null);
+            }
 
             document.getElementById('nav-current').textContent = navData.total + 1;
             document.getElementById('nav-total').textContent  = navData.total;
@@ -594,6 +629,13 @@
                 form.appendChild(methodInput);
             } else {
                 methodInput.value = 'PATCH';
+            }
+
+            // Runtime state now reflects an existing (edit) record.
+            createMode = false;
+            currentActivityId = act.id;
+            if (window.CAD && typeof window.CAD.setActivityId === 'function') {
+                window.CAD.setActivityId(act.id);
             }
 
             document.getElementById('nav-current').textContent = data.current;

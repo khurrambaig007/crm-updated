@@ -6,7 +6,7 @@
         $submitClasses = 'rounded-lg bg-primary-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 hover:shadow-md hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 transition-all duration-200';
     @endphp
 
-    <div class="mx-auto max-w-7xl space-y-8">
+    <div class="mx-auto max-w-full space-y-8">
         <div>
             <div class="flex items-center gap-3">
                 @include('components.icons.badge-dollar-sign', ['classes' => 'h-7 w-7 text-primary-600'])

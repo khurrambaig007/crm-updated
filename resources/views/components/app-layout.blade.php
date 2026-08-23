@@ -319,5 +319,7 @@
                 localStorage.setItem('sidebar-menus', JSON.stringify(menuStates));
             }
         </script>
+
+        @stack('scripts')
     </body>
 </html>

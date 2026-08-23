@@ -19,6 +19,11 @@ class Booking extends Model
         ];
     }
 
+    public function carrier(): BelongsTo
+    {
+        return $this->belongsTo(Carrier::class);
+    }
+
     public function commodity(): BelongsTo
     {
         return $this->belongsTo(Commodity::class);

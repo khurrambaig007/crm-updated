@@ -7,44 +7,40 @@ let config = null;
 let rowCounter = 0;
 
 function ActionsRenderer(params) {
-    this.params = params;
-    this.eGui = document.createElement('div');
-    this.eGui.className = 'flex items-center gap-1';
+    // ag-grid v36 calls a plain function renderer as a plain function and uses
+    // its RETURNED element; the `this` binding is not preserved. Capture params
+    // (incl. node) via closure instead of via `this`.
+    const container = document.createElement('div');
+    container.className = 'flex items-center gap-1';
 
-    this.saveBtn = document.createElement('button');
-    this.saveBtn.type = 'button';
-    this.saveBtn.className = 'inline-flex items-center justify-center rounded p-1 text-emerald-600 hover:bg-emerald-50';
-    this.saveBtn.title = 'Save';
-    this.saveBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.className = 'inline-flex items-center justify-center rounded p-1 text-emerald-600 hover:bg-emerald-50';
+    saveBtn.title = 'Save';
+    saveBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8 15 8"/></svg>';
 
-    this.delBtn = document.createElement('button');
-    this.delBtn.type = 'button';
-    this.delBtn.className = 'inline-flex items-center justify-center rounded p-1 text-red-500 hover:bg-red-50';
-    this.delBtn.title = 'Delete';
-    this.delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'inline-flex items-center justify-center rounded p-1 text-red-500 hover:bg-red-50';
+    delBtn.title = 'Delete';
+    delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
 
     // Look up click handlers via the window global namespace — see
     // container-activity-details-grid.js for the bundler-rationale.
-    this.saveBtn.addEventListener('click', (e) => {
+    saveBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        window['__pig_save'](this);
+        window['__pig_save'](params);
     });
-    this.delBtn.addEventListener('click', (e) => {
+    delBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        window['__pig_delete'](this);
+        window['__pig_delete'](params);
     });
 
-    this.eGui.appendChild(this.saveBtn);
-    this.eGui.appendChild(this.delBtn);
+    container.appendChild(saveBtn);
+    container.appendChild(delBtn);
+
+    return container;
 }
-
-ActionsRenderer.prototype.getGui = function () {
-    return this.eGui;
-};
-
-ActionsRenderer.prototype.refresh = function () {
-    return true;
-};
 
 function recalcRow(node) {
     const data = node.data;
