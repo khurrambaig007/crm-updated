@@ -94,19 +94,54 @@ Route::middleware('auth')->group(function () {
     });
     Route::middleware('permission:bookings.delete')->delete('bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
 
-    // Container Purchase (tabbed shell, record-based with navigation)
-    Route::middleware('permission:container_purchases.view')->get('container-purchases', [ContainerPurchaseController::class, 'index'])->name('container-purchases.index');
-    Route::middleware('permission:container_purchases.view')->get('container-purchases/data', [ContainerPurchaseController::class, 'data'])->name('container-purchases.data');
-    Route::middleware('permission:container_purchases.view')->get('container-purchases/placeholder-data', [ContainerPurchaseController::class, 'placeholderData'])->name('container-purchases.placeholder-data');
+    // Container Purchase (record-based navigation with standalone sub-screens)
+    Route::middleware('permission:container_purchases.view')->group(function () {
+        Route::get('container-purchases', [ContainerPurchaseController::class, 'index'])->name('container-purchases.index');
+        Route::get('container-purchases/data', [ContainerPurchaseController::class, 'data'])->name('container-purchases.data');
+        Route::get('container-purchases/models-data', [ContainerPurchaseController::class, 'modelsData'])->name('container-purchases.models-data');
+        Route::get('container-purchases/invoice-data', [ContainerPurchaseController::class, 'invoiceData'])->name('container-purchases.invoice-data');
+        Route::get('container-purchases/releases-data', [ContainerPurchaseController::class, 'releasesData'])->name('container-purchases.releases-data');
+        Route::get('container-purchases/debit-data', [ContainerPurchaseController::class, 'debitData'])->name('container-purchases.debit-data');
+        Route::get('container-purchases/po-cancel-data', [ContainerPurchaseController::class, 'poCancelData'])->name('container-purchases.po-cancel-data');
+        Route::get('container-purchases/transactions-for-purchase', [ContainerPurchaseController::class, 'transactionsForPurchase'])->name('container-purchases.transactions-for-purchase');
+
+        // Standalone child screens (add form + full row CRUD DataTable).
+        Route::get('container-purchases/models', [ContainerPurchaseController::class, 'modelsIndex'])->name('container-purchases.models');
+        Route::get('container-purchases/invoices', [ContainerPurchaseController::class, 'invoicesIndex'])->name('container-purchases.invoices');
+        Route::get('container-purchases/releases', [ContainerPurchaseController::class, 'releasesIndex'])->name('container-purchases.releases');
+        Route::get('container-purchases/debits', [ContainerPurchaseController::class, 'debitsIndex'])->name('container-purchases.debits');
+        Route::get('container-purchases/po-cancels', [ContainerPurchaseController::class, 'poCancelsIndex'])->name('container-purchases.po-cancels');
+    });
     Route::middleware('permission:container_purchases.add')->group(function () {
         Route::get('container-purchases/create', [ContainerPurchaseController::class, 'create'])->name('container-purchases.create');
         Route::post('container-purchases', [ContainerPurchaseController::class, 'store'])->name('container-purchases.store');
+        Route::post('container-purchases/models', [ContainerPurchaseController::class, 'storeModel'])->name('container-purchases.models.store');
+        Route::post('container-purchases/invoices', [ContainerPurchaseController::class, 'storeInvoice'])->name('container-purchases.invoices.store');
+        Route::post('container-purchases/releases', [ContainerPurchaseController::class, 'storeRelease'])->name('container-purchases.releases.store');
+        Route::post('container-purchases/debits', [ContainerPurchaseController::class, 'storeDebit'])->name('container-purchases.debits.store');
+        Route::post('container-purchases/po-cancels', [ContainerPurchaseController::class, 'storePoCancel'])->name('container-purchases.po-cancels.store');
     });
     Route::middleware('permission:container_purchases.edit')->group(function () {
         Route::get('container-purchases/{containerPurchase}/edit', [ContainerPurchaseController::class, 'edit'])->name('container-purchases.edit');
         Route::patch('container-purchases/{containerPurchase}', [ContainerPurchaseController::class, 'update'])->name('container-purchases.update');
+
+        // Child row updates.
+        Route::patch('container-purchases/models/{model}', [ContainerPurchaseController::class, 'updateModel'])->name('container-purchases.models.update');
+        Route::patch('container-purchases/invoices/{invoice}', [ContainerPurchaseController::class, 'updateInvoice'])->name('container-purchases.invoices.update');
+        Route::patch('container-purchases/releases/{release}', [ContainerPurchaseController::class, 'updateRelease'])->name('container-purchases.releases.update');
+        Route::patch('container-purchases/debits/{debitNote}', [ContainerPurchaseController::class, 'updateDebit'])->name('container-purchases.debits.update');
+        Route::patch('container-purchases/po-cancels/{poCancel}', [ContainerPurchaseController::class, 'updatePoCancel'])->name('container-purchases.po-cancels.update');
     });
-    Route::middleware('permission:container_purchases.delete')->delete('container-purchases/{containerPurchase}', [ContainerPurchaseController::class, 'destroy'])->name('container-purchases.destroy');
+    Route::middleware('permission:container_purchases.delete')->group(function () {
+        Route::delete('container-purchases/{containerPurchase}', [ContainerPurchaseController::class, 'destroy'])->name('container-purchases.destroy');
+
+        // Child row deletes.
+        Route::delete('container-purchases/models/{model}', [ContainerPurchaseController::class, 'destroyModel'])->name('container-purchases.models.destroy');
+        Route::delete('container-purchases/invoices/{invoice}', [ContainerPurchaseController::class, 'destroyInvoice'])->name('container-purchases.invoices.destroy');
+        Route::delete('container-purchases/releases/{release}', [ContainerPurchaseController::class, 'destroyRelease'])->name('container-purchases.releases.destroy');
+        Route::delete('container-purchases/debits/{debitNote}', [ContainerPurchaseController::class, 'destroyDebit'])->name('container-purchases.debits.destroy');
+        Route::delete('container-purchases/po-cancels/{poCancel}', [ContainerPurchaseController::class, 'destroyPoCancel'])->name('container-purchases.po-cancels.destroy');
+    });
 
     Route::middleware('permission:maintenance_repair_entries.view')->group(function () {
         Route::get('maintenance-repair-entries', [MaintenanceRepairEntryController::class, 'index'])->name('maintenance-repair-entries.index');

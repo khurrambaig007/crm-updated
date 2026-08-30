@@ -5,6 +5,10 @@
     RewriteCond %{REQUEST_URI} ^/(css|js|img|fonts|vendor|storage|build) [NC]
     RewriteRule ^(.*)$ public/$1 [L]
 
+    # Redirect favicons to the public folder
+    RewriteCond %{REQUEST_URI} ^/favicon\.(ico|png|svg)$ [NC]
+    RewriteRule ^(.*)$ public/$1 [L]
+
     # Redirect all other requests to the root index.php
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f

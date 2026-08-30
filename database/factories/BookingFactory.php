@@ -20,9 +20,9 @@ class BookingFactory extends Factory
     public function definition(): array
     {
         return [
-            'booking_no' => 'BK-' . fake()->unique()->bothify('##-??-####'),
-            'approval_no' => 'AP-' . fake()->unique()->bothify('##-??-####'),
-            'reference_no' => 'REF-' . fake()->unique()->bothify('##-??-####'),
+            'booking_no' => 'BK-'.fake()->unique()->bothify('##-??-####'),
+            'approval_no' => 'AP-'.fake()->unique()->bothify('##-??-####'),
+            'reference_no' => 'REF-'.fake()->unique()->bothify('##-??-####'),
             'booking_date' => fake()->dateTimeBetween('-1 month', 'now'),
             'sailing_date' => fake()->dateTimeBetween('now', '+2 months'),
             'carrier' => 1,
@@ -54,12 +54,12 @@ class BookingFactory extends Factory
     /**
      * Indicate that the booking has a specific booking number.
      */
-    public function withNumber(string $number, string $approval = null, string $reference = null): static
+    public function withNumber(string $number, ?string $approval = null, ?string $reference = null): static
     {
         return $this->state(fn (array $attributes) => [
             'booking_no' => $number,
-            'approval_no' => $approval ?? 'AP-' . substr($number, 3),
-            'reference_no' => $reference ?? 'REF-' . substr($number, 3),
+            'approval_no' => $approval ?? 'AP-'.substr($number, 3),
+            'reference_no' => $reference ?? 'REF-'.substr($number, 3),
         ]);
     }
 

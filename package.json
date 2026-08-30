@@ -17,6 +17,7 @@
         "ag-grid-community": "^36.1.0",
         "datatables.net": "^3.0.1",
         "datatables.net-responsive": "^3.0.8",
-        "jquery": "^4.0.0"
+        "jquery": "^4.0.0",
+        "select2": "^4.1.0"
     }
 }

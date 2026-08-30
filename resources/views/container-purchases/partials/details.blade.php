@@ -1,5 +1,6 @@
 ﻿                <div class="cp-tab-pane" id="container-purchase-details">
                     <div class="rounded bg-card-bg p-6 shadow-sm ring-1 ring-card-border sm:p-8">
+                        <h2 class="text-lg font-semibold text-topbar-text mb-6">Container Purchases Detail</h2>
                         {!! html()->form($isNew ? 'POST' : 'PATCH', $isNew ? route('container-purchases.store') : route('container-purchases.update', $containerPurchase))->id('cp-form')->class('grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4')->open() !!}
 
                             <div>
@@ -106,27 +107,24 @@
                                 </div>
                             </div>
 
-                            <div class="col-span-full mt-2 flex items-center justify-end gap-3">
-                                @if (! $isNew)
-                                    <form method="POST" action="{{ route('container-purchases.destroy', $containerPurchase) }}" class="delete-form inline-block">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="rounded-lg bg-red-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-500">Delete</button>
-                                    </form>
-                                @endif
-                                <a href="{{ route('container-purchases.create') }}" class="{{ $submitClasses }}">New</a>
-                                <button type="submit" form="cp-form" class="{{ $submitClasses }}">Save</button>
-                            </div>
-
                         {!! html()->form()->close() !!}
-                    </div>
 
-                    <div class="mt-8 rounded bg-card-bg shadow-sm ring-1 ring-card-border">
-                        <div class="border-b border-card-border px-6 py-5">
-                            <h2 class="text-lg font-semibold text-topbar-text">Saved Container Purchases</h2>
+                        <div class="mt-6 flex items-center justify-end gap-3">
+                            @if (! $isNew)
+                                <form method="POST" action="{{ route('container-purchases.destroy', $containerPurchase) }}" class="delete-form inline-block">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="rounded-lg bg-red-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-500">Delete</button>
+                                </form>
+                            @endif
+                            <a href="{{ route('container-purchases.create') }}" class="{{ $submitClasses }}">New</a>
+                            <button type="submit" form="cp-form" class="{{ $submitClasses }}">Save</button>
                         </div>
-                        <div class="p-6" style="overflow: auto;max-width: 100%;max-height: 600px;">
+
+                        <div class="mt-6">
                             {!! $dataTable->table() !!}
                         </div>
                     </div>
+                    
                 </div>
+                    

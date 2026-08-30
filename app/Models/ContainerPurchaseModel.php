@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['auto', 'container_size_id', 'container_type_id', 'container_kind_id', 'quantity', 'price', 'total', 'rate', 'container_purchase_detail_id'])]
+#[Fillable(['auto', 'container_size_id', 'container_type_id', 'container_kind_id', 'quantity', 'amount', 'rate', 'container_purchase_detail_id'])]
 final class ContainerPurchaseModel extends Model
 {
     use HasFactory;
