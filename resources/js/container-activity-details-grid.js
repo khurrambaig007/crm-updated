@@ -59,6 +59,9 @@ function ActionsRenderer(params) {
  * shape agSelectCellEditor wants), with a separate lookup map for voyage.
  */
 function onCellValueChanged(event) {
+    if (event.node.data) {
+        event.node.data.__dirty = true;
+    }
     const field = event.colDef.field;
     if (
         field === 'vessel_ts1' ||
@@ -175,6 +178,15 @@ export function initContainerActivityDetailsGrid(el, cfg) {
             domLayout: 'normal',
             animateRows: true,
             onCellValueChanged,
+            getRowStyle: function (params) {
+                if (!params.data.id) {
+                    return { backgroundColor: '#fef2f2' };
+                }
+                if (params.data.__dirty) {
+                    return { backgroundColor: '#fefce8' };
+                }
+                return null;
+            },
             stopEditingWhenCellsLoseFocus: true,
             suppressRowClickSelection: true,
             rowSelection: 'single',
@@ -235,6 +247,7 @@ export async function saveAll() {
             const data = { ...row };
             delete data.id;
             delete data._rowId;
+            delete data.__dirty;
 
             const url = detailId
                 ? `/container-activities/${activityId}/details/${detailId}`
@@ -269,7 +282,7 @@ export async function saveAll() {
             const detail = await r.resp.json();
             const node = getNodeById(r.row._rowId || r.row.id);
             if (node && detail && detail.detail) {
-                node.setData({ ...node.data, id: detail.detail.id });
+                node.setData({ ...node.data, id: detail.detail.id, __dirty: false });
             }
         }
     }
@@ -306,6 +319,7 @@ export async function saveContainerActivityDetailRow(rendererOrParams) {
     const detailId = data.id;
     delete data.id;
     delete data._rowId;
+    delete data.__dirty;
 
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const url = detailId
@@ -327,8 +341,11 @@ export async function saveContainerActivityDetailRow(rendererOrParams) {
 
         if (resp.ok) {
             if (!detailId && result.detail) {
-                node.setData({ ...node.data, id: result.detail.id });
+                node.setData({ ...node.data, id: result.detail.id, __dirty: false });
+            } else {
+                node.setData({ ...node.data, __dirty: false });
             }
+            gridApi.redrawRows({ rowNodes: [node] });
             flashRow(node);
             window.Alerts.toast('Detail saved.');
         } else {

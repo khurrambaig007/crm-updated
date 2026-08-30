@@ -56,6 +56,9 @@ function recalcRow(node) {
 }
 
 function onCellValueChanged(event) {
+    if (event.node.data) {
+        event.node.data.__dirty = true;
+    }
     if (['amount', 'exchange_rate', 'vat_percentage'].includes(event.colDef.field)) {
         recalcRow(event.node);
     }
@@ -150,6 +153,15 @@ export function initPurchaseInvoiceGrid(el, cfg) {
             domLayout: 'normal',
             animateRows: true,
             onCellValueChanged,
+            getRowStyle: function (params) {
+                if (!params.data.id) {
+                    return { backgroundColor: '#fef2f2' };
+                }
+                if (params.data.__dirty) {
+                    return { backgroundColor: '#fefce8' };
+                }
+                return null;
+            },
             stopEditingWhenCellsLoseFocus: true,
             suppressRowClickSelection: true,
             rowSelection: 'single',
@@ -199,6 +211,7 @@ export async function savePurchaseInvoiceDetailRow(rendererOrParams) {
     const detailId = data.id;
     delete data.id;
     delete data._rowId;
+    delete data.__dirty;
 
     const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const url = detailId
@@ -220,8 +233,11 @@ export async function savePurchaseInvoiceDetailRow(rendererOrParams) {
 
         if (resp.ok) {
             if (!detailId && result.detail) {
-                node.setData({ ...node.data, id: result.detail.id });
+                node.setData({ ...node.data, id: result.detail.id, __dirty: false });
+            } else {
+                node.setData({ ...node.data, __dirty: false });
             }
+            gridApi.redrawRows({ rowNodes: [node] });
             flashRow(node);
             window.Alerts.toast('Detail saved.');
         } else {

@@ -11,11 +11,13 @@ use App\Http\Controllers\ChargeController;
 use App\Http\Controllers\CommodityController;
 use App\Http\Controllers\ContainerActivityController;
 use App\Http\Controllers\ContainerKindController;
+use App\Http\Controllers\ContainerPurchaseController;
 use App\Http\Controllers\ContainerSizeController;
 use App\Http\Controllers\ContainerTypeController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\CurrencyExchangeRateController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FreightTypeController;
 use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\MaintenanceRepairEntryController;
 use App\Http\Controllers\PartyController;
@@ -82,8 +84,29 @@ Route::middleware('auth')->group(function () {
         Route::post('bookings/{booking}/equipments', [BookingController::class, 'storeEquipment'])->name('bookings.equipments.store');
         Route::patch('bookings/{booking}/equipments/{equipment}', [BookingController::class, 'updateEquipment'])->name('bookings.equipments.update');
         Route::delete('bookings/{booking}/equipments/{equipment}', [BookingController::class, 'destroyEquipment'])->name('bookings.equipments.destroy');
+        Route::post('bookings/{booking}/revenues', [BookingController::class, 'storeRevenue'])->name('bookings.revenues.store');
+        Route::patch('bookings/{booking}/revenues/{revenue}', [BookingController::class, 'updateRevenue'])->name('bookings.revenues.update');
+        Route::delete('bookings/{booking}/revenues/{revenue}', [BookingController::class, 'destroyRevenue'])->name('bookings.revenues.destroy');
+        Route::post('bookings/{booking}/costs', [BookingController::class, 'storeCost'])->name('bookings.costs.store');
+        Route::patch('bookings/{booking}/costs/{cost}', [BookingController::class, 'updateCost'])->name('bookings.costs.update');
+        Route::delete('bookings/{booking}/costs/{cost}', [BookingController::class, 'destroyCost'])->name('bookings.costs.destroy');
+        Route::middleware('permission:bookings.edit')->patch('bookings/{booking}/approve', [BookingController::class, 'approve'])->name('bookings.approve');
     });
     Route::middleware('permission:bookings.delete')->delete('bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
+
+    // Container Purchase (tabbed shell, record-based with navigation)
+    Route::middleware('permission:container_purchases.view')->get('container-purchases', [ContainerPurchaseController::class, 'index'])->name('container-purchases.index');
+    Route::middleware('permission:container_purchases.view')->get('container-purchases/data', [ContainerPurchaseController::class, 'data'])->name('container-purchases.data');
+    Route::middleware('permission:container_purchases.view')->get('container-purchases/placeholder-data', [ContainerPurchaseController::class, 'placeholderData'])->name('container-purchases.placeholder-data');
+    Route::middleware('permission:container_purchases.add')->group(function () {
+        Route::get('container-purchases/create', [ContainerPurchaseController::class, 'create'])->name('container-purchases.create');
+        Route::post('container-purchases', [ContainerPurchaseController::class, 'store'])->name('container-purchases.store');
+    });
+    Route::middleware('permission:container_purchases.edit')->group(function () {
+        Route::get('container-purchases/{containerPurchase}/edit', [ContainerPurchaseController::class, 'edit'])->name('container-purchases.edit');
+        Route::patch('container-purchases/{containerPurchase}', [ContainerPurchaseController::class, 'update'])->name('container-purchases.update');
+    });
+    Route::middleware('permission:container_purchases.delete')->delete('container-purchases/{containerPurchase}', [ContainerPurchaseController::class, 'destroy'])->name('container-purchases.destroy');
 
     Route::middleware('permission:maintenance_repair_entries.view')->group(function () {
         Route::get('maintenance-repair-entries', [MaintenanceRepairEntryController::class, 'index'])->name('maintenance-repair-entries.index');
@@ -275,6 +298,19 @@ Route::middleware('auth')->group(function () {
             Route::patch('commodities/{commodity}', [CommodityController::class, 'update'])->name('commodities.update');
         });
         Route::middleware('permission:commodities.delete')->delete('commodities/{commodity}', [CommodityController::class, 'destroy'])->name('commodities.destroy');
+
+        Route::middleware('permission:freight_types.view')->group(function () {
+            Route::get('freight-types', [FreightTypeController::class, 'index'])->name('freight-types.index');
+        });
+        Route::middleware('permission:freight_types.add')->group(function () {
+            Route::get('freight-types/create', [FreightTypeController::class, 'create'])->name('freight-types.create');
+            Route::post('freight-types', [FreightTypeController::class, 'store'])->name('freight-types.store');
+        });
+        Route::middleware('permission:freight_types.edit')->group(function () {
+            Route::get('freight-types/{freightType}/edit', [FreightTypeController::class, 'edit'])->name('freight-types.edit');
+            Route::patch('freight-types/{freightType}', [FreightTypeController::class, 'update'])->name('freight-types.update');
+        });
+        Route::middleware('permission:freight_types.delete')->delete('freight-types/{freightType}', [FreightTypeController::class, 'destroy'])->name('freight-types.destroy');
 
         Route::middleware('permission:vessel_voyages.view')->group(function () {
             Route::get('vessel-voyages', [VesselVoyageController::class, 'index'])->name('vessel-voyages.index');

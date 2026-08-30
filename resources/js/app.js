@@ -1,5 +1,6 @@
 import $ from './jquery-global';
 import 'datatables.net';
+import 'datatables.net-responsive';
 import './sweetalert';
 import './phone-mask';
 import './party';
@@ -8,3 +9,7 @@ import './purchase-invoice-grid';
 import './container-activity-details-grid';
 import './booking-details';
 import './booking-equipment-grid';
+import './booking-revenue-grid';
+import './booking-cost-grid';
+import './booking-totals';
+import './container-purchase-tabs';

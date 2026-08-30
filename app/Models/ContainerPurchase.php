@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['train_no', 'date', 'normal_purchase', 'supplier_id', 'port_id', 'handling_id', 'expected_delivery', 'po_no', 'release_no', 'currency', 'rate', 'principal', 'trans_no', 'currency_code'])]
 final class ContainerPurchase extends Model
@@ -19,5 +20,20 @@ final class ContainerPurchase extends Model
             'date' => 'date',
             'expected_delivery' => 'date',
         ];
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    public function port(): BelongsTo
+    {
+        return $this->belongsTo(Pol::class, 'port_id');
+    }
+
+    public function handling(): BelongsTo
+    {
+        return $this->belongsTo(Agent::class, 'handling_id');
     }
 }

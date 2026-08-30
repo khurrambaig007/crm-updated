@@ -56,6 +56,12 @@ function buildPayload(data) {
     };
 }
 
+function onCellValueChanged(event) {
+    if (event.node.data) {
+        event.node.data.__dirty = true;
+    }
+}
+
 window['__beg_save'] = function (params) {
     if (!gridApi || !config) {
         return;
@@ -92,7 +98,9 @@ window['__beg_save'] = function (params) {
                 size: saved.size,
                 type: saved.type,
             });
+            updated.__dirty = false;
             params.node.setData(updated);
+            gridApi.redrawRows({ rowNodes: [params.node] });
             window.Alerts.toast(response.message, 'success');
         },
         error: function (xhr) {
@@ -273,9 +281,13 @@ $(function () {
         rowHeight: 44,
         suppressCellFocus: false,
         stopEditingWhenCellsLoseFocus: true,
+        onCellValueChanged: onCellValueChanged,
         getRowStyle: function (params) {
             if (!params.data.id) {
                 return { backgroundColor: '#fef2f2' };
+            }
+            if (params.data.__dirty) {
+                return { backgroundColor: '#fefce8' };
             }
             return null;
         },

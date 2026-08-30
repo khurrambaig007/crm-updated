@@ -10,6 +10,7 @@ use App\Models\ContainerKind;
 use App\Models\ContainerSize;
 use App\Models\ContainerType;
 use App\Models\Currency;
+use App\Models\FreightType;
 use App\Models\Investor;
 use App\Models\Party;
 use App\Models\Pol;
@@ -36,6 +37,7 @@ class SystemOperationsController extends Controller
                 'container_types' => ContainerType::count(),
                 'container_kinds' => ContainerKind::count(),
                 'commodities' => Commodity::count(),
+                'freight_types' => FreightType::count(),
                 'vessel_voyages' => VesselVoyage::count(),
                 'charges' => Charge::count(),
                 'currencies' => Currency::count(),

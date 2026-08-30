@@ -199,6 +199,32 @@ return [
 - For model-backed dropdowns (Carriers, Commodities, Ports, Agents, etc.),
   continue to query the corresponding Eloquent model in the controller.
 
+## agGrid — always use legacy theme
+
+Every agGrid instance in this project MUST pass `theme: 'legacy'` to `createGrid()`.
+The app loads `ag-grid.css` and `ag-theme-quartz.css` globally in `app-layout`, which
+conflicts with the default Theming API in v33+. Omitting `theme: 'legacy'` triggers
+AG Grid error #239 (Mixed Theming Approaches).
+
+```js
+import { createGrid, ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+gridApi = createGrid(el, {
+    theme: 'legacy',          // ← REQUIRED — always include
+    columnDefs: buildColumnDefs(),
+    rowData: [],
+    // ...
+});
+```
+
+**Rules:**
+- ALWAYS set `theme: 'legacy'` in `createGrid()` options.
+- ALWAYS register `AllCommunityModule` via `ModuleRegistry.registerModules()` at module top.
+- Action column renderers must use `window['__prefix_save']` / `window['__prefix_delete']`
+  globals (bundler minifier aliases plain function references across modules).
+- CSS variable overrides go in the Blade partial targeting `#grid-id.ag-theme-quartz`.
+
 ## Verification
 
 - Run `vendor\bin\pint` on changed PHP files.

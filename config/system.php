@@ -77,6 +77,7 @@ return [
                         ['label' => 'Container Type', 'route' => 'container-types.index', 'icon' => 'layers', 'permission' => 'container_types.view'],
                         ['label' => 'Container Kind', 'route' => 'container-kinds.index', 'icon' => 'box', 'permission' => 'container_kinds.view'],
                         ['label' => 'Commodity', 'route' => 'commodities.index', 'icon' => 'tag', 'permission' => 'commodities.view'],
+                        ['label' => 'Freight Type', 'route' => 'freight-types.index', 'icon' => 'tag', 'permission' => 'freight_types.view'],
                         ['label' => 'Vessel Voyage', 'route' => 'vessel-voyages.index', 'icon' => 'ship-wheel', 'permission' => 'vessel_voyages.view'],
                         ['label' => 'Charge', 'route' => 'charges.index', 'icon' => 'badge-dollar-sign', 'permission' => 'charges.view'],
                         ['label' => 'Currency Exchange Rate', 'route' => 'currency-exchange-rates.index', 'icon' => 'coins', 'permission' => 'currencies.view'],
@@ -88,6 +89,17 @@ return [
                         ['label' => 'Suppliers', 'route' => 'suppliers.index', 'icon' => 'truck', 'permission' => 'suppliers.view'],
                         ['label' => 'Sub Companies', 'route' => 'sub-companies.index', 'icon' => 'landmark', 'permission' => 'sub_companies.view'],
                     ],
+                ],
+            ],
+        ],
+        'inventory' => [
+            'title' => 'Inventory',
+            'items' => [
+                [
+                    'label' => 'Container Purchase',
+                    'route' => 'container-purchases.index',
+                    'icon' => 'package',
+                    'permission' => 'container_purchases.view',
                 ],
             ],
         ],
@@ -230,8 +242,16 @@ return [
             'label' => 'Container Kind',
             'permissions' => ['view', 'add', 'edit', 'delete'],
         ],
+        'container_purchases' => [
+            'label' => 'Container Purchase',
+            'permissions' => ['view', 'add', 'edit', 'delete'],
+        ],
         'commodities' => [
             'label' => 'Commodity',
+            'permissions' => ['view', 'add', 'edit', 'delete'],
+        ],
+        'freight_types' => [
+            'label' => 'Freight Type',
             'permissions' => ['view', 'add', 'edit', 'delete'],
         ],
         'vessel_voyages' => [

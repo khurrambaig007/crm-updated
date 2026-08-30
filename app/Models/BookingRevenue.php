@@ -17,6 +17,12 @@ final class BookingRevenue extends Model
     protected function casts(): array
     {
         return [
+            'quantity' => 'float',
+            'mrg' => 'float',
+            'rate' => 'float',
+            'amount' => 'float',
+            'ex_rate' => 'float',
+            'amount_in_dollar' => 'float',
             'hide' => 'boolean',
         ];
     }

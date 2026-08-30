@@ -18,15 +18,18 @@ class BookingsDataTable extends DataTable
             ->editColumn('booking_date', fn (Booking $model) => $model->booking_date?->format('M j, Y'))
             ->editColumn('sailing_date', fn (Booking $model) => $model->sailing_date?->format('M j, Y'))
             ->editColumn('carrier_id', fn (Booking $model) => $model->carrier?->name ?? '—')
+            ->editColumn('approved', fn (Booking $model) => $model->approved
+                ? '<span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Approved</span>'
+                : '<span class="inline-flex items-center rounded-full bg-gray-50 px-2.5 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/20">Pending</span>')
             ->addColumn('actions', fn (Booking $model) => $this->actionsHtml($model))
-            ->rawColumns(['actions']);
+            ->rawColumns(['actions', 'approved']);
     }
 
     public function query(Booking $model): QueryBuilder
     {
         return $model->newQuery()
             ->with('carrier')
-            ->select(['id', 'booking_no', 'approval_no', 'reference_no', 'booking_date', 'sailing_date', 'carrier']);
+            ->select(['id', 'booking_no', 'approval_no', 'reference_no', 'booking_date', 'sailing_date', 'carrier', 'approved']);
     }
 
     public function html(): HtmlBuilder
@@ -66,6 +69,7 @@ class BookingsDataTable extends DataTable
             Column::make('booking_date')->title('Booking Date'),
             Column::make('sailing_date')->title('Sailing Date'),
             Column::make('carrier_id')->title('Carrier'),
+            Column::make('approved')->title('Approved'),
             Column::computed('actions')
                 ->title('')
                 ->orderable(false)
