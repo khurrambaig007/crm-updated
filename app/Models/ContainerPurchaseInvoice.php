@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable(['doc_no', 'invoice_no', 'invoice_date', 'settlement_type_id', 'payment_agent_id', 'currency_id', 'amount', 'supplier_id', 'location_id', 'sub_company_id', 'container_purchase_detail_id', 'currency_exchange_rate', 'currency_code', 'total_amount'])]
-final class Invoice extends Model
+final class ContainerPurchaseInvoice extends Model
 {
     use HasFactory;
 

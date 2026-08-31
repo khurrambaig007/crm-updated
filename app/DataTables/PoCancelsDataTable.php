@@ -17,13 +17,15 @@ class PoCancelsDataTable extends DataTable
     {
         return DataTables::eloquent($query)
             ->editColumn('transaction_date', fn (PoCancel $model) => $model->transaction_date?->format('Y-m-d') ?? '')
+            ->addColumn('invoice_no', fn (PoCancel $model) => $model->invoice?->invoice_no ?? '')
+            ->addColumn('trans_no', fn (PoCancel $model) => $model->containerPurchase?->trans_no ?? '')
             ->addColumn('actions', fn (PoCancel $model) => $this->actionsHtml($model))
             ->rawColumns(['actions']);
     }
 
     public function query(PoCancel $model): QueryBuilder
     {
-        return $model->newQuery();
+        return $model->newQuery()->with(['invoice', 'containerPurchase']);
     }
 
     public function html(): HtmlBuilder
@@ -64,9 +66,9 @@ class PoCancelsDataTable extends DataTable
     {
         return [
             Column::make('id')->title('ID')->responsivePriority(1),
-            Column::make('doc_no')->title('Doc No.')->orderable(false)->searchable(false)->responsivePriority(2),
-            Column::make('transaction_date')->title('Transaction Date')->responsivePriority(3),
-            Column::make('trans_no')->title('Trans No.')->orderable(false)->searchable(false)->responsivePriority(4),
+            Column::computed('trans_no')->title('Transaction No.')->orderable(false)->searchable(false)->responsivePriority(2),
+            Column::computed('invoice_no')->title('Invoice No.')->orderable(false)->searchable(false)->responsivePriority(3),
+            Column::make('transaction_date')->title('Transaction Date')->responsivePriority(4),
             Column::computed('actions')
                 ->title('')
                 ->orderable(false)
@@ -90,9 +92,10 @@ class PoCancelsDataTable extends DataTable
         $canDelete = $user->isSuperAdmin() || $user->can('container_purchases.delete');
 
         $payload = [
-            'doc_no' => $model->doc_no,
+            'invoice_id' => $model->invoice_id,
+            'container_purchase_detail_id' => $model->container_purchase_detail_id,
             'transaction_date' => $model->transaction_date?->format('Y-m-d'),
-            'trans_no' => $model->trans_no,
+            'container_purchase_trans_no' => $model->containerPurchase?->trans_no,
         ];
 
         $edit = $canEdit

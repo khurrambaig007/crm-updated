@@ -16,7 +16,7 @@ final class DebiteNote extends Model
 
     public function invoice(): BelongsTo
     {
-        return $this->belongsTo(Invoice::class);
+        return $this->belongsTo(ContainerPurchaseInvoice::class, 'invoice_id');
     }
 
     public function settlementType(): BelongsTo

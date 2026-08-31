@@ -2,7 +2,8 @@
 
 namespace App\DataTables;
 
-use App\Models\Invoice;
+use App\Models\ContainerPurchaseInvoice;
+use App\Models\Currency;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Illuminate\Http\JsonResponse;
 use Yajra\DataTables\EloquentDataTable;
@@ -16,18 +17,28 @@ class ContainerPurchaseInvoicesDataTable extends DataTable
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return DataTables::eloquent($query)
-            ->editColumn('invoice_date', fn (Invoice $model) => $model->invoice_date?->format('Y-m-d') ?? '')
-            ->addColumn('settlement_type', fn (Invoice $model) => $model->settlementType?->name ?? '')
-            ->addColumn('payment_agent', fn (Invoice $model) => $model->paymentAgent?->name ?? '')
-            ->addColumn('currency', fn (Invoice $model) => $model->currency_code ?? '')
-            ->addColumn('supplier', fn (Invoice $model) => $model->supplier?->name ?? '')
-            ->addColumn('location', fn (Invoice $model) => $model->location?->city ?? '')
-            ->addColumn('sub_company', fn (Invoice $model) => $model->subCompany?->name ?? '')
-            ->addColumn('actions', fn (Invoice $model) => $this->actionsHtml($model))
+            ->editColumn('invoice_date', fn (ContainerPurchaseInvoice $model) => $model->invoice_date?->format('Y-m-d') ?? '')
+            ->addColumn('settlement_type', fn (ContainerPurchaseInvoice $model) => $model->settlementType?->name ?? '')
+            ->addColumn('payment_agent', fn (ContainerPurchaseInvoice $model) => $model->paymentAgent?->name ?? '')
+            ->addColumn('currency', function (ContainerPurchaseInvoice $model) {
+                $code = $model->currency_code;
+                if (! $code) {
+                    return '';
+                }
+                $latest = Currency::orderBy('exchange_rate_date', 'desc')->first();
+                $rates = $latest ? (json_decode($latest->exchange_rate ?? '', true) ?: []) : [];
+                $rate = $rates[$code] ?? null;
+
+                return $rate !== null ? $code.' (@'.$rate.')' : $code;
+            })
+            ->addColumn('supplier', fn (ContainerPurchaseInvoice $model) => $model->supplier?->name ?? '')
+            ->addColumn('location', fn (ContainerPurchaseInvoice $model) => $model->location?->city ?? '')
+            ->addColumn('sub_company', fn (ContainerPurchaseInvoice $model) => $model->subCompany?->name ?? '')
+            ->addColumn('actions', fn (ContainerPurchaseInvoice $model) => $this->actionsHtml($model))
             ->rawColumns(['actions']);
     }
 
-    public function query(Invoice $model): QueryBuilder
+    public function query(ContainerPurchaseInvoice $model): QueryBuilder
     {
         return $model->newQuery()->with(['settlementType', 'paymentAgent', 'currency', 'supplier', 'location', 'subCompany', 'containerPurchase']);
     }
@@ -77,6 +88,7 @@ class ContainerPurchaseInvoicesDataTable extends DataTable
             Column::computed('payment_agent')->title('Payment Agent')->orderable(false)->searchable(false)->responsivePriority(6),
             Column::computed('currency')->title('Currency')->orderable(false)->searchable(false)->responsivePriority(7),
             Column::make('amount')->title('Amount')->orderable(false)->searchable(false)->responsivePriority(8),
+            Column::make('total_amount')->title('Total Amount')->orderable(false)->searchable(false)->responsivePriority(8),
             Column::computed('supplier')->title('Supplier')->orderable(false)->searchable(false)->responsivePriority(9),
             Column::computed('location')->title('Location')->orderable(false)->searchable(false)->responsivePriority(10),
             Column::computed('sub_company')->title('Sub Company')->orderable(false)->searchable(false)->responsivePriority(11),
@@ -93,10 +105,10 @@ class ContainerPurchaseInvoicesDataTable extends DataTable
 
     public function ajax(): JsonResponse
     {
-        return $this->dataTable($this->query(new Invoice))->toJson();
+        return $this->dataTable($this->query(new ContainerPurchaseInvoice))->toJson();
     }
 
-    private function actionsHtml(Invoice $model): string
+    private function actionsHtml(ContainerPurchaseInvoice $model): string
     {
         $user = auth()->user();
         $canEdit = $user->isSuperAdmin() || $user->can('container_purchases.edit');

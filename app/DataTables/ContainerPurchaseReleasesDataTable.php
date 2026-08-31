@@ -16,6 +16,7 @@ class ContainerPurchaseReleasesDataTable extends DataTable
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return DataTables::eloquent($query)
+            ->addColumn('trans_no', fn (ContainerPurchaseRelease $model) => $model->containerPurchase?->trans_no ?? '')
             ->addColumn('container_size', fn (ContainerPurchaseRelease $model) => $model->containerSize?->size ?? '')
             ->addColumn('container_type', fn (ContainerPurchaseRelease $model) => $model->containerType?->name ?? '')
             ->addColumn('container_kind', fn (ContainerPurchaseRelease $model) => $model->containerKind?->name ?? '')
@@ -66,14 +67,15 @@ class ContainerPurchaseReleasesDataTable extends DataTable
     {
         return [
             Column::make('id')->title('ID')->responsivePriority(1),
+            Column::computed('trans_no')->title('Transaction No.')->orderable(false)->searchable(false)->responsivePriority(1),
             Column::make('container_number')->title('Container No.')->orderable(false)->searchable(false)->responsivePriority(2),
             Column::computed('container_size')->title('Size')->orderable(false)->searchable(false)->responsivePriority(3),
             Column::computed('container_type')->title('Type')->orderable(false)->searchable(false)->responsivePriority(4),
             Column::computed('container_kind')->title('Kind')->orderable(false)->searchable(false)->responsivePriority(5),
             Column::make('m_f_year')->title('M/F Year')->orderable(false)->searchable(false)->responsivePriority(6),
             Column::make('rate')->title('Rate')->orderable(false)->searchable(false)->responsivePriority(7),
-            Column::make('remarks')->title('Remarks')->orderable(false)->searchable(false)->responsivePriority(8),
-            Column::make('original_container_number')->title('Original Container No.')->orderable(false)->searchable(false)->responsivePriority(9),
+            Column::make('original_container_number')->title('Original Container No.')->orderable(false)->searchable(false)->responsivePriority(8),
+            Column::make('remarks')->title('Remarks')->orderable(false)->searchable(false)->responsivePriority(9),
             Column::computed('actions')
                 ->title('')
                 ->orderable(false)

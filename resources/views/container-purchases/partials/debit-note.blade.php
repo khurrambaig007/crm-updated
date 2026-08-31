@@ -13,7 +13,7 @@
                 {!! html()->text('doc_no', null)->id('debit_doc_no')->class($inputClasses) !!}
             </div>
             <div>
-                {!! html()->label('Invoice', 'debit_invoice_id')->class($labelClasses) !!}
+                {!! html()->label('Invoice No.', 'debit_invoice_id')->class($labelClasses) !!}
                 <div class="relative">
                     <select name="invoice_id" id="debit_invoice_id" class="{{ $selectClasses }} appearance-none cursor-pointer">
                         <option value="">Select invoice</option>
@@ -40,7 +40,7 @@
 
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-                {!! html()->label('Payment Agent', 'debit_payment_agent_id')->class($labelClasses) !!}
+                {!! html()->label('Agent', 'debit_payment_agent_id')->class($labelClasses) !!}
                 <div class="relative">
                     <select name="payment_agent_id" id="debit_payment_agent_id" class="{{ $selectClasses }} appearance-none cursor-pointer">
                         <option value="">Select agent</option>
@@ -64,7 +64,7 @@
                 </div>
             </div>
             <div>
-                {!! html()->label('Amount', 'debit_amount')->class($labelClasses) !!}
+                {!! html()->label('Invoice Amount', 'debit_amount')->class($labelClasses) !!}
                 {!! html()->number('amount', null)->id('debit_amount')->class($inputClasses)->attribute('step', 'any') !!}
             </div>
             <div>
@@ -107,22 +107,10 @@
                 </div>
             </div>
             <div>
-                {!! html()->label('Exchange Rate', 'debit_exchange_rate')->class($labelClasses) !!}
-                {!! html()->number('currency_exchange_rate', null)->id('debit_exchange_rate')->class($inputClasses.' cp-rate-input')->attribute('step', 'any') !!}
+                <input type="hidden" name="currency_exchange_rate" id="debit_exchange_rate" class="cp-rate-input">
+                <input type="hidden" name="currency_code" id="debit_currency_code" class="cp-currency-code-input">
+                <input type="hidden" name="total_amount" id="debit_total_amount">
             </div>
-            <div>
-                {!! html()->label('Currency Code', 'debit_currency_code')->class($labelClasses) !!}
-                {!! html()->text('currency_code', null)->id('debit_currency_code')->class($inputClasses.' cp-currency-code-input') !!}
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-                {!! html()->label('Total Amount', 'debit_total_amount')->class($labelClasses) !!}
-                {!! html()->number('total_amount', null)->id('debit_total_amount')->class($inputClasses)->attribute('step', 'any') !!}
-            </div>
-            <div></div>
-            <div></div>
             <div></div>
         </div>
 

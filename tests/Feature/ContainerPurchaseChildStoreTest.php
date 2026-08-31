@@ -101,15 +101,49 @@ class ContainerPurchaseChildStoreTest extends TestCase
         ]);
 
         $poCancelResponse = $this->postJson(route('container-purchases.po-cancels.store'), [
-            'doc_no' => 100,
-            'trans_no' => 200,
+            'container_purchase_detail_id' => $parentId,
+            'invoice_id' => $invoiceId,
             'transaction_date' => '2026-08-20',
         ]);
         $poCancelResponse->assertStatus(201)->assertJson(['message' => 'PO cancel saved successfully.']);
         $poCancel = \DB::table('po_cancels')->first();
-        $this->assertSame(100, (int) $poCancel->doc_no, 'doc_no stored as integer');
-        $this->assertSame(200, (int) $poCancel->trans_no, 'trans_no stored as integer');
+        $this->assertSame($invoiceId, (int) $poCancel->invoice_id, 'invoice_id stored');
+        $this->assertSame($parentId, (int) $poCancel->container_purchase_detail_id, 'parent purchase stored');
         $this->assertSame('2026-08-20', substr((string) $poCancel->transaction_date, 0, 10), 'transaction date persisted');
+    }
+
+    public function test_invoice_store_resolves_currency_fields_server_side(): void
+    {
+        $parentId = $this->createParentPurchase();
+
+        \DB::table('currencies')->updateOrInsert(
+            ['id' => 1],
+            ['exchange_rate_date' => now()->toDateString(), 'exchange_rate' => json_encode(['USD' => 1, 'INR' => 95.5338]), 'created_at' => now(), 'updated_at' => now()]
+        );
+
+        $invoiceResponse = $this->postJson(route('container-purchases.invoices.store'), [
+            'container_purchase_detail_id' => $parentId,
+            'doc_no' => 'DOC-1',
+            'invoice_no' => 'INV-1',
+            'invoice_date' => '2026-08-20',
+            'settlement_type_id' => 1,
+            'payment_agent_id' => 1,
+            'amount' => 100,
+            'supplier_id' => 1,
+            'location_id' => 1,
+            'sub_company_id' => 1,
+            'currency' => 'INR',
+            'currency_code' => 'WRONG',
+            'currency_exchange_rate' => '999',
+        ]);
+        $invoiceResponse->assertStatus(201)->assertJson(['message' => 'Invoice saved successfully.']);
+        $this->assertDatabaseHas('container_purchase_invoices', [
+            'invoice_no' => 'INV-1',
+            'currency_id' => 1,
+            'currency_code' => 'INR',
+            'currency_exchange_rate' => '95.5338',
+            'total_amount' => 9553.38,
+        ]);
     }
 
     public function test_invoice_store_resolves_currency_id_and_links_parent(): void
@@ -133,8 +167,8 @@ class ContainerPurchaseChildStoreTest extends TestCase
             'total_amount' => 100,
         ]);
         $invoiceResponse->assertStatus(201)->assertJson(['message' => 'Invoice saved successfully.']);
-        $this->assertSame(1, \DB::table('invoices')->count(), 'invoice row persisted');
-        $this->assertDatabaseHas('invoices', [
+        $this->assertSame(1, \DB::table('container_purchase_invoices')->count(), 'invoice row persisted');
+        $this->assertDatabaseHas('container_purchase_invoices', [
             'invoice_no' => 'INV-1',
             'currency_id' => 1,
             'currency_code' => 'USD',
@@ -165,10 +199,9 @@ class ContainerPurchaseChildStoreTest extends TestCase
             ->assertJsonValidationErrors(['doc_no', 'invoice_id', 'settlement_type_id', 'payment_agent_id', 'amount', 'supplier_id', 'location_id', 'sub_company_id', 'currency']);
 
         $this->postJson(route('container-purchases.po-cancels.store'), [
-            'doc_no' => 'not-a-number',
-            'trans_no' => 'not-a-number',
+            'invoice_id' => 9999,
         ])->assertUnprocessable()
-            ->assertJsonValidationErrors(['doc_no', 'trans_no', 'transaction_date']);
+            ->assertJsonValidationErrors(['invoice_id', 'transaction_date']);
     }
 
     public function test_child_screens_render_forms_with_store_urls_and_csrf(): void
@@ -178,7 +211,7 @@ class ContainerPurchaseChildStoreTest extends TestCase
             'container-purchases.invoices' => ['form' => 'cp-invoice-form', 'route' => 'container-purchases.invoices.store', 'hasParent' => true],
             'container-purchases.releases' => ['form' => 'cp-release-form', 'route' => 'container-purchases.releases.store', 'hasParent' => true],
             'container-purchases.debits' => ['form' => 'cp-debit-form', 'route' => 'container-purchases.debits.store', 'hasParent' => true],
-            'container-purchases.po-cancels' => ['form' => 'cp-po-cancel-form', 'route' => 'container-purchases.po-cancels.store', 'hasParent' => false],
+            'container-purchases.po-cancels' => ['form' => 'cp-po-cancel-form', 'route' => 'container-purchases.po-cancels.store', 'hasParent' => true],
         ];
 
         foreach ($expected as $screenRoute => $config) {
@@ -204,7 +237,7 @@ class ContainerPurchaseChildStoreTest extends TestCase
             if ($config['hasParent']) {
                 $this->assertSame(1, $parentField->length, "{$config['form']} must carry the parent purchase id");
             } else {
-                $this->assertSame(0, $parentField->length, 'po_cancels has no parent FK so no hidden parent field');
+                $this->assertSame(0, $parentField->length, 'the form has no parent FK so no hidden parent field');
             }
         }
     }
@@ -285,7 +318,7 @@ class ContainerPurchaseChildStoreTest extends TestCase
             'currency_exchange_rate' => '1',
             'total_amount' => 150,
         ])->assertOk()->assertJson(['message' => 'Invoice updated successfully.']);
-        $this->assertDatabaseHas('invoices', [
+        $this->assertDatabaseHas('container_purchase_invoices', [
             'id' => $invoiceId,
             'invoice_no' => 'INV-UPD',
             'amount' => 150,
@@ -329,21 +362,21 @@ class ContainerPurchaseChildStoreTest extends TestCase
         ]);
 
         $poCancelId = \DB::table('po_cancels')->insertGetId([
-            'doc_no' => 100,
-            'trans_no' => 200,
+            'invoice_id' => $invoiceId,
+            'container_purchase_detail_id' => $parentId,
             'transaction_date' => now()->toDateString(),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
         $this->patchJson(route('container-purchases.po-cancels.update', $poCancelId), [
-            'doc_no' => 101,
-            'trans_no' => 201,
+            'invoice_id' => $invoiceId,
+            'container_purchase_detail_id' => $parentId,
             'transaction_date' => '2026-08-22',
         ])->assertOk()->assertJson(['message' => 'PO cancel updated successfully.']);
         $poCancel = \DB::table('po_cancels')->find($poCancelId);
-        $this->assertSame(101, (int) $poCancel->doc_no);
-        $this->assertSame(201, (int) $poCancel->trans_no);
+        $this->assertSame($invoiceId, (int) $poCancel->invoice_id);
+        $this->assertSame($parentId, (int) $poCancel->container_purchase_detail_id);
         $this->assertSame('2026-08-22', substr((string) $poCancel->transaction_date, 0, 10));
     }
 
@@ -406,13 +439,9 @@ class ContainerPurchaseChildStoreTest extends TestCase
             ->assertOk()->assertJson(['message' => 'Debit note deleted successfully.']);
         $this->assertDatabaseMissing('debite_notes', ['id' => $debitId]);
 
-        $this->deleteJson(route('container-purchases.invoices.destroy', $invoiceId))
-            ->assertOk()->assertJson(['message' => 'Invoice deleted successfully.']);
-        $this->assertDatabaseMissing('invoices', ['id' => $invoiceId]);
-
         $poCancelId = \DB::table('po_cancels')->insertGetId([
-            'doc_no' => 100,
-            'trans_no' => 200,
+            'invoice_id' => $invoiceId,
+            'container_purchase_detail_id' => $parentId,
             'transaction_date' => now()->toDateString(),
             'created_at' => now(),
             'updated_at' => now(),
@@ -420,6 +449,10 @@ class ContainerPurchaseChildStoreTest extends TestCase
         $this->deleteJson(route('container-purchases.po-cancels.destroy', $poCancelId))
             ->assertOk()->assertJson(['message' => 'PO cancel deleted successfully.']);
         $this->assertDatabaseMissing('po_cancels', ['id' => $poCancelId]);
+
+        $this->deleteJson(route('container-purchases.invoices.destroy', $invoiceId))
+            ->assertOk()->assertJson(['message' => 'Invoice deleted successfully.']);
+        $this->assertDatabaseMissing('container_purchase_invoices', ['id' => $invoiceId]);
 
         $this->assertSame(1, \DB::table('container_purchases')->where('id', $parentId)->count(), 'parent purchase is preserved');
     }
@@ -499,6 +532,6 @@ class ContainerPurchaseChildStoreTest extends TestCase
             'currency_code' => 'USD',
         ])->assertStatus(201);
 
-        return (int) \DB::table('invoices')->orderByDesc('id')->value('id');
+        return (int) \DB::table('container_purchase_invoices')->orderByDesc('id')->value('id');
     }
 }

@@ -109,7 +109,7 @@ class ContainerPurchaseChildTablesTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        \DB::table('invoices')->insert([
+        \DB::table('container_purchase_invoices')->insert([
             'doc_no' => 'DOC-1',
             'invoice_no' => 'INV-1',
             'invoice_date' => now(),
@@ -133,6 +133,8 @@ class ContainerPurchaseChildTablesTest extends TestCase
             'container_kind' => 1,
             'm_f_year' => '2020',
             'rate' => 1,
+            'remarks' => 'Test remarks',
+            'container_purchase_detail_id' => 1,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -154,9 +156,9 @@ class ContainerPurchaseChildTablesTest extends TestCase
         ]);
 
         \DB::table('po_cancels')->insert([
-            'doc_no' => 'PC-1',
+            'invoice_id' => 1,
+            'container_purchase_detail_id' => 1,
             'transaction_date' => now(),
-            'trans_no' => 'TC-1',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -173,12 +175,15 @@ class ContainerPurchaseChildTablesTest extends TestCase
         $this->assertSame('Test Supplier', $invoices[0]['supplier'], 'supplier relation resolves');
         $this->assertSame('Testport', $invoices[0]['location'], 'location relation resolves');
         $this->assertSame('Sub Co', $invoices[0]['sub_company'], 'sub_company relation resolves');
-        $this->assertSame('USD', $invoices[0]['currency'], 'currency_code renders');
+        $this->assertSame('USD (@1)', $invoices[0]['currency'], 'currency_code renders with rate');
+        $this->assertSame('100', (string) $invoices[0]['total_amount'], 'total_amount column renders');
 
         $releases = $this->get(route('container-purchases.releases-data'))->json('data');
         $this->assertCount(1, $releases);
         $this->assertSame('20', $releases[0]['container_size'], 'release size relation resolves');
         $this->assertSame('CNTR-001', $releases[0]['container_number']);
+        $this->assertSame('VRM0000000001', $releases[0]['trans_no'], 'transaction no resolves from container purchase');
+        $this->assertSame('Test remarks', $releases[0]['remarks'], 'remarks column renders');
 
         $debits = $this->get(route('container-purchases.debit-data'))->json('data');
         $this->assertCount(1, $debits);
@@ -186,7 +191,8 @@ class ContainerPurchaseChildTablesTest extends TestCase
 
         $poCancels = $this->get(route('container-purchases.po-cancel-data'))->json('data');
         $this->assertCount(1, $poCancels);
-        $this->assertSame('PC-1', $poCancels[0]['doc_no']);
+        $this->assertSame('INV-1', $poCancels[0]['invoice_no'], 'invoice relation resolves to invoice_no');
+        $this->assertSame('VRM0000000001', $poCancels[0]['trans_no'], 'transaction no resolves from container purchase');
     }
 
     public function test_transactions_for_purchase_returns_partial_matches(): void

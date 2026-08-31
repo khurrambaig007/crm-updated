@@ -76,6 +76,7 @@ class DebiteNotesDataTable extends DataTable
             Column::computed('payment_agent')->title('Payment Agent')->orderable(false)->searchable(false)->responsivePriority(5),
             Column::computed('currency')->title('Currency')->orderable(false)->searchable(false)->responsivePriority(6),
             Column::make('amount')->title('Amount')->orderable(false)->searchable(false)->responsivePriority(7),
+            Column::make('total_amount')->title('Total Amount')->orderable(false)->searchable(false)->responsivePriority(7),
             Column::computed('supplier')->title('Supplier')->orderable(false)->searchable(false)->responsivePriority(8),
             Column::computed('location')->title('Location')->orderable(false)->searchable(false)->responsivePriority(9),
             Column::computed('sub_company')->title('Sub Company')->orderable(false)->searchable(false)->responsivePriority(10),

@@ -13,13 +13,13 @@ use App\Http\Requests\ContainerPurchase\UpdateContainerPurchaseRequest;
 use App\Models\Agent;
 use App\Models\ContainerKind;
 use App\Models\ContainerPurchase;
+use App\Models\ContainerPurchaseInvoice;
 use App\Models\ContainerPurchaseModel;
 use App\Models\ContainerPurchaseRelease;
 use App\Models\ContainerSize;
 use App\Models\ContainerType;
 use App\Models\Currency;
 use App\Models\DebiteNote;
-use App\Models\Invoice;
 use App\Models\PoCancel;
 use App\Models\Pol;
 use App\Models\SettlementType;
@@ -227,7 +227,7 @@ class ContainerPurchaseController extends Controller
 
     public function storeInvoice(Request $request): JsonResponse
     {
-        Invoice::create($this->withCurrency($this->validateChildForm($request, $this->invoiceRules())));
+        ContainerPurchaseInvoice::create($this->withCurrency($this->validateChildForm($request, $this->invoiceRules())));
 
         return response()->json(['message' => 'Invoice saved successfully.'], 201);
     }
@@ -248,11 +248,7 @@ class ContainerPurchaseController extends Controller
 
     public function storePoCancel(Request $request): JsonResponse
     {
-        $validated = $this->validateChildForm($request, $this->poCancelRules());
-        $validated['doc_no'] = (int) $validated['doc_no'];
-        $validated['trans_no'] = (int) $validated['trans_no'];
-
-        PoCancel::create($validated);
+        PoCancel::create($this->validateChildForm($request, $this->poCancelRules()));
 
         return response()->json(['message' => 'PO cancel saved successfully.'], 201);
     }
@@ -264,7 +260,7 @@ class ContainerPurchaseController extends Controller
         return response()->json(['message' => 'Purchase updated successfully.']);
     }
 
-    public function updateInvoice(Request $request, Invoice $invoice): JsonResponse
+    public function updateInvoice(Request $request, ContainerPurchaseInvoice $invoice): JsonResponse
     {
         $invoice->update($this->withCurrency($this->validateChildForm($request, $this->invoiceRules())));
 
@@ -287,11 +283,7 @@ class ContainerPurchaseController extends Controller
 
     public function updatePoCancel(Request $request, PoCancel $poCancel): JsonResponse
     {
-        $validated = $this->validateChildForm($request, $this->poCancelRules());
-        $validated['doc_no'] = (int) $validated['doc_no'];
-        $validated['trans_no'] = (int) $validated['trans_no'];
-
-        $poCancel->update($validated);
+        $poCancel->update($this->validateChildForm($request, $this->poCancelRules()));
 
         return response()->json(['message' => 'PO cancel updated successfully.']);
     }
@@ -301,7 +293,7 @@ class ContainerPurchaseController extends Controller
         return $this->destroyChild($model, 'Purchase deleted successfully.');
     }
 
-    public function destroyInvoice(Invoice $invoice): JsonResponse
+    public function destroyInvoice(ContainerPurchaseInvoice $invoice): JsonResponse
     {
         return $this->destroyChild($invoice, 'Invoice deleted successfully.');
     }
@@ -386,7 +378,7 @@ class ContainerPurchaseController extends Controller
     {
         return [
             'doc_no' => ['required', 'string', 'max:191'],
-            'invoice_id' => ['required', 'integer', 'exists:invoices,id'],
+            'invoice_id' => ['required', 'integer', 'exists:container_purchase_invoices,id'],
             'settlement_type_id' => ['required', 'integer', 'exists:settlement_types,id'],
             'payment_agent_id' => ['required', 'integer', 'exists:agents,id'],
             'amount' => ['required', 'numeric'],
@@ -404,18 +396,50 @@ class ContainerPurchaseController extends Controller
     private function poCancelRules(): array
     {
         return [
-            'doc_no' => ['required', 'integer'],
-            'trans_no' => ['required', 'integer'],
+            'invoice_id' => ['required', 'integer', 'exists:container_purchase_invoices,id'],
+            'container_purchase_detail_id' => ['nullable', 'integer', 'exists:container_purchases,id'],
             'transaction_date' => ['required', 'date'],
         ];
     }
 
     private function withCurrency(array $validated): array
     {
-        $validated['currency_id'] = $this->resolveCurrencyId((string) $validated['currency']);
+        $code = (string) ($validated['currency'] ?? '');
         unset($validated['currency']);
 
+        $rate = $this->exchangeRateFor($code);
+
+        $validated['currency_id'] = $this->resolveCurrencyId($code);
+        $validated['currency_code'] = $code !== '' ? $code : ($validated['currency_code'] ?? null);
+        $validated['currency_exchange_rate'] = $rate !== null ? (string) $rate : null;
+
+        $amount = (float) ($validated['amount'] ?? 0);
+        $validated['total_amount'] = round($amount * ($rate ?? 1), 2);
+
         return $validated;
+    }
+
+    private function exchangeRateFor(string $code): ?float
+    {
+        if ($code === '') {
+            return null;
+        }
+
+        $latest = Currency::orderBy('exchange_rate_date', 'desc')->first();
+        $rates = $latest ? (json_decode($latest->exchange_rate ?? '', true) ?: []) : [];
+
+        if (is_array($rates) && array_key_exists($code, $rates)) {
+            return (float) $rates[$code];
+        }
+
+        foreach (Currency::orderByDesc('exchange_rate_date')->get() as $currency) {
+            $rates = json_decode($currency->exchange_rate ?? '', true);
+            if (is_array($rates) && array_key_exists($code, $rates)) {
+                return (float) $rates[$code];
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -474,7 +498,10 @@ class ContainerPurchaseController extends Controller
         $currency = Currency::orderBy('exchange_rate_date', 'desc')->first();
         $rates = $currency ? (json_decode($currency->exchange_rate ?? '', true) ?: []) : [];
         $currencies = ! empty($rates)
-            ? array_combine(array_keys($rates), array_keys($rates))
+            ? array_combine(
+                array_keys($rates),
+                array_map(fn ($code, $rate) => $code.' (@'.$rate.')', array_keys($rates), $rates)
+            )
             : config('dropdowns.bookings.detention_currency');
 
         return [
@@ -495,7 +522,7 @@ class ContainerPurchaseController extends Controller
             'containerKinds' => ContainerKind::orderBy('name')->pluck('name', 'id'),
             'settlementTypes' => SettlementType::orderBy('name')->pluck('name', 'id'),
             'subCompanies' => SubCompany::orderBy('name')->pluck('name', 'id'),
-            'invoices' => Invoice::orderByDesc('id')->pluck('invoice_no', 'id'),
+            'invoices' => ContainerPurchaseInvoice::orderByDesc('id')->pluck('invoice_no', 'id'),
         ];
     }
 

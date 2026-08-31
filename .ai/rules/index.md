@@ -4,6 +4,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 
 | Applies to | Rule file |
 | --- | --- |
+| resources/views/container-purchases/** | .ai/rules/container-purchases.md |
 | app/Http/Controllers/ContainerPurchaseController.php, app/Http/Controllers/** | .ai/rules/controllers.md |
 | .htaccess | .ai/rules/general.md |
 | resources/js/**, resources/js/app.js | .ai/rules/js.md |

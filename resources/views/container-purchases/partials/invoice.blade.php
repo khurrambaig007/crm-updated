@@ -103,22 +103,9 @@
                 </div>
             </div>
             <div>
-                {!! html()->label('Exchange Rate', 'invoice_exchange_rate')->class($labelClasses) !!}
-                {!! html()->number('currency_exchange_rate', null)->id('invoice_exchange_rate')->class($inputClasses.' cp-rate-input')->attribute('step', 'any') !!}
+                <input type="hidden" name="currency_exchange_rate" id="invoice_exchange_rate" class="cp-rate-input">
+                <input type="hidden" name="currency_code" id="invoice_currency_code" class="cp-currency-code-input">
             </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-                {!! html()->label('Currency Code', 'invoice_currency_code')->class($labelClasses) !!}
-                {!! html()->text('currency_code', null)->id('invoice_currency_code')->class($inputClasses.' cp-currency-code-input') !!}
-            </div>
-            <div>
-                {!! html()->label('Total Amount', 'invoice_total_amount')->class($labelClasses) !!}
-                {!! html()->number('total_amount', null)->id('invoice_total_amount')->class($inputClasses)->attribute('step', 'any') !!}
-            </div>
-            <div></div>
-            <div></div>
         </div>
 
     {!! html()->form()->close() !!}
