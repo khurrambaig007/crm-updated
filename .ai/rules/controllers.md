@@ -27,3 +27,6 @@ The container purchase PO Cancel child screen stores only 3 fields and links to 
 
 ## Booking auto-numbering (booking_no + reporting_no)
 Booking numbers are ALWAYS auto-generated on store and preserved on update. booking_no = {AMS prefix from config('dropdowns.bookings.booking_prefix')}{POL port_code}{POFD location_code}{6-digit padded global seq}. reporting_no = {B prefix from config('dropdowns.bookings.reporting_prefix')}-{count for current year}/{2-digit year} (resets each calendar year). Both scans use withTrashed() so soft-deleted rows keep their numbers occupied. Sequencing must be DB-agnostic (pluck + preg_replace digits, never MySQL SUBSTRING/REGEXP) because tests run on SQLite :memory:. Both columns have UNIQUE indexes.
+
+## Never pass $request->string() into spatie assignRole/syncRoles
+$request->string('role') returns an Illuminate\Support\Stringable. spatie getStoredRole() only accepts string/int/Role, so passing a Stringable throws TypeError "Return value must be of type Spatie\Permission\Contracts\Role, Iterator returned" (HasRoles.php:500). Always pass a plain string: use $request->validated('role') (role is validated as nullable|string|exists:roles,name) or $request->input('role').

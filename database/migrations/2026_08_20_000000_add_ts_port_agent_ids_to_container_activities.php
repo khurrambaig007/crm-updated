@@ -30,8 +30,12 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('container_activities', function (Blueprint $table) {
-            $table->dropForeign(['ts_1_port_id', 'ts_2_port_id', 'ts_3_port_id']);
-            $table->dropForeign(['ts_1_agent_id', 'ts_2_agent_id', 'ts_3_agent_id']);
+            $table->dropForeign(['ts_1_port_id']);
+            $table->dropForeign(['ts_2_port_id']);
+            $table->dropForeign(['ts_3_port_id']);
+            $table->dropForeign(['ts_1_agent_id']);
+            $table->dropForeign(['ts_2_agent_id']);
+            $table->dropForeign(['ts_3_agent_id']);
             $table->dropColumn([
                 'ts_1_port_id', 'ts_2_port_id', 'ts_3_port_id',
                 'ts_1_agent_id', 'ts_2_agent_id', 'ts_3_agent_id',

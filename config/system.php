@@ -316,4 +316,16 @@ return [
     */
 
     'super_admin_role' => 'superAdmin',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Admin Role
+    |--------------------------------------------------------------------------
+    |
+    | The default role granted to the seeded test user. It owns every
+    | permission, mirroring the super administrator role.
+    |
+    */
+
+    'admin_role' => 'Admin',
 ];

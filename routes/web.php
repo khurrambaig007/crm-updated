@@ -35,23 +35,9 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SystemOperationsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VesselVoyageController;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : redirect()->route('login'));
-
-// TEMPORARY ROUTE FOR CONSOLE COMMANDS - REMOVE AFTER USE
-Route::get('/temp-console/{command}', function ($command) {
-    try {
-        Artisan::call($command);
-
-        return response(Artisan::output(), 200)
-            ->header('Content-Type', 'text/plain');
-    } catch (Exception $e) {
-        return response('Error executing command: '.$e->getMessage(), 500)
-            ->header('Content-Type', 'text/plain');
-    }
-});
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');

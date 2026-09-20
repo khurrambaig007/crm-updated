@@ -23,7 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('po_cancels', function (Blueprint $table) {
-            $table->dropForeign(['invoice_id', 'container_purchase_detail_id']);
+            $table->dropForeign(['invoice_id']);
+            $table->dropForeign(['container_purchase_detail_id']);
             $table->dropIndex(['invoice_id']);
             $table->dropColumn(['invoice_id', 'container_purchase_detail_id']);
 

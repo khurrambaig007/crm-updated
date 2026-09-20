@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -42,25 +43,38 @@ class PermissionSyncService
      */
     public function sync(): array
     {
-        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+        $lock = Cache::lock('permissions:sync', 60);
 
-        $permissions = $this->configuredPermissions();
-        $created = 0;
-
-        foreach ($permissions as $permissionName) {
-            if (Permission::firstOrCreate(['name' => $permissionName])->wasRecentlyCreated) {
-                $created++;
-            }
+        if (! $lock->get()) {
+            return ['created' => 0, 'assigned' => 0];
         }
 
-        $superAdmin = Role::firstOrCreate(['name' => config('system.super_admin_role')]);
-        $superAdmin->syncPermissions($permissions);
+        try {
+            app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+            $permissions = $this->configuredPermissions();
+            $created = 0;
 
-        return [
-            'created' => $created,
-            'assigned' => count($permissions),
-        ];
+            foreach ($permissions as $permissionName) {
+                if (Permission::firstOrCreate(['name' => $permissionName])->wasRecentlyCreated) {
+                    $created++;
+                }
+            }
+
+            $superAdmin = Role::firstOrCreate(['name' => config('system.super_admin_role')]);
+            $superAdmin->syncPermissions($permissions);
+
+            $admin = Role::firstOrCreate(['name' => config('system.admin_role')]);
+            $admin->syncPermissions($permissions);
+
+            app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+            return [
+                'created' => $created,
+                'assigned' => count($permissions),
+            ];
+        } finally {
+            $lock->release();
+        }
     }
 }

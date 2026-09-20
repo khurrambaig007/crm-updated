@@ -33,8 +33,8 @@ class UserController extends Controller
     {
         $user = User::create($request->validated());
 
-        if ($request->filled('role')) {
-            $user->assignRole($request->string('role'));
+        if ($roleName = $request->validated('role')) {
+            $user->assignRole($roleName);
         }
 
         return redirect()->route('users.index')->with('status', 'User created successfully.');
@@ -64,11 +64,7 @@ class UserController extends Controller
             return redirect()->route('users.index')->with('error', 'You cannot remove the Super Admin role from this account.');
         }
 
-        if ($request->filled('role')) {
-            $user->syncRoles($request->string('role'));
-        } else {
-            $user->syncRoles([]);
-        }
+        $user->syncRoles($request->validated('role') ?? []);
 
         return redirect()->route('users.index')->with('status', 'User updated successfully.');
     }

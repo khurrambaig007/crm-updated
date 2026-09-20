@@ -4,11 +4,20 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function superAdmin(): User
+    {
+        $user = User::factory()->create();
+        $user->assignRole(Role::create(['name' => config('system.super_admin_role')]));
+
+        return $user;
+    }
 
     public function test_guests_can_view_the_login_page(): void
     {
@@ -53,12 +62,22 @@ class AuthenticationTest extends TestCase
 
     public function test_authenticated_users_can_view_the_dashboard(): void
     {
-        $user = User::factory()->create();
+        $user = $this->superAdmin();
 
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee($user->name);
+    }
+
+    public function test_authenticated_users_without_a_role_see_unauthorized_page(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertStatus(403)
+            ->assertSee('Un-Authorized');
     }
 
     public function test_guests_are_redirected_to_login_when_accessing_the_dashboard(): void
@@ -68,7 +87,7 @@ class AuthenticationTest extends TestCase
 
     public function test_authenticated_users_are_redirected_away_from_the_login_page(): void
     {
-        $user = User::factory()->create();
+        $user = $this->superAdmin();
 
         $this->actingAs($user)
             ->get(route('login'))
