@@ -124,6 +124,25 @@ return [
             3 => 'Cancelled',
             4 => 'Approved',
         ],
+        'booking_prefix' => [
+            'AMS' => 'AMS',
+        ],
+        'reporting_prefix' => [
+            'B' => 'B',
+        ],
+    ],
+
+    // Container Release Order screen
+    'container_release_orders' => [
+        'cntr_owner' => [
+            1 => 'Shipper',
+            2 => 'Carrier',
+            3 => 'Consignee',
+        ],
+        'dg_status' => [
+            0 => 'NON DG',
+            1 => 'DG',
+        ],
     ],
 
     // Container Purchase screen

@@ -48,9 +48,8 @@
                         @csrf
                         <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
-                                <label for="booking_no" class="{{ $labelClasses }}">Booking # <span class="text-red-500">*</span></label>
-                                {!! html()->text('booking_no', old('booking_no', $booking->booking_no))->class($inputClasses)->required() !!}
-                                @error('booking_no')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                                <label for="booking_no" class="{{ $labelClasses }}">Booking #</label>
+                                {!! html()->text('booking_no', old('booking_no', $booking->booking_no))->class($inputClasses)->attribute('readonly', 'readonly')->id('booking_no') !!}
                             </div>
                             <div>
                                 <label for="approval_no" class="{{ $labelClasses }}">Approval # <span class="text-red-500">*</span></label>

@@ -6,6 +6,7 @@ use App\Http\Middleware\PermissionMiddleware;
 use App\Models\Booking;
 use App\Models\BookingOtherInfo;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
@@ -50,12 +51,12 @@ class BookingStoreUpdateTest extends BaseTestCase
 
         \DB::table('pols')->updateOrInsert(
             ['id' => 1],
-            ['city' => 'Testport', 'country' => 'Testland', 'created_at' => now(), 'updated_at' => now()],
+            ['city' => 'Testport', 'country' => 'Testland', 'port_code' => 'TST', 'created_at' => now(), 'updated_at' => now()],
         );
 
         \DB::table('pods')->updateOrInsert(
             ['id' => 1],
-            ['city' => 'Pod City', 'country' => 'Podland', 'created_at' => now(), 'updated_at' => now()],
+            ['city' => 'Pod City', 'country' => 'Podland', 'location_code' => 'DST', 'created_at' => now(), 'updated_at' => now()],
         );
 
         \DB::table('agents')->updateOrInsert(
@@ -138,7 +139,8 @@ class BookingStoreUpdateTest extends BaseTestCase
         $this->assertSame(1, Booking::count(), 'booking should be created');
 
         $booking = Booking::first();
-        $this->assertSame('BK-TEST-001', $booking->booking_no);
+        $this->assertSame('AMSTSTDST000001', $booking->booking_no, 'booking no should be auto-generated from prefix + pol code + pofd code + seq');
+        $this->assertSame('B-1/'.now()->format('y'), $booking->reporting_no, 'reporting no should start at 1 for the current year');
         $this->assertSame('AP-TEST-001', $booking->approval_no);
         $this->assertSame('REF-TEST-001', $booking->reference_no);
         $this->assertSame('2026-08-23', $booking->booking_date->format('Y-m-d'));
@@ -225,7 +227,7 @@ class BookingStoreUpdateTest extends BaseTestCase
         $this->assertSame(1, Booking::count(), 'update must not create a new row');
 
         $booking->refresh();
-        $this->assertSame('BK-EDITED', $booking->booking_no);
+        $this->assertSame('BK-ORIG', $booking->booking_no, 'booking no should be preserved on update');
         $this->assertSame('AP-EDITED', $booking->approval_no);
         $this->assertSame('REF-EDITED', $booking->reference_no);
         $this->assertSame('2026-09-01', $booking->booking_date->format('Y-m-d'));
@@ -286,7 +288,7 @@ class BookingStoreUpdateTest extends BaseTestCase
 
         $response->assertRedirect();
         $booking = Booking::first();
-        $this->assertSame('BK-MINIMAL', $booking->booking_no);
+        $this->assertSame('AMS000001', $booking->booking_no, 'booking no should be auto-generated without pol/pofd codes');
         $this->assertNull($booking->carrier);
         $this->assertNull($booking->commodity);
 
@@ -300,7 +302,6 @@ class BookingStoreUpdateTest extends BaseTestCase
     {
         $this->post(route('bookings.store'), [])
             ->assertSessionHasErrors([
-                'booking_no',
                 'approval_no',
                 'reference_no',
                 'booking_date',
@@ -323,7 +324,7 @@ class BookingStoreUpdateTest extends BaseTestCase
         ]))->assertSessionHasErrors(['carrier', 'freight_type_sub']);
     }
 
-    public function test_destroy_deletes_booking_and_cascades(): void
+    public function test_destroy_soft_deletes_booking_and_keeps_children(): void
     {
         $booking = Booking::create([
             'booking_no' => 'BK-DEL',
@@ -334,7 +335,7 @@ class BookingStoreUpdateTest extends BaseTestCase
         ]);
 
         $booking->otherInfo()->create([
-            'special_req' => 'To be deleted',
+            'special_req' => 'Retained on soft delete',
         ]);
 
         $this->assertSame(1, Booking::count());
@@ -343,8 +344,43 @@ class BookingStoreUpdateTest extends BaseTestCase
         $response = $this->delete(route('bookings.destroy', $booking));
 
         $response->assertRedirect();
-        $this->assertSame(0, Booking::count(), 'booking should be deleted');
-        $this->assertSame(0, BookingOtherInfo::count(), 'other info should cascade');
+        $this->assertSoftDeleted('bookings', ['id' => $booking->id, 'booking_no' => 'BK-DEL']);
+        $this->assertSame(0, Booking::count(), 'soft-deleted booking must be excluded from default queries');
+        $this->assertSame(1, Booking::onlyTrashed()->count(), 'booking must remain in the trashed set');
+        $this->assertSame(1, BookingOtherInfo::count(), 'child records must be retained for reporting segregation');
+    }
+
+    public function test_store_auto_generates_unique_booking_numbers_and_reporting_numbers(): void
+    {
+        $firstPayload = $this->validPayload();
+        $this->post(route('bookings.store'), $firstPayload)->assertRedirect();
+
+        $first = Booking::first();
+        $this->assertSame('AMSTSTDST000001', $first->booking_no);
+        $this->assertSame('B-1/'.now()->format('y'), $first->reporting_no);
+        $this->assertSame(1, Booking::count());
+
+        $secondPayload = $this->validPayload();
+        $this->post(route('bookings.store'), $secondPayload)->assertRedirect();
+
+        $second = Booking::orderBy('id')->get()->last();
+        $this->assertSame('AMSTSTDST000002', $second->booking_no, 'sequence must keep incrementing');
+        $this->assertSame('B-2/'.now()->format('y'), $second->reporting_no, 'reporting count must keep incrementing');
+        $this->assertSame(2, Booking::count());
+    }
+
+    public function test_reporting_number_resets_at_new_year(): void
+    {
+        Carbon::setTestNow('2026-09-20 10:00:00');
+        $this->post(route('bookings.store'), $this->validPayload())->assertRedirect();
+        $this->assertSame('B-1/26', Booking::first()->reporting_no, 'starts at B-1/26 in 2026');
+
+        Carbon::setTestNow('2027-01-01 00:00:00');
+        $this->post(route('bookings.store'), $this->validPayload())->assertRedirect();
+        $second = Booking::orderBy('id')->get()->last();
+        $this->assertSame('B-1/27', $second->reporting_no, 'count resets to 1 for a new calendar year');
+
+        Carbon::setTestNow();
     }
 
     public function test_edit_view_displays_existing_data(): void

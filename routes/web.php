@@ -12,6 +12,7 @@ use App\Http\Controllers\CommodityController;
 use App\Http\Controllers\ContainerActivityController;
 use App\Http\Controllers\ContainerKindController;
 use App\Http\Controllers\ContainerPurchaseController;
+use App\Http\Controllers\ContainerReleaseOrderController;
 use App\Http\Controllers\ContainerSizeController;
 use App\Http\Controllers\ContainerTypeController;
 use App\Http\Controllers\CostController;
@@ -93,6 +94,19 @@ Route::middleware('auth')->group(function () {
         Route::middleware('permission:bookings.edit')->patch('bookings/{booking}/approve', [BookingController::class, 'approve'])->name('bookings.approve');
     });
     Route::middleware('permission:bookings.delete')->delete('bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
+
+    // Container Release Order (CRO)
+    Route::middleware('permission:container_release_orders.view')->get('container-release-orders', [ContainerReleaseOrderController::class, 'index'])->name('container-release-orders.index');
+    Route::middleware('permission:container_release_orders.add')->group(function () {
+        Route::get('container-release-orders/create', [ContainerReleaseOrderController::class, 'create'])->name('container-release-orders.create');
+        Route::post('container-release-orders', [ContainerReleaseOrderController::class, 'store'])->name('container-release-orders.store');
+    });
+    Route::middleware('permission:container_release_orders.edit')->group(function () {
+        Route::get('container-release-orders/{containerReleaseOrder}/edit', [ContainerReleaseOrderController::class, 'edit'])->name('container-release-orders.edit');
+        Route::patch('container-release-orders/{containerReleaseOrder}', [ContainerReleaseOrderController::class, 'update'])->name('container-release-orders.update');
+    });
+    Route::middleware('permission:container_release_orders.delete')->delete('container-release-orders/{containerReleaseOrder}', [ContainerReleaseOrderController::class, 'destroy'])->name('container-release-orders.destroy');
+    Route::middleware('permission:container_release_orders.view')->get('container-release-orders/{containerReleaseOrder}/pdf', [ContainerReleaseOrderController::class, 'exportPdf'])->name('container-release-orders.pdf');
 
     // Container Purchase (record-based navigation with standalone sub-screens)
     Route::middleware('permission:container_purchases.view')->group(function () {

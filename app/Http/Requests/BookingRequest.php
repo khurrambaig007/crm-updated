@@ -14,7 +14,7 @@ class BookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'booking_no' => ['required', 'string', 'max:191'],
+            'booking_no' => ['nullable', 'string', 'max:191'],
             'approval_no' => ['required', 'string', 'max:191'],
             'reference_no' => ['required', 'string', 'max:191'],
             'booking_date' => ['required', 'date'],

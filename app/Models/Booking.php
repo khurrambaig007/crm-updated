@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['booking_no', 'approval_no', 'reference_no', 'booking_date', 'carrier', 'cntr_owner', 'sailing_date', 'commodity', 'non_dg', 'vessel_voyage', 'pol', 'pofd', 'pot_1', 'pot_2', 'shipper_bp', 'agent_pol', 'agent_pofd', 'agent_1', 'agent_2', 'act_shipper', 'freight_type', 'freight_type_sub', 'consignee', 'srr', 'services', 'services_sub', 'thru_bl', 'booking_status', 'is_split_booking', 'approved'])]
+#[Fillable(['booking_no', 'reporting_no', 'approval_no', 'reference_no', 'booking_date', 'carrier', 'cntr_owner', 'sailing_date', 'commodity', 'non_dg', 'vessel_voyage', 'pol', 'pofd', 'pot_1', 'pot_2', 'shipper_bp', 'agent_pol', 'agent_pofd', 'agent_1', 'agent_2', 'act_shipper', 'freight_type', 'freight_type_sub', 'consignee', 'srr', 'services', 'services_sub', 'thru_bl', 'booking_status', 'is_split_booking', 'approved'])]
 final class Booking extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected function casts(): array
     {

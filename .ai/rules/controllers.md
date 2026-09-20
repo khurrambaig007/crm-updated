@@ -2,6 +2,7 @@
 paths:
   - app/Http/Controllers/ContainerPurchaseController.php
   - 'app/Http/Controllers/**'
+  - app/Http/Controllers/BookingController.php
 ---
 
 # Controllers
@@ -23,3 +24,6 @@ The Container Purchase child "Invoice" screen is backed by the dedicated `contai
 
 ## PO Cancel child screen now links invoice + parent purchase
 The container purchase PO Cancel child screen stores only 3 fields and links to the invoice and the parent Container Purchase via FKs: po_cancels has invoice_id (FK -> container_purchase_invoices) and container_purchase_detail_id (nullable FK -> container_purchases), plus transaction_date. doc_no and trans_no were dropped. The form uses the cp-transno-select (container_purchase_detail_id) for Transaction No., an invoice_id select populated from $invoices, and a transaction_date date input. The PoCancel model (PoCancel.php) exposes invoice() and containerPurchase() relations, and PoCancelsDataTable shows Invoice No. and Transaction No. resolved from those relations.
+
+## Booking auto-numbering (booking_no + reporting_no)
+Booking numbers are ALWAYS auto-generated on store and preserved on update. booking_no = {AMS prefix from config('dropdowns.bookings.booking_prefix')}{POL port_code}{POFD location_code}{6-digit padded global seq}. reporting_no = {B prefix from config('dropdowns.bookings.reporting_prefix')}-{count for current year}/{2-digit year} (resets each calendar year). Both scans use withTrashed() so soft-deleted rows keep their numbers occupied. Sequencing must be DB-agnostic (pluck + preg_replace digits, never MySQL SUBSTRING/REGEXP) because tests run on SQLite :memory:. Both columns have UNIQUE indexes.

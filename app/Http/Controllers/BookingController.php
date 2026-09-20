@@ -40,12 +40,19 @@ class BookingController extends Controller
 
     public function create(): View
     {
-        return view('bookings.create', $this->formData());
+        return view('bookings.create', array_merge($this->formData(), [
+            'bookingPrefix' => (string) array_key_first(config('dropdowns.bookings.booking_prefix')),
+            'bookingNoSeq' => str_pad((string) $this->nextBookingSeq(), 6, '0', STR_PAD_LEFT),
+            'bookingNoPreview' => $this->nextBookingNo(null, null),
+        ]));
     }
 
     public function store(BookingRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+
+        $validated['booking_no'] = $this->nextBookingNo($validated['pol'] ?? null, $validated['pofd'] ?? null);
+        $validated['reporting_no'] = $this->nextReportingNo();
 
         $otherInfoData = collect($validated)->only([
             'special_req', 'free_days_pol', 'detention_free_pofd',
@@ -74,7 +81,7 @@ class BookingController extends Controller
             'detention_tariff', 'detention_currency', 'message',
         ])->toArray();
 
-        $booking->update(collect($validated)->except(array_keys($otherInfoData))->toArray());
+        $booking->update(collect($validated)->except(array_merge(['booking_no', 'reporting_no'], array_keys($otherInfoData)))->toArray());
         $booking->otherInfo()->updateOrCreate(['booking_id' => $booking->id], $otherInfoData);
 
         return redirect()->route('bookings.index')->with('status', 'Booking updated successfully.');
@@ -362,6 +369,35 @@ class BookingController extends Controller
             'approved' => $booking->approved,
             'message' => $booking->approved ? 'Booking approved.' : 'Booking unapproved.',
         ]);
+    }
+
+    private function nextBookingSeq(): int
+    {
+        return (Booking::withTrashed()->pluck('booking_no')
+            ->map(fn (?string $no) => (int) preg_replace('/\D/', '', (string) $no))
+            ->max() ?? 0) + 1;
+    }
+
+    private function nextBookingNo(?int $polId, ?int $pofdId): string
+    {
+        $prefix = (string) array_key_first(config('dropdowns.bookings.booking_prefix'));
+        $polCode = $polId ? Pol::query()->whereKey($polId)->value('port_code') : null;
+        $pofdCode = $pofdId ? Pod::query()->whereKey($pofdId)->value('location_code') : null;
+
+        return $prefix.strtoupper((string) $polCode).strtoupper((string) $pofdCode)
+            .str_pad((string) $this->nextBookingSeq(), 6, '0', STR_PAD_LEFT);
+    }
+
+    private function nextReportingNo(): string
+    {
+        $prefix = (string) array_key_first(config('dropdowns.bookings.reporting_prefix'));
+        $year = now()->format('y');
+
+        $count = Booking::withTrashed()
+            ->where('reporting_no', 'like', $prefix.'-%/'.$year)
+            ->count();
+
+        return $prefix.'-'.($count + 1).'/'.$year;
     }
 
     private function formData(): array

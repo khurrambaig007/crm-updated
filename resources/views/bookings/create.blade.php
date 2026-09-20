@@ -50,9 +50,8 @@
                         @csrf    
                         <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
-                                <label for="booking_no" class="{{ $labelClasses }}">Booking # <span class="text-red-500">*</span></label>
-                                {!! html()->text('booking_no', old('booking_no'))->class($inputClasses)->required() !!}
-                                @error('booking_no')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                                <label for="booking_no" class="{{ $labelClasses }}">Booking #</label>
+                                {!! html()->text('booking_no', $bookingNoPreview)->class($inputClasses)->attribute('readonly', 'readonly')->id('booking_no') !!}
                             </div>
                             <div>
                                 <label for="approval_no" class="{{ $labelClasses }}">Approval # <span class="text-red-500">*</span></label>
@@ -169,7 +168,7 @@
                                     <select name="pol" id="pol" class="{{ $selectClasses }}">
                                         <option value="">Select POL</option>
                                         @foreach ($pols as $pol)
-                                            <option value="{{ $pol->id }}" data-detail="{{ $pol->city }}, {{ $pol->country }}" {{ old('pol') == $pol->id ? 'selected' : '' }}>{{ $pol->port_code }}</option>
+                                            <option value="{{ $pol->id }}" data-detail="{{ $pol->city }}, {{ $pol->country }}" data-code="{{ $pol->port_code }}" {{ old('pol') == $pol->id ? 'selected' : '' }}>{{ $pol->port_code }}</option>
                                         @endforeach
                                     </select>
                                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-topbar-muted">
@@ -208,7 +207,7 @@
                                     <select name="pofd" id="pofd" class="{{ $selectClasses }}">
                                         <option value="">Select POFD</option>
                                         @foreach ($pofds as $pod)
-                                            <option value="{{ $pod->id }}" data-detail="{{ $pod->city }}, {{ $pod->country }}" {{ old('pofd') == $pod->id ? 'selected' : '' }}>{{ $pod->location_code }}</option>
+                                            <option value="{{ $pod->id }}" data-detail="{{ $pod->city }}, {{ $pod->country }}" data-code="{{ $pod->location_code }}" {{ old('pofd') == $pod->id ? 'selected' : '' }}>{{ $pod->location_code }}</option>
                                         @endforeach
                                     </select>
                                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-topbar-muted">
@@ -460,4 +459,21 @@
         </div>
     </div>
 </x-app-layout>
+
+@push('scripts')
+<script>
+    $(document).ready(function () {
+        var bookingPrefix = @json($bookingPrefix);
+        var bookingNoSeq = @json($bookingNoSeq);
+
+        function updateBookingNo() {
+            var polCode = $('#pol option:selected').data('code') || '';
+            var pofdCode = $('#pofd option:selected').data('code') || '';
+            $('#booking_no').val(bookingPrefix + polCode + pofdCode + bookingNoSeq);
+        }
+
+        $('#pol, #pofd').on('change', updateBookingNo);
+    });
+</script>
+@endpush
 

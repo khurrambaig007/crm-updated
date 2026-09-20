@@ -12,6 +12,7 @@ use App\Models\ContainerType;
 use App\Models\Currency;
 use App\Models\Investor;
 use App\Models\Party;
+use App\Models\Pod;
 use App\Models\Pol;
 use App\Models\SettlementType;
 use App\Models\ShipperBp;
@@ -38,6 +39,7 @@ class SystemOperationsSeeder extends Seeder
         $this->seedSettlementTypes();
         $this->seedSubCompanies();
         $this->seedPols();
+        $this->seedPods();
         $this->seedAgents();
         $this->seedParties();
         $this->seedShipperBps();
@@ -245,6 +247,16 @@ class SystemOperationsSeeder extends Seeder
         foreach ($ports as $port) {
             $port['container_size_id'] = $containerSizeIds[array_rand($containerSizeIds)];
             Pol::create($port);
+        }
+    }
+
+    private function seedPods(): void
+    {
+        foreach (Pol::orderBy('id')->get() as $pol) {
+            Pod::updateOrCreate(
+                ['city' => $pol->city],
+                ['country' => $pol->country, 'location_code' => $pol->port_code],
+            );
         }
     }
 

@@ -35,6 +35,12 @@ return [
                     'permission' => 'bookings.view',
                 ],
                 [
+                    'label' => 'Container Release Order',
+                    'route' => 'container-release-orders.index',
+                    'icon' => 'box',
+                    'permission' => 'container_release_orders.view',
+                ],
+                [
                     'label' => 'Maintenance & Repair',
                     'route' => 'maintenance-repair-entries.index',
                     'icon' => 'wrench',
@@ -168,6 +174,10 @@ return [
         ],
         'bookings' => [
             'label' => 'Booking',
+            'permissions' => ['view', 'add', 'edit', 'delete'],
+        ],
+        'container_release_orders' => [
+            'label' => 'Container Release Order',
             'permissions' => ['view', 'add', 'edit', 'delete'],
         ],
         'users' => [
