@@ -25,6 +25,7 @@ use App\Models\VesselVoyage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class BookingController extends Controller
@@ -361,14 +362,42 @@ class BookingController extends Controller
 
     public function approve(Request $request, Booking $booking): JsonResponse
     {
-        $booking->update([
-            'approved' => ! $booking->approved,
-        ]);
+        DB::transaction(function () use ($booking) {
+            $booking->update([
+                'approved' => ! $booking->approved,
+            ]);
+
+            if ($booking->approved) {
+                $booking->containerReleaseOrder()->updateOrCreate(
+                    ['booking_id' => $booking->id],
+                    $this->croAttributesFromBooking($booking),
+                );
+            }
+        });
 
         return response()->json([
             'approved' => $booking->approved,
             'message' => $booking->approved ? 'Booking approved.' : 'Booking unapproved.',
         ]);
+    }
+
+    /**
+     * Map a booking's fields onto the Container Release Order columns.
+     *
+     * @return array<string, mixed>
+     */
+    private function croAttributesFromBooking(Booking $booking): array
+    {
+        return [
+            'booking_no' => $booking->booking_no,
+            'reference_no' => $booking->reference_no,
+            'booking_date' => $booking->booking_date,
+            'cntr_owner' => $booking->cntr_owner,
+            'commodity_id' => $booking->commodity,
+            'dg_status' => $booking->non_dg,
+            'pol_id' => $booking->pol,
+            'pofd_id' => $booking->pofd,
+        ];
     }
 
     private function nextBookingSeq(): int

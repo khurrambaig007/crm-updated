@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Http\Middleware\PermissionMiddleware;
 use App\Models\Booking;
 use App\Models\BookingOtherInfo;
+use App\Models\ContainerReleaseOrder;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Auth\Middleware\Authenticate;
@@ -406,5 +407,121 @@ class BookingStoreUpdateTest extends BaseTestCase
         $response->assertSee('AP-VIEW');
         $response->assertSee('REF-VIEW');
         $response->assertSee('Visible note');
+    }
+
+    public function test_approving_booking_creates_container_release_order_with_booking_fields(): void
+    {
+        $booking = $this->bookingForApproval([
+            'booking_no' => 'BK-CRO-1',
+            'reference_no' => 'REF-CRO-1',
+            'booking_date' => '2026-08-01',
+            'cntr_owner' => 2,
+            'non_dg' => 1,
+        ]);
+
+        $this->patchJson(route('bookings.approve', $booking))
+            ->assertOk()
+            ->assertJson(['approved' => true]);
+
+        $this->assertSame(1, ContainerReleaseOrder::count(), 'approval must create exactly one CRO');
+
+        $cro = ContainerReleaseOrder::first();
+        $this->assertSame($booking->id, $cro->booking_id);
+        $this->assertSame('BK-CRO-1', $cro->booking_no);
+        $this->assertSame('REF-CRO-1', $cro->reference_no);
+        $this->assertSame('2026-08-01', $cro->booking_date->format('Y-m-d'));
+        $this->assertSame(2, $cro->cntr_owner);
+        $this->assertSame(1, $cro->commodity_id);
+        $this->assertSame(1, $cro->dg_status, 'booking non_dg maps onto CRO dg_status');
+        $this->assertSame(1, $cro->pol_id);
+        $this->assertSame(1, $cro->pofd_id);
+        $this->assertNull($cro->notes, 'notes are left for the user to fill');
+    }
+
+    public function test_reapproving_booking_does_not_duplicate_the_container_release_order(): void
+    {
+        $booking = $this->bookingForApproval();
+
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => true]);
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => false]);
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => true]);
+
+        $this->assertSame(1, ContainerReleaseOrder::count(), 're-approving must reuse the existing CRO');
+    }
+
+    public function test_unapproving_booking_leaves_the_container_release_order_untouched(): void
+    {
+        $booking = $this->bookingForApproval();
+
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => true]);
+        $croId = ContainerReleaseOrder::first()->id;
+
+        $this->patchJson(route('bookings.approve', $booking))
+            ->assertOk()
+            ->assertJson(['approved' => false]);
+
+        $this->assertFalse($booking->fresh()->approved);
+        $this->assertSame(1, ContainerReleaseOrder::count(), 'un-approving must not delete the CRO');
+        $this->assertNotNull(ContainerReleaseOrder::find($croId), 'the CRO must remain available for audit');
+    }
+
+    public function test_reapproving_booking_resyncs_changed_fields_onto_the_existing_cro(): void
+    {
+        \DB::table('pols')->updateOrInsert(
+            ['id' => 2],
+            ['city' => 'Second Port', 'country' => 'Testland', 'port_code' => 'SEC', 'created_at' => now(), 'updated_at' => now()],
+        );
+        \DB::table('pods')->updateOrInsert(
+            ['id' => 2],
+            ['city' => 'Second Pod', 'country' => 'Podland', 'location_code' => 'SEC', 'created_at' => now(), 'updated_at' => now()],
+        );
+
+        $booking = $this->bookingForApproval([
+            'reference_no' => 'REF-OLD',
+            'cntr_owner' => 1,
+            'non_dg' => 0,
+        ]);
+
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => true]);
+        $croId = ContainerReleaseOrder::first()->id;
+
+        $booking->update([
+            'reference_no' => 'REF-NEW',
+            'cntr_owner' => 3,
+            'non_dg' => 1,
+            'pol' => 2,
+            'pofd' => 2,
+        ]);
+
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => false]);
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => true]);
+
+        $this->assertSame(1, ContainerReleaseOrder::count(), 're-approval must update in place, not insert');
+
+        $cro = ContainerReleaseOrder::find($croId);
+        $this->assertSame('REF-NEW', $cro->reference_no);
+        $this->assertSame(3, $cro->cntr_owner);
+        $this->assertSame(1, $cro->dg_status);
+        $this->assertSame(2, $cro->pol_id);
+        $this->assertSame(2, $cro->pofd_id);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function bookingForApproval(array $overrides = []): Booking
+    {
+        return Booking::create(array_merge([
+            'booking_no' => 'BK-CRO',
+            'approval_no' => 'AP-CRO',
+            'reference_no' => 'REF-CRO',
+            'booking_date' => '2026-08-01',
+            'sailing_date' => '2026-08-10',
+            'cntr_owner' => 1,
+            'commodity' => 1,
+            'non_dg' => 0,
+            'pol' => 1,
+            'pofd' => 1,
+        ], $overrides));
     }
 }

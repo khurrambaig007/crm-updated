@@ -43,11 +43,41 @@ function csrfToken() {
     return $('meta[name="csrf-token"]').attr('content') || '';
 }
 
+function numOrNull(value) {
+    if (value === '' || value === undefined || value === null) {
+        return null;
+    }
+    var parsed = parseFloat(value);
+    return isNaN(parsed) ? null : parsed;
+}
+
+function numberFormatter(params) {
+    if (params.value === null || params.value === undefined || params.value === '') {
+        return '';
+    }
+    var num = parseFloat(params.value);
+    if (isNaN(num)) {
+        return String(params.value);
+    }
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function integerFormatter(params) {
+    if (params.value === null || params.value === undefined || params.value === '') {
+        return '';
+    }
+    var num = parseFloat(params.value);
+    if (isNaN(num)) {
+        return String(params.value);
+    }
+    return String(Math.round(num));
+}
+
 function buildPayload(data) {
     return {
         size: sizeMap[data.size],
         type: typeMap[data.type],
-        quantity: data.quantity === '' || data.quantity === undefined || data.quantity === null ? null : parseFloat(data.quantity),
+        quantity: numOrNull(data.quantity),
         approval_status: parseInt(data.approval_status, 10) || 1,
         gross_weight: data.gross_weight || null,
         packages: data.packages || null,
@@ -170,7 +200,7 @@ window.BEG = {
             type: $type.find('option:selected').text(),
             size_id: parseInt($size.val(), 10),
             type_id: parseInt($type.val(), 10),
-            quantity: $('#eq-quantity').val() !== '' ? parseFloat($('#eq-quantity').val()) : null,
+            quantity: numOrNull($('#eq-quantity').val()),
             approval_status: parseInt($('#eq-approval-status').val(), 10) || 1,
             gross_weight: '',
             packages: '',
@@ -243,6 +273,9 @@ $(function () {
             headerName: 'Quantity',
             flex: 1,
             minWidth: 100,
+            cellEditor: 'agNumberCellEditor',
+            cellEditorParams: { min: 0, precision: 2 },
+            valueFormatter: numberFormatter,
         },
         {
             field: 'gross_weight',
@@ -261,6 +294,9 @@ $(function () {
             headerName: 'Unit',
             flex: 1,
             minWidth: 90,
+            cellEditor: 'agNumberCellEditor',
+            cellEditorParams: { min: 0, precision: 0 },
+            valueFormatter: integerFormatter,
         },
         {
             field: 'cargo_volumn',

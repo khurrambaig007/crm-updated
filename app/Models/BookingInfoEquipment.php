@@ -16,6 +16,15 @@ final class BookingInfoEquipment extends Model
 
     protected $table = 'booking_info_equipments';
 
+    protected function casts(): array
+    {
+        return [
+            'quantity' => 'float',
+            'unit' => 'integer',
+            'approval_status' => 'integer',
+        ];
+    }
+
     public function booking(): BelongsTo
     {
         return $this->belongsTo(Booking::class);

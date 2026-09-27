@@ -99,6 +99,11 @@ final class Booking extends Model
         return $this->hasOne(BookingOtherInfo::class);
     }
 
+    public function containerReleaseOrder(): HasOne
+    {
+        return $this->hasOne(ContainerReleaseOrder::class);
+    }
+
     public function equipments(): HasMany
     {
         return $this->hasMany(BookingInfoEquipment::class);

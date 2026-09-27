@@ -85,15 +85,6 @@ class BookingsDataTable extends DataTable
         $user = auth()->user();
         $canEdit = $user->isSuperAdmin() || $user->can('bookings.edit');
         $canDelete = $user->isSuperAdmin() || $user->can('bookings.delete');
-        $canCreateCRO = $user->isSuperAdmin() || $user->can('container_release_orders.add');
-
-        $cro = $canCreateCRO
-            ? '<a href="'.e(route('container-release-orders.create', ['booking' => $model->id])).'" class="group inline-flex items-center justify-center rounded-lg bg-teal-50 p-2 text-teal-600 transition-all hover:bg-teal-500 hover:shadow-md hover:-translate-y-0.5" title="Create Container Release Order">'
-                .'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 transition-colors group-hover:text-white">'
-                .'<path d="M2 8h20v13H2z" />'
-                .'<path d="M2 8V5a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v3" />'
-                .'</svg></a>'
-            : '';
 
         $edit = $canEdit
             ? '<a href="'.e(route('bookings.edit', $model)).'" class="group inline-flex items-center justify-center rounded-lg bg-blue-50 p-2 text-blue-600 transition-all hover:bg-blue-500 hover:shadow-md hover:-translate-y-0.5" title="Edit">'
@@ -115,6 +106,6 @@ class BookingsDataTable extends DataTable
                 .'</svg></button></form>'
             : '';
 
-        return '<div class="flex items-center justify-end gap-2">'.$cro.$edit.$delete.'</div>';
+        return '<div class="flex items-center justify-end gap-2">'.$edit.$delete.'</div>';
     }
 }
