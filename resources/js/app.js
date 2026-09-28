@@ -29,5 +29,6 @@ import './booking-equipment-grid';
 import './booking-revenue-grid';
 import './booking-cost-grid';
 import './booking-totals';
+import './booking-split';
 import './container-purchase-tabs';
 import './container-purchase';

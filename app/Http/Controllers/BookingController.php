@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\DataTables\BookingsDataTable;
 use App\Http\Requests\BookingRequest;
+use App\Http\Requests\SplitBookingRequest;
 use App\Models\Agent;
 use App\Models\Booking;
 use App\Models\BookingCost;
@@ -22,6 +23,7 @@ use App\Models\Pol;
 use App\Models\ShipperBp;
 use App\Models\SlotTerm;
 use App\Models\VesselVoyage;
+use App\Services\BookingSplitService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,11 +41,11 @@ class BookingController extends Controller
         return $dataTable->render('bookings.index');
     }
 
-    public function create(): View
+    public function create(BookingSplitService $splitService): View
     {
         return view('bookings.create', array_merge($this->formData(), [
             'bookingPrefix' => (string) array_key_first(config('dropdowns.bookings.booking_prefix')),
-            'bookingNoSeq' => str_pad((string) $this->nextBookingSeq(), 6, '0', STR_PAD_LEFT),
+            'bookingNoSeq' => str_pad((string) $splitService->nextBookingSeq(), 6, '0', STR_PAD_LEFT),
             'bookingNoPreview' => $this->nextBookingNo(null, null),
         ]));
     }
@@ -68,7 +70,7 @@ class BookingController extends Controller
 
     public function edit(Booking $booking): View
     {
-        $booking->load('otherInfo', 'equipments.containerSize', 'equipments.containerType', 'revenues.charge', 'revenues.containerSize', 'revenues.containerType', 'costs.charge', 'costs.containerSize', 'costs.containerType', 'costs.slotTerm', 'polPol', 'podPofd', 'polPot1', 'polPot2', 'agentPol', 'agentPofd', 'agent1', 'agent2', 'shipperBp', 'vesselVoyage', 'bookingCommodity');
+        $booking->load('otherInfo', 'equipments.containerSize', 'equipments.containerType', 'revenues.charge', 'revenues.containerSize', 'revenues.containerType', 'costs.charge', 'costs.containerSize', 'costs.containerType', 'costs.slotTerm', 'polPol', 'podPofd', 'polPot1', 'polPot2', 'agentPol', 'agentPofd', 'agent1', 'agent2', 'shipperBp', 'vesselVoyage', 'bookingCommodity', 'parentBooking', 'splitBookings');
 
         return view('bookings.edit', array_merge(['booking' => $booking], $this->formData()));
     }
@@ -93,6 +95,31 @@ class BookingController extends Controller
         $booking->delete();
 
         return redirect()->route('bookings.index')->with('status', 'Booking deleted successfully.');
+    }
+
+    /**
+     * Split a booking by equipment: show which equipment is available and how
+     * much of each can be moved to a new child booking.
+     */
+    public function splitForm(BookingSplitService $splitService, Booking $booking): View
+    {
+        $booking->load(['otherInfo', 'parentBooking', 'polPol', 'podPofd', 'carrier', 'vesselVoyage']);
+
+        return view('bookings.split', [
+            'booking' => $booking,
+            'equipmentGroups' => $splitService->equipmentSummary($booking),
+            'splitBookingNo' => $splitService->nextSplitBookingNo($booking),
+        ]);
+    }
+
+    public function split(SplitBookingRequest $request, BookingSplitService $splitService, Booking $booking): RedirectResponse
+    {
+        $rows = $request->equipmentRows();
+
+        $child = $splitService->split($booking, $rows);
+
+        return redirect()->route('bookings.edit', $child)
+            ->with('status', "Booking split into {$child->booking_no}.");
     }
 
     public function updateOtherInfo(Request $request, Booking $booking): RedirectResponse
@@ -400,33 +427,14 @@ class BookingController extends Controller
         ];
     }
 
-    private function nextBookingSeq(): int
-    {
-        return (Booking::withTrashed()->pluck('booking_no')
-            ->map(fn (?string $no) => (int) preg_replace('/\D/', '', (string) $no))
-            ->max() ?? 0) + 1;
-    }
-
     private function nextBookingNo(?int $polId, ?int $pofdId): string
     {
-        $prefix = (string) array_key_first(config('dropdowns.bookings.booking_prefix'));
-        $polCode = $polId ? Pol::query()->whereKey($polId)->value('port_code') : null;
-        $pofdCode = $pofdId ? Pod::query()->whereKey($pofdId)->value('location_code') : null;
-
-        return $prefix.strtoupper((string) $polCode).strtoupper((string) $pofdCode)
-            .str_pad((string) $this->nextBookingSeq(), 6, '0', STR_PAD_LEFT);
+        return app(BookingSplitService::class)->nextBookingNo($polId, $pofdId);
     }
 
     private function nextReportingNo(): string
     {
-        $prefix = (string) array_key_first(config('dropdowns.bookings.reporting_prefix'));
-        $year = now()->format('y');
-
-        $count = Booking::withTrashed()
-            ->where('reporting_no', 'like', $prefix.'-%/'.$year)
-            ->count();
-
-        return $prefix.'-'.($count + 1).'/'.$year;
+        return app(BookingSplitService::class)->nextReportingNo();
     }
 
     private function formData(): array

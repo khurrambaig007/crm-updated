@@ -18,8 +18,37 @@
                     </div>
                 </div>
             </div>
-            <a href="{{ route('bookings.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">Cancel</a>
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
+                @if (auth()->user()->isSuperAdmin() || auth()->user()->can('bookings.edit'))
+                    <a href="{{ route('bookings.split', $booking) }}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 hover:shadow-md hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900 transition-all duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                            <path d="M16 3h5v5" />
+                            <path d="M8 3H3v5" />
+                            <path d="M21 3l-7 18" />
+                            <path d="M3 21l7-18" />
+                        </svg>
+                        Split Booking
+                    </a>
+                @endif
+                <a href="{{ route('bookings.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">Cancel</a>
+            </div>
         </div>
+
+        @if ($booking->parentBooking)
+            <div class="rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-700 ring-1 ring-blue-200">
+                Split of
+                <a href="{{ route('bookings.edit', $booking->parentBooking) }}" class="font-semibold underline">{{ $booking->parentBooking->booking_no }}</a>
+            </div>
+        @endif
+
+        @if ($booking->hasSplitBookings())
+            <div class="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-200">
+                Split into:
+                @foreach ($booking->splitBookings as $split)
+                    <a href="{{ route('bookings.edit', $split) }}" class="font-semibold underline">{{ $split->booking_no }}</a>@if (! $loop->last), @endif
+                @endforeach
+            </div>
+        @endif
 
         <div class="rounded-2xl bg-card-bg shadow-lg ring-1 ring-card-border">
             <div class="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-6 py-4 sm:px-8">

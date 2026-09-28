@@ -78,6 +78,8 @@ Route::middleware('auth')->group(function () {
         Route::patch('bookings/{booking}/costs/{cost}', [BookingController::class, 'updateCost'])->name('bookings.costs.update');
         Route::delete('bookings/{booking}/costs/{cost}', [BookingController::class, 'destroyCost'])->name('bookings.costs.destroy');
         Route::middleware('permission:bookings.edit')->patch('bookings/{booking}/approve', [BookingController::class, 'approve'])->name('bookings.approve');
+        Route::get('bookings/{booking}/split', [BookingController::class, 'splitForm'])->name('bookings.split');
+        Route::post('bookings/{booking}/split', [BookingController::class, 'split'])->name('bookings.split.store');
     });
     Route::middleware('permission:bookings.delete')->delete('bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
 

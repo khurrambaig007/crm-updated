@@ -10,5 +10,5 @@ Before planning or editing, find the row whose globs match the file's path and r
 | resources/js/**, resources/js/app.js | .ai/rules/js.md |
 | database/migrations/** | .ai/rules/migrations.md |
 | app/Models/Booking.php | .ai/rules/models.md |
-| app/Services/PermissionSyncService.php | .ai/rules/services.md |
+| app/Services/PermissionSyncService.php, app/Services/BookingSplitService.php | .ai/rules/services.md |
 | resources/views/**/*.blade.php, resources/views/** | .ai/rules/views.md |
