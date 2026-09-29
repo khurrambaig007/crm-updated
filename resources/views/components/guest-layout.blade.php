@@ -1,11 +1,22 @@
+@php
+    // This layout renders pre-authentication (login, register, password reset), so
+    // branding is resolved from the profile directly rather than from the gate.
+    $profile = \App\Models\CompanyProfile::current();
+    $brandName = $profile->displayName();
+    $brandSubtitle = $profile->displaySubtitle();
+    $brandLogoUrl = $profile->logoUrl();
+    $brandFaviconUrl = $profile->faviconUrl();
+    $brandMessage = $profile->message;
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>{{ config('app.name', 'Laravel') }}</title>
-        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+        <title>{{ $brandName }}</title>
+        <link rel="icon" type="image/x-icon" href="{{ $brandFaviconUrl ?? asset('favicon.ico') }}">
+        <link rel="apple-touch-icon" href="{{ $brandLogoUrl ?? asset('favicon.ico') }}">
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
@@ -88,25 +99,36 @@
 
                 <div class="relative z-10">
                     <div class="flex items-center gap-3">
-                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500 text-white shadow-lg duration-300 hover:rotate-3 hover:scale-110 motion-safe:transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
-                                <path d="M21 16V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8" />
-                                <path d="M3 20h18" />
-                                <path d="M6 12h2" />
-                                <path d="M16 12h2" />
-                            </svg>
+                        @if ($brandLogoUrl)
+                            <img src="{{ $brandLogoUrl }}" alt="{{ $brandName }}" class="h-10 w-10 shrink-0 rounded-xl bg-white object-contain p-0.5 shadow-lg">
+                        @else
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500 text-white shadow-lg duration-300 hover:rotate-3 hover:scale-110 motion-safe:transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6">
+                                    <path d="M21 16V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8" />
+                                    <path d="M3 20h18" />
+                                    <path d="M6 12h2" />
+                                    <path d="M16 12h2" />
+                                </svg>
+                            </div>
+                        @endif
+                        <div class="min-w-0">
+                            <span class="block truncate text-xl font-semibold tracking-tight text-white" title="{{ $brandName }}">{{ $brandName }}</span>
+                            @if ($brandSubtitle)
+                                <span class="block truncate text-xs font-medium uppercase tracking-wider text-slate-300">{{ $brandSubtitle }}</span>
+                            @endif
                         </div>
-                        <span class="text-xl font-semibold tracking-tight text-white">{{ config('app.name', 'Laravel') }}</span>
                     </div>
                 </div>
 
                 <div class="relative z-10 mt-auto">
                     <blockquote class="max-w-md">
                         <p class="text-2xl font-semibold leading-tight text-white sm:text-3xl">
-                            Move cargo with confidence.
+                            {{ filled($brandMessage) ? $brandMessage : 'Move cargo with confidence.' }}
                         </p>
                         <p class="mt-4 text-sm leading-relaxed text-slate-300 sm:text-base">
-                            Track every load and unload, manage container flows, and keep shippers, carriers, and port ops on the same page.
+                            {{ filled($brandMessage)
+                                ? $brandName.' — track every load and unload, manage container flows, and keep shippers, carriers, and port ops on the same page.'
+                                : 'Track every load and unload, manage container flows, and keep shippers, carriers, and port ops on the same page.' }}
                         </p>
                     </blockquote>
                 </div>

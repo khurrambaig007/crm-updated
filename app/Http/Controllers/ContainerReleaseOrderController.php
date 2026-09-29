@@ -7,6 +7,7 @@ use App\Http\Requests\ContainerReleaseOrder\StoreContainerReleaseOrderRequest;
 use App\Http\Requests\ContainerReleaseOrder\UpdateContainerReleaseOrderRequest;
 use App\Models\Booking;
 use App\Models\Commodity;
+use App\Models\CompanyProfile;
 use App\Models\ContainerReleaseOrder;
 use App\Models\Pod;
 use App\Models\Pol;
@@ -18,6 +19,13 @@ use Illuminate\View\View;
 
 class ContainerReleaseOrderController extends Controller
 {
+    /**
+     * Maximum rendered size of the company logo in the exported PDF, in pixels.
+     */
+    private const PDF_LOGO_MAX_WIDTH = 320;
+
+    private const PDF_LOGO_MAX_HEIGHT = 150;
+
     public function index(Request $request, ContainerReleaseOrdersDataTable $dataTable): mixed
     {
         if ($request->ajax()) {
@@ -85,7 +93,24 @@ class ContainerReleaseOrderController extends Controller
     {
         $containerReleaseOrder->load(['pol', 'pofd', 'commodity']);
 
-        return Pdf::loadView('container-release-orders.pdf', ['cro' => $containerReleaseOrder])
+        // Branded from the company profile. logoPath() is passed rather than the URL
+        // because dompdf only reads local files inside its chroot (base_path()).
+        $profile = CompanyProfile::current();
+
+        return Pdf::loadView('container-release-orders.pdf', [
+            'cro' => $containerReleaseOrder,
+            'brandName' => $profile->displayName(),
+            'brandLogoPath' => $profile->logoPath(),
+            'brandLogoSize' => $profile->logoDisplaySize(
+                self::PDF_LOGO_MAX_WIDTH,
+                self::PDF_LOGO_MAX_HEIGHT,
+            ),
+            'brandContact' => array_filter([
+                $profile->website,
+                $profile->primaryEmail(),
+                $profile->pic_number,
+            ]),
+        ])
             ->setPaper('a4', 'portrait')
             ->stream("CRO-{$containerReleaseOrder->booking_no}.pdf");
     }

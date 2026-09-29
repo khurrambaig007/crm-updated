@@ -167,4 +167,48 @@ return [
         ],
     ],
 
+    // Bank Account screen
+    'bank_accounts' => [
+        // Keyed by the bank's common abbreviation (the value stored on the record);
+        // the label is the full legal name. Edit this list to add or remove banks.
+        'bank' => [
+            // Conventional banks
+            'ABL' => 'Allied Bank Limited',
+            'AKBL' => 'Askari Bank Limited',
+            'BAHL' => 'Bank Al Habib Limited',
+            'ALFALAH' => 'Bank Alfalah Limited',
+            'BOC' => 'Bank of China Limited (Pakistan)',
+            'BOK' => 'The Bank of Khyber',
+            'BOP' => 'The Bank of Punjab',
+            'CITI' => 'Citibank N.A.',
+            'DB' => 'Deutsche Bank AG',
+            'FAYSAL' => 'Faysal Bank Limited',
+            'FWBL' => 'First Women Bank Limited',
+            'HBL' => 'Habib Bank Limited',
+            'HMB' => 'Habib Metropolitan Bank Limited',
+            'ICBC' => 'Industrial and Commercial Bank of China Limited',
+            'JSBL' => 'JS Bank Limited',
+            'MCB' => 'MCB Bank Limited',
+            'NBP' => 'National Bank of Pakistan',
+            'SAMBA' => 'Samba Bank Limited',
+            'SCB' => 'Standard Chartered Bank (Pakistan) Limited',
+            'SILK' => 'Silkbank Limited',
+            'SINDH' => 'Sindh Bank Limited',
+            'SONERI' => 'Soneri Bank Limited',
+            'SUMMIT' => 'Summit Bank Limited',
+            'UBL' => 'United Bank Limited',
+
+            // Islamic banks
+            'ALBARAKA' => 'Al Baraka Bank (Pakistan) Limited',
+            'BIPL' => 'BankIslami Pakistan Limited',
+            'DIBPL' => 'Dubai Islamic Bank Pakistan Limited',
+            'MCBISLAMIC' => 'MCB Islamic Bank Limited',
+            'MEZAN' => 'Meezan Bank Limited',
+
+            // Digital banks
+            'NAYAPAY' => 'NayaPay',
+            'SADAPAY' => 'SadaPay',
+        ],
+    ],
+
 ];

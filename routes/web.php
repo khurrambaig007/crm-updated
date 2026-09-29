@@ -5,10 +5,12 @@ use App\Http\Controllers\AgentReceiptPaymentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CarrierController;
 use App\Http\Controllers\ChargeController;
 use App\Http\Controllers\CommodityController;
+use App\Http\Controllers\CompanyProfileController;
 use App\Http\Controllers\ContainerActivityController;
 use App\Http\Controllers\ContainerKindController;
 use App\Http\Controllers\ContainerPurchaseController;
@@ -51,7 +53,7 @@ Route::middleware('guest')->group(function () {
     Route::post('reset-password', [PasswordResetController::class, 'update'])->name('password.store');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware('authenticated')->group(function () {
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
 
     Route::middleware('permission:dashboard.view')->group(function () {
@@ -449,6 +451,16 @@ Route::middleware('auth')->group(function () {
         });
         Route::middleware('permission:parties.delete')->delete('pa-parties/{party}', [PartyController::class, 'destroy'])->name('parties.destroy');
     });
+
+    // Company Profile (singleton — one record for the whole installation)
+    Route::middleware('permission:company_profiles.view')->get('company-profile', [CompanyProfileController::class, 'edit'])->name('company-profile.index');
+    Route::middleware('permission:company_profiles.add')->post('company-profile', [CompanyProfileController::class, 'store'])->name('company-profile.store');
+    Route::middleware('permission:company_profiles.edit')->patch('company-profile', [CompanyProfileController::class, 'update'])->name('company-profile.update');
+
+    // Bank Account (singleton — one record for the whole installation)
+    Route::middleware('permission:bank_accounts.view')->get('bank-accounts', [BankAccountController::class, 'edit'])->name('bank-accounts.index');
+    Route::middleware('permission:bank_accounts.add')->post('bank-accounts', [BankAccountController::class, 'store'])->name('bank-accounts.store');
+    Route::middleware('permission:bank_accounts.edit')->patch('bank-accounts', [BankAccountController::class, 'update'])->name('bank-accounts.update');
 
     Route::middleware('permission:profile.view')->group(function () {
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');

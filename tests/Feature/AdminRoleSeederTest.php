@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Services\PermissionSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Spatie\Permission\Models\Permission;
@@ -20,7 +21,13 @@ class AdminRoleSeederTest extends BaseTestCase
 
         $this->assertNotNull($adminRole, 'Admin role should be seeded');
         $this->assertSame(Permission::count(), $adminRole->permissions()->count());
-        $this->assertSame(118, $adminRole->permissions()->count());
+
+        // Assert against the configured set rather than a hardcoded number, so adding
+        // a new screen does not require editing this test.
+        $this->assertEqualsCanonicalizing(
+            app(PermissionSyncService::class)->configuredPermissions(),
+            $adminRole->permissions()->pluck('name')->all(),
+        );
     }
 
     public function test_test_user_is_assigned_the_admin_role(): void

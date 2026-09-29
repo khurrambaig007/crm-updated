@@ -1,11 +1,28 @@
+@php
+    // Single source for both the profile gate and the application branding, so the
+    // sidebar, title and favicon cost one query rather than one each.
+    $profile = \App\Models\CompanyProfile::current();
+
+    // missingFieldsOn() mirrors CompanyProfile::missingFields() used by the
+    // EnsureCompanyProfileIsComplete middleware, so the lock and its explanation can
+    // never disagree.
+    $profileMissing = $profile->missingFieldsOn();
+    $navLocked = $profileMissing !== [];
+
+    $brandName = $profile->displayName();
+    $brandSubtitle = $profile->displaySubtitle();
+    $brandLogoUrl = $profile->logoUrl();
+    $brandFaviconUrl = $profile->faviconUrl();
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>{{ $title ?? config('app.name', 'Laravel') }}</title>
-        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+        <title>{{ filled($title ?? null) ? $title.' · '.$brandName : $brandName }}</title>
+        <link rel="icon" type="image/x-icon" href="{{ $brandFaviconUrl ?? asset('favicon.ico') }}">
+        <link rel="apple-touch-icon" href="{{ $brandLogoUrl ?? asset('favicon.ico') }}">
         <link rel="stylesheet" href="{{ asset('css/ag-grid.css') }}">
         <link rel="stylesheet" href="{{ asset('css/ag-theme-quartz.css') }}">
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
@@ -44,17 +61,21 @@
             <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 transform-gpu bg-sidebar-bg transition-transform duration-200 ease-out -translate-x-full lg:translate-x-0">
                 <div class="flex h-full flex-col">
                     <div class="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-500 text-white">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                <circle cx="8.5" cy="7" r="4" />
-                                <path d="M20 8v6m3-3h-6" />
-                            </svg>
-                        </div>
+                        @if ($brandLogoUrl)
+                            <img src="{{ $brandLogoUrl }}" alt="{{ $brandName }}" class="h-9 w-9 shrink-0 rounded-lg bg-white object-contain p-0.5">
+                        @else
+                            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-500 text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                    <circle cx="8.5" cy="7" r="4" />
+                                    <path d="M20 8v6m3-3h-6" />
+                                </svg>
+                            </div>
+                        @endif
                         <div class="min-w-0">
-                            <span class="block text-lg font-semibold tracking-tight text-white">{{ config('app.name', 'Laravel') }}</span>
-                            @if(config('app.subtitle'))
-                                <span class="block text-xs text-sidebar-muted">{{ config('app.subtitle') }}</span>
+                            <span class="block truncate text-lg font-semibold tracking-tight text-white" title="{{ $brandName }}">{{ $brandName }}</span>
+                            @if ($brandSubtitle)
+                                <span class="block truncate text-xs text-sidebar-muted" title="{{ $brandSubtitle }}">{{ $brandSubtitle }}</span>
                             @endif
                         </div>
                     </div>
@@ -91,16 +112,17 @@
                                             $isParentCurrentPage = request()->routeIs($routePattern);
                                             $isActive = $isParentActive || $isParentCurrentPage;
                                             $menuKey = Str::slug($item['label']);
+                                            $parentLocked = $navLocked && $item['route'] !== 'company-profile.index' && ! $isParentCurrentPage;
                                         @endphp
 
                                         @if ($visibleChildren->isNotEmpty())
                                             <div class="sidebar-parent" data-menu="{{ $menuKey }}">
                                                 <div class="flex items-center rounded-lg {{ $isActive ? 'bg-sidebar-active' : '' }}">
-                                                    <a href="{{ route($item['route']) }}" class="sidebar-nav-item flex-1 min-w-0 flex items-center gap-3 px-3 py-2.5 text-sm font-medium {{ $isActive ? 'text-white sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} transition-colors">
+                                                    <a href="{{ route($item['route']) }}" class="sidebar-nav-item flex-1 min-w-0 flex items-center gap-3 px-3 py-2.5 text-sm font-medium {{ $isActive ? 'text-white sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} transition-colors {{ $parentLocked ? 'pointer-events-none opacity-40' : '' }}">
                                                         @include('components.icons.' . $item['icon'], ['classes' => 'sidebar-nav-icon shrink-0 h-5 w-5 ' . ($isActive ? 'text-primary-500' : 'text-sidebar-muted group-hover:text-sidebar-icon-hover')])
                                                         <span class="min-w-0 truncate">{{ $item['label'] }}</span>
                                                     </a>
-                                                    <button type="button" onclick="toggleSidebarMenu('{{ $menuKey }}')" class="sidebar-parent-btn px-3 py-2.5 text-sm {{ $isActive ? 'text-white' : 'text-sidebar-text hover:text-sidebar-hover-text' }} transition-colors">
+                                                    <button type="button" onclick="toggleSidebarMenu('{{ $menuKey }}')" class="sidebar-parent-btn px-3 py-2.5 text-sm {{ $isActive ? 'text-white' : 'text-sidebar-text hover:text-sidebar-hover-text' }} transition-colors {{ $parentLocked ? 'pointer-events-none opacity-40' : '' }}">
                                                         <svg class="h-4 w-4 transition-transform duration-200 {{ $isActive ? 'rotate-0' : '-rotate-90' }}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                             <path d="m6 9 6 6 6-6" />
                                                         </svg>
@@ -113,8 +135,9 @@
                                                                 ? str_replace('.index', '.*', $child['route'])
                                                                 : $child['route'];
                                                             $isChildActive = request()->routeIs($childRoutePattern);
+                                                            $childLocked = $navLocked && $child['route'] !== 'company-profile.index' && ! $isChildActive;
                                                         @endphp
-                                                        <a href="{{ route($child['route']) }}" class="sidebar-child sidebar-nav-item flex min-w-0 items-center gap-2.5 pl-11 pr-3 py-2 text-xs font-medium rounded-lg transition-colors {{ $isChildActive ? 'text-primary-500 bg-primary-50 sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }}">
+                                                        <a href="{{ route($child['route']) }}" class="sidebar-child sidebar-nav-item flex min-w-0 items-center gap-2.5 pl-11 pr-3 py-2 text-xs font-medium rounded-lg transition-colors {{ $isChildActive ? 'text-primary-500 bg-primary-50 sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} {{ $childLocked ? 'pointer-events-none opacity-40' : '' }}">
                                                             @if (! empty($child['icon']))
                                                                 @include('components.icons.' . $child['icon'], ['classes' => 'sidebar-nav-icon shrink-0 h-4 w-4 ' . ($isChildActive ? 'text-primary-500' : 'text-sidebar-muted')])
                                                             @endif
@@ -131,8 +154,9 @@
                                                 : $item['route'];
                                             $isActive = request()->routeIs($routePattern);
                                             $iconClasses = 'h-5 w-5 ' . ($isActive ? 'text-primary-500' : 'text-sidebar-muted group-hover:text-sidebar-icon-hover');
+                                            $itemLocked = $navLocked && $item['route'] !== 'company-profile.index' && ! $isActive;
                                         @endphp
-                                        <a href="{{ route($item['route']) }}" class="sidebar-nav-item group flex min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium {{ $isActive ? 'text-white bg-sidebar-active sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} transition-colors">
+                                        <a href="{{ route($item['route']) }}" class="sidebar-nav-item group flex min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium {{ $isActive ? 'text-white bg-sidebar-active sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} transition-colors {{ $itemLocked ? 'pointer-events-none opacity-40' : '' }}">
                                             @include('components.icons.' . $item['icon'], ['classes' => 'sidebar-nav-icon shrink-0 ' . $iconClasses])
                                             <span class="min-w-0 truncate">{{ $item['label'] }}</span>
                                         </a>
@@ -251,6 +275,21 @@
                 </header>
 
                 <main class="px-4 py-8 sm:px-6 lg:px-8">
+                    @if ($profileMissing)
+                        <div class="mb-6 flex items-start gap-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-inset ring-amber-600/20">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-5 w-5 shrink-0 text-amber-600">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 8v4" />
+                                <path d="M12 16h.01" />
+                            </svg>
+                            <div>
+                                <p class="font-semibold">Complete your company profile to continue</p>
+                                <p class="mt-0.5 text-amber-700">Missing {{ \Illuminate\Support\Str::plural('field', count($profileMissing)) }}: {{ implode(', ', $profileMissing) }}. Every other screen stays locked until {{ count($profileMissing) === 1 ? 'it is' : 'they are' }} set.</p>
+                            </div>
+                            <a href="{{ route('company-profile.index') }}" class="ml-auto shrink-0 rounded-lg bg-amber-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-700">Set it now</a>
+                        </div>
+                    @endif
+
                     {{ $slot }}
                 </main>
             </div>

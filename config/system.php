@@ -113,6 +113,18 @@ return [
             'title' => 'Account',
             'items' => [
                 [
+                    'label' => 'Company Profile',
+                    'route' => 'company-profile.index',
+                    'icon' => 'building',
+                    'permission' => 'company_profiles.view',
+                ],
+                [
+                    'label' => 'Bank Account',
+                    'route' => 'bank-accounts.index',
+                    'icon' => 'landmark',
+                    'permission' => 'bank_accounts.view',
+                ],
+                [
                     'label' => 'Profile',
                     'route' => 'profile.edit',
                     'icon' => 'user',
@@ -199,6 +211,14 @@ return [
         'agent_receipt_payments' => [
             'label' => 'Agent Receipt Payment',
             'permissions' => ['view', 'add', 'edit', 'delete'],
+        ],
+        'company_profiles' => [
+            'label' => 'Company Profile',
+            'permissions' => ['view', 'add', 'edit'],
+        ],
+        'bank_accounts' => [
+            'label' => 'Bank Account',
+            'permissions' => ['view', 'add', 'edit'],
         ],
         'costs' => [
             'label' => 'Cost',

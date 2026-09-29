@@ -1,7 +1,18 @@
 <x-guest-layout>
+    @php
+        // Resolved here rather than reused from guest-layout: variables set inside a
+        // Blade component are not in scope for the slot content that fills it.
+        $loginProfile = \App\Models\CompanyProfile::current();
+        $loginBrandLogo = $loginProfile->logoUrl();
+    @endphp
+
     <div class="text-center">
+        @if ($loginBrandLogo)
+            <img src="{{ $loginBrandLogo }}" alt="{{ $loginProfile->displayName() }}" class="mx-auto mb-5 h-24 w-auto max-w-full object-contain">
+        @endif
+
         <h1 class="text-2xl font-bold tracking-tight text-topbar-text sm:text-3xl">Welcome back</h1>
-        <p class="mt-2 text-sm text-topbar-muted">Sign in to continue to your workspace.</p>
+        <p class="mt-3 text-sm text-topbar-muted">Sign in to continue to your workspace.</p>
     </div>
 
     <div class="mt-8 rounded-2xl bg-card-bg p-6 shadow-sm ring-1 ring-card-border sm:p-8">

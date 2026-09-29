@@ -5,10 +5,12 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Tests\Concerns\CreatesCompanyProfile;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
 {
+    use CreatesCompanyProfile;
     use RefreshDatabase;
 
     private function superAdmin(): User
@@ -62,6 +64,8 @@ class AuthenticationTest extends TestCase
 
     public function test_authenticated_users_can_view_the_dashboard(): void
     {
+        $this->seedCompleteCompanyProfile();
+
         $user = $this->superAdmin();
 
         $this->actingAs($user)

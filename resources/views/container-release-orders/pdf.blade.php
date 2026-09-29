@@ -4,11 +4,22 @@
     <meta charset="UTF-8">
     <title>CRO-{{ $cro->booking_no }}</title>
     <style>
+        /* dompdf's default stylesheet sets `@page { margin: 1.2cm }`, which stacks on
+           top of the body margin below. Overriding it here is the only way to control
+           the real edge distance; 0.7cm (~7mm) stays inside the unprintable margin of
+           virtually every consumer printer while reclaiming ~11mm per edge. */
+        @page { margin: 0.7cm; }
         * { box-sizing: border-box; }
-        body { font-family: DejaVu Sans, Helvetica, Arial, sans-serif; font-size: 11px; color: #1f2937; margin: 24px; }
-        .header { border-bottom: 3px solid #1f2937; padding-bottom: 12px; margin-bottom: 18px; }
+        body { font-family: DejaVu Sans, Helvetica, Arial, sans-serif; font-size: 11px; color: #1f2937; margin: 0; }
+        .header { border-bottom: 3px solid #1f2937; padding-bottom: 8px; margin-bottom: 12px; }
+        table.header-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        table.header-table td { vertical-align: bottom; padding: 0; }
+        td.header-brand { text-align: left; }
+        td.header-mark { text-align: right; }
+        .brand-logo { border: 0; }
         .company-name { font-size: 20px; font-weight: bold; color: #111827; text-transform: uppercase; }
-        .doc-title { font-size: 13px; font-weight: bold; color: #374151; text-align: right; }
+        .company-contact { font-size: 9px; color: #6b7280; margin-top: 3px; }
+        .doc-title { font-size: 13px; font-weight: bold; color: #374151; margin-top: 6px; }
         table.details { width: 100%; border-collapse: collapse; margin-top: 6px; }
         table.details th, table.details td { border: 1px solid #d1d5db; padding: 7px 9px; vertical-align: top; }
         table.details th { width: 22%; background: #f3f4f6; text-align: left; font-weight: bold; color: #111827; text-transform: uppercase; font-size: 9.5px; letter-spacing: 0.3px; }
@@ -25,8 +36,22 @@
 </head>
 <body>
     <div class="header">
-        <div class="company-name">{{ config('app.name') }}</div>
-        <div class="doc-title">CRO-{{ $cro->booking_no }}</div>
+        <table class="header-table" cellspacing="0" cellpadding="0">
+            <tr>
+                <td class="header-brand" valign="bottom" width="40%">
+                    <div class="company-name">{{ $brandName }}</div>
+                    @if (! empty($brandContact))
+                        <div class="company-contact">{{ implode(' | ', $brandContact) }}</div>
+                    @endif
+                </td>
+                <td class="header-mark" valign="bottom" align="right" width="60%">
+                    @if ($brandLogoPath && $brandLogoSize)
+                        <img src="{{ $brandLogoPath }}" alt="" class="brand-logo" width="{{ $brandLogoSize['width'] }}" height="{{ $brandLogoSize['height'] }}">
+                    @endif
+                    <div class="doc-title">CRO-{{ $cro->booking_no }}</div>
+                </td>
+            </tr>
+        </table>
     </div>
 
     <table class="details">
