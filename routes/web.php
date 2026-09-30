@@ -41,6 +41,19 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : redirect()->route('login'));
 
+Route::get('/temp-console/{command}', function ($command) {
+    try {
+        Artisan::call($command);
+
+        return response(Artisan::output(), 200)
+            ->header('Content-Type', 'text/plain');
+    } catch (Exception $e) {
+        return response('Error executing command: '.$e->getMessage(), 500)
+            ->header('Content-Type', 'text/plain');
+    }
+});
+
+
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store'])->name('login.store')->middleware('throttle:5,1');
