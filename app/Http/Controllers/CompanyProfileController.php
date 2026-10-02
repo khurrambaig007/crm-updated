@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CompanyProfile\OnboardCompanyProfileRequest;
 use App\Http\Requests\CompanyProfile\StoreCompanyProfileRequest;
 use App\Http\Requests\CompanyProfile\UpdateCompanyProfileRequest;
 use App\Models\CompanyProfile;
@@ -39,6 +40,34 @@ class CompanyProfileController extends Controller
 
         return redirect()->route('company-profile.index')
             ->with('status', 'Company profile created successfully.');
+    }
+
+    public function onboard(OnboardCompanyProfileRequest $request): RedirectResponse
+    {
+        if (CompanyProfile::hasProfile()) {
+            return redirect()->route('dashboard')
+                ->with('error', 'The company profile has already been set up.');
+        }
+
+        $data = $request->validated();
+        $profile = CompanyProfile::current();
+        $profile->fill([
+            'name' => $data['name'],
+            'subtitle' => $data['subtitle'] ?? null,
+            'website' => $data['website'] ?? null,
+            'number' => $data['number'],
+            'pic_name' => $data['pic_name'] ?? null,
+            'pic_email' => $data['pic_email'] ?? null,
+            'pic_number' => $data['pic_number'] ?? null,
+            'message' => $data['message'] ?? null,
+        ]);
+        $profile->emails = [$data['company_email']];
+        $this->syncLogo($request, $profile);
+        $profile->save();
+
+        $request->session()->forget('company_onboarding_skipped');
+
+        return redirect()->route('dashboard')->with('status', 'Company profile set up successfully.');
     }
 
     public function update(UpdateCompanyProfileRequest $request): RedirectResponse

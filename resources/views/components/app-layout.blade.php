@@ -1,13 +1,8 @@
 @php
-    // Single source for both the profile gate and the application branding, so the
-    // sidebar, title and favicon cost one query rather than one each.
+    // Load company branding once for the sidebar, title, and favicon.
     $profile = \App\Models\CompanyProfile::current();
 
-    // missingFieldsOn() mirrors CompanyProfile::missingFields() used by the
-    // EnsureCompanyProfileIsComplete middleware, so the lock and its explanation can
-    // never disagree.
     $profileMissing = $profile->missingFieldsOn();
-    $navLocked = $profileMissing !== [];
 
     $brandName = $profile->displayName();
     $brandSubtitle = $profile->displaySubtitle();
@@ -83,7 +78,13 @@
                     <nav class="flex-1 min-h-0 space-y-1 overflow-y-auto overflow-x-hidden px-4 py-6">
                         @foreach (config('system.navigation') as $section)
                             @php
-                                $visibleItems = collect($section['items'])->filter(function ($item) {
+                                $sectionItems = collect($section['items']);
+
+                                if ($profileMissing !== []) {
+                                    $sectionItems = $sectionItems->where('route', 'company-profile.index');
+                                }
+
+                                $visibleItems = $sectionItems->filter(function ($item) {
                                     if (auth()->user()->isSuperAdmin()) return true;
                                     return auth()->user()->can($item['permission'] ?? '__none__');
                                 });
@@ -112,17 +113,16 @@
                                             $isParentCurrentPage = request()->routeIs($routePattern);
                                             $isActive = $isParentActive || $isParentCurrentPage;
                                             $menuKey = Str::slug($item['label']);
-                                            $parentLocked = $navLocked && $item['route'] !== 'company-profile.index' && ! $isParentCurrentPage;
                                         @endphp
 
                                         @if ($visibleChildren->isNotEmpty())
                                             <div class="sidebar-parent" data-menu="{{ $menuKey }}">
                                                 <div class="flex items-center rounded-lg {{ $isActive ? 'bg-sidebar-active' : '' }}">
-                                                    <a href="{{ route($item['route']) }}" class="sidebar-nav-item flex-1 min-w-0 flex items-center gap-3 px-3 py-2.5 text-sm font-medium {{ $isActive ? 'text-white sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} transition-colors {{ $parentLocked ? 'pointer-events-none opacity-40' : '' }}">
+                                                    <a href="{{ route($item['route']) }}" class="sidebar-nav-item flex-1 min-w-0 flex items-center gap-3 px-3 py-2.5 text-sm font-medium {{ $isActive ? 'text-white sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} transition-colors">
                                                         @include('components.icons.' . $item['icon'], ['classes' => 'sidebar-nav-icon shrink-0 h-5 w-5 ' . ($isActive ? 'text-primary-500' : 'text-sidebar-muted group-hover:text-sidebar-icon-hover')])
                                                         <span class="min-w-0 truncate">{{ $item['label'] }}</span>
                                                     </a>
-                                                    <button type="button" onclick="toggleSidebarMenu('{{ $menuKey }}')" class="sidebar-parent-btn px-3 py-2.5 text-sm {{ $isActive ? 'text-white' : 'text-sidebar-text hover:text-sidebar-hover-text' }} transition-colors {{ $parentLocked ? 'pointer-events-none opacity-40' : '' }}">
+                                                    <button type="button" onclick="toggleSidebarMenu('{{ $menuKey }}')" class="sidebar-parent-btn px-3 py-2.5 text-sm {{ $isActive ? 'text-white' : 'text-sidebar-text hover:text-sidebar-hover-text' }} transition-colors">
                                                         <svg class="h-4 w-4 transition-transform duration-200 {{ $isActive ? 'rotate-0' : '-rotate-90' }}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                             <path d="m6 9 6 6 6-6" />
                                                         </svg>
@@ -135,9 +135,8 @@
                                                                 ? str_replace('.index', '.*', $child['route'])
                                                                 : $child['route'];
                                                             $isChildActive = request()->routeIs($childRoutePattern);
-                                                            $childLocked = $navLocked && $child['route'] !== 'company-profile.index' && ! $isChildActive;
                                                         @endphp
-                                                        <a href="{{ route($child['route']) }}" class="sidebar-child sidebar-nav-item flex min-w-0 items-center gap-2.5 pl-11 pr-3 py-2 text-xs font-medium rounded-lg transition-colors {{ $isChildActive ? 'text-primary-500 bg-primary-50 sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} {{ $childLocked ? 'pointer-events-none opacity-40' : '' }}">
+                                                        <a href="{{ route($child['route']) }}" class="sidebar-child sidebar-nav-item flex min-w-0 items-center gap-2.5 pl-11 pr-3 py-2 text-xs font-medium rounded-lg transition-colors {{ $isChildActive ? 'text-primary-500 bg-primary-50 sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }}">
                                                             @if (! empty($child['icon']))
                                                                 @include('components.icons.' . $child['icon'], ['classes' => 'sidebar-nav-icon shrink-0 h-4 w-4 ' . ($isChildActive ? 'text-primary-500' : 'text-sidebar-muted')])
                                                             @endif
@@ -154,9 +153,8 @@
                                                 : $item['route'];
                                             $isActive = request()->routeIs($routePattern);
                                             $iconClasses = 'h-5 w-5 ' . ($isActive ? 'text-primary-500' : 'text-sidebar-muted group-hover:text-sidebar-icon-hover');
-                                            $itemLocked = $navLocked && $item['route'] !== 'company-profile.index' && ! $isActive;
                                         @endphp
-                                        <a href="{{ route($item['route']) }}" class="sidebar-nav-item group flex min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium {{ $isActive ? 'text-white bg-sidebar-active sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} transition-colors {{ $itemLocked ? 'pointer-events-none opacity-40' : '' }}">
+                                        <a href="{{ route($item['route']) }}" class="sidebar-nav-item group flex min-w-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium {{ $isActive ? 'text-white bg-sidebar-active sidebar-nav-item--active' : 'text-sidebar-text hover:bg-sidebar-hover hover:text-sidebar-hover-text' }} transition-colors">
                                             @include('components.icons.' . $item['icon'], ['classes' => 'sidebar-nav-icon shrink-0 ' . $iconClasses])
                                             <span class="min-w-0 truncate">{{ $item['label'] }}</span>
                                         </a>
@@ -283,10 +281,10 @@
                                 <path d="M12 16h.01" />
                             </svg>
                             <div>
-                                <p class="font-semibold">Complete your company profile to continue</p>
-                                <p class="mt-0.5 text-amber-700">Missing {{ \Illuminate\Support\Str::plural('field', count($profileMissing)) }}: {{ implode(', ', $profileMissing) }}. Every other screen stays locked until {{ count($profileMissing) === 1 ? 'it is' : 'they are' }} set.</p>
+                                <p class="font-semibold">Your company profile is still incomplete</p>
+                                <p class="mt-0.5 text-amber-700">Missing {{ \Illuminate\Support\Str::plural('field', count($profileMissing)) }}: {{ implode(', ', $profileMissing) }}. You can finish setting it up whenever you’re ready.</p>
                             </div>
-                            <a href="{{ route('company-profile.index') }}" class="ml-auto shrink-0 rounded-lg bg-amber-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-700">Set it now</a>
+                            <a href="{{ route('company-profile.index') }}" class="ml-auto shrink-0 rounded-lg bg-amber-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-amber-700">Complete profile</a>
                         </div>
                     @endif
 

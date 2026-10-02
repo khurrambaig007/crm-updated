@@ -1,4 +1,8 @@
 <x-app-layout :title="'Dashboard'">
+    @if ($showCompanyOnboarding)
+        @include('company-profiles.onboarding')
+    @endif
+
     <div class="mx-auto max-w-7xl space-y-8">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>

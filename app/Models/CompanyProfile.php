@@ -172,10 +172,8 @@ final class CompanyProfile extends Model
     /**
      * Human-readable labels of the mandatory fields that are still missing.
      *
-     * A profile is only considered complete once the company name, the logo and at
-     * least one email address are all present. Used both by the
-     * EnsureCompanyProfileIsComplete middleware and the app-layout banner so the
-     * lock and its explanation can never drift apart.
+     * A profile is considered complete once the company name and at least one email
+     * address are present. The logo is optional during onboarding.
      *
      * @return array<int, string>
      */
@@ -199,10 +197,6 @@ final class CompanyProfile extends Model
 
         if (blank($this->name)) {
             $missing[] = 'Company Name';
-        }
-
-        if (blank($this->logo)) {
-            $missing[] = 'Logo';
         }
 
         if (collect($this->emails)->filter()->isEmpty()) {

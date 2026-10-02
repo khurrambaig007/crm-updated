@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Middleware\EnsureCompanyProfileIsComplete;
 use App\Http\Middleware\PermissionMiddleware;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Application;
@@ -41,7 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
         ]);
 
-        // A dedicated group so the profile gate runs straight after authentication.
+        // A dedicated group keeps authentication ahead of route permissions.
         //
         // This must be a NEW group name, not an extension of 'auth'. Two traps:
         //  - appendToGroup('auth', ...) would create a group literally named
@@ -53,7 +52,6 @@ return Application::configure(basePath: dirname(__DIR__))
         //    "Array to string conversion". Only Closure aliases short-circuit.
         $middleware->appendToGroup('authenticated', [
             Authenticate::class,
-            EnsureCompanyProfileIsComplete::class,
         ]);
     })
     ->withEvents(discover: __DIR__.'/../app/Listeners')

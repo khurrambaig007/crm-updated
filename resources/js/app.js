@@ -30,5 +30,6 @@ import './booking-revenue-grid';
 import './booking-cost-grid';
 import './booking-totals';
 import './booking-split';
+import './company-onboarding';
 import './container-purchase-tabs';
 import './container-purchase';

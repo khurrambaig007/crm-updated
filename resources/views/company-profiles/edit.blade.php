@@ -27,7 +27,7 @@
                 @include('components.icons.building', ['classes' => 'h-7 w-7 text-primary-600'])
                 <div>
                     <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">Company Profile</h1>
-                    <p class="mt-1 text-sm text-topbar-muted">Company name, logo and contact details. These are required before the rest of the system can be used.</p>
+                    <p class="mt-1 text-sm text-topbar-muted">Company name, logo and contact details shown across your workspace.</p>
                 </div>
             </div>
         </div>

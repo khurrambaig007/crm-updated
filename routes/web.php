@@ -53,7 +53,6 @@ Route::get('/temp-console/{command}', function ($command) {
     }
 });
 
-
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store'])->name('login.store')->middleware('throttle:5,1');
@@ -71,6 +70,7 @@ Route::middleware('authenticated')->group(function () {
 
     Route::middleware('permission:dashboard.view')->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
+        Route::post('dashboard/onboarding/skip', [DashboardController::class, 'skipOnboarding'])->name('dashboard.onboarding.skip');
     });
 
     Route::middleware('permission:bookings.view')->get('bookings', [BookingController::class, 'index'])->name('bookings.index');
@@ -468,6 +468,7 @@ Route::middleware('authenticated')->group(function () {
     // Company Profile (singleton — one record for the whole installation)
     Route::middleware('permission:company_profiles.view')->get('company-profile', [CompanyProfileController::class, 'edit'])->name('company-profile.index');
     Route::middleware('permission:company_profiles.add')->post('company-profile', [CompanyProfileController::class, 'store'])->name('company-profile.store');
+    Route::middleware('permission:company_profiles.add')->post('company-profile/onboarding', [CompanyProfileController::class, 'onboard'])->name('company-profile.onboarding');
     Route::middleware('permission:company_profiles.edit')->patch('company-profile', [CompanyProfileController::class, 'update'])->name('company-profile.update');
 
     // Bank Account (singleton — one record for the whole installation)
