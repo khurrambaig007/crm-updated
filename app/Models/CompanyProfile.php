@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'subtitle', 'logo', 'website', 'number', 'emails', 'pic_name', 'pic_email', 'pic_number', 'custom_fields', 'message'])]
+#[Fillable(['name', 'subtitle', 'logo', 'website', 'number', 'emails', 'pic_name', 'pic_email', 'pic_number', 'custom_fields', 'message', 'billing_address', 'invoice_payment_instructions'])]
 final class CompanyProfile extends Model
 {
     use HasFactory;

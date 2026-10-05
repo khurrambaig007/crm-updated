@@ -50,6 +50,8 @@ abstract class SaveCompanyProfileRequest extends FormRequest
             'custom_fields.*.key' => ['nullable', 'string', 'max:191'],
             'custom_fields.*.value' => ['nullable', 'string', 'max:191'],
             'message' => ['nullable', 'string'],
+            'billing_address' => ['nullable', 'string', 'max:3000'],
+            'invoice_payment_instructions' => ['nullable', 'string', 'max:5000'],
             'remove_logo' => ['nullable', 'boolean'],
         ];
     }

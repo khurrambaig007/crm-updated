@@ -53,6 +53,12 @@ return [
                     'permission' => 'purchase_invoices.view',
                 ],
                 [
+                    'label' => 'Sales Invoices',
+                    'route' => 'sales-invoices.index',
+                    'icon' => 'receipt',
+                    'permission' => 'sales_invoices.view',
+                ],
+                [
                     'label' => 'Container Activity',
                     'route' => 'container-activities.index',
                     'icon' => 'box',
@@ -202,6 +208,10 @@ return [
         ],
         'purchase_invoices' => [
             'label' => 'Purchase Invoices',
+            'permissions' => ['view', 'add', 'edit', 'delete'],
+        ],
+        'sales_invoices' => [
+            'label' => 'Sales Invoices',
             'permissions' => ['view', 'add', 'edit', 'delete'],
         ],
         'container_activities' => [

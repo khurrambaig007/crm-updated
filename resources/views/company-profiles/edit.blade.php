@@ -101,6 +101,28 @@
                     </div>
                 </div>
 
+                {{-- Invoice details --}}
+                <div class="border-t border-card-border py-6">
+                    <h3 class="text-xl font-semibold text-gray-800">Invoice Details</h3>
+                </div>
+
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                    <div class="col-span-2">
+                        {!! html()->label('Billing Address', 'billing_address')->class($labelClasses) !!}
+                        {!! html()->textarea('billing_address', old('billing_address', $profile->billing_address))->class($inputClasses)->rows(3) !!}
+                        @error('billing_address')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div class="col-span-2">
+                        {!! html()->label('Invoice Payment Instructions', 'invoice_payment_instructions')->class($labelClasses) !!}
+                        {!! html()->textarea('invoice_payment_instructions', old('invoice_payment_instructions', $profile->invoice_payment_instructions))->class($inputClasses)->rows(3) !!}
+                        @error('invoice_payment_instructions')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
                 {{-- Emails --}}
                 <div class="border-t border-card-border py-6">
                     <h3 class="text-xl font-semibold text-gray-800">Email</h3>

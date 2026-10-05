@@ -23,6 +23,7 @@ import './phone-mask';
 import './party';
 import './shipper-bp';
 import './purchase-invoice-grid';
+import './sales-invoice';
 import './container-activity-details-grid';
 import './booking-details';
 import './booking-equipment-grid';

@@ -14,6 +14,18 @@ class ExchangeRateService
 
     public const CURRENCIES = ['PKR', 'INR', 'USD', 'MYR', 'AED', 'SAR', 'CNY'];
 
+    /** @return list<string> */
+    public static function availableCodes(): array
+    {
+        $rates = Currency::query()
+            ->orderByDesc('exchange_rate_date')
+            ->value('exchange_rate');
+
+        $codes = array_keys((array) json_decode((string) $rates, true) ?: []);
+
+        return $codes === [] ? self::CURRENCIES : array_values($codes);
+    }
+
     public function fetchAndStore(array $currencies = self::CURRENCIES, string $base = self::BASE_CURRENCY): Currency
     {
         $apiKey = config('services.exchange_rate.api_key');

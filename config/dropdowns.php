@@ -211,4 +211,12 @@ return [
         ],
     ],
 
+    // Sales Invoice screen
+    'sales_invoices' => [
+        'status' => [
+            'unpaid' => 'Unpaid',
+            'paid' => 'Paid',
+        ],
+    ],
+
 ];

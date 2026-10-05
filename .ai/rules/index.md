@@ -14,5 +14,6 @@ Before planning or editing, find the row whose globs match the file's path and r
 | database/migrations/** | .ai/rules/migrations.md |
 | app/Models/Booking.php | .ai/rules/models.md |
 | app/Http/Requests/**/*.php | .ai/rules/requests.md |
+| app/Http/Controllers/SalesInvoiceController.php, app/Models/SalesInvoice.php, app/DataTables/SalesInvoicesDataTable.php, resources/views/sales-invoices/**, app/Http/Requests/SalesInvoice/** | .ai/rules/sales-invoice.md |
 | app/Services/PermissionSyncService.php, app/Services/BookingSplitService.php | .ai/rules/services.md |
 | resources/views/**/*.blade.php, resources/views/** | .ai/rules/views.md |

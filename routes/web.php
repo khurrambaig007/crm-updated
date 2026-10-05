@@ -29,6 +29,7 @@ use App\Http\Controllers\PolController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseInvoiceController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SalesInvoiceController;
 use App\Http\Controllers\SettlementTypeController;
 use App\Http\Controllers\ShipperBpController;
 use App\Http\Controllers\SlotTermController;
@@ -187,6 +188,22 @@ Route::middleware('authenticated')->group(function () {
         Route::delete('purchase-invoices/{purchaseInvoice}/details/{detail}', [PurchaseInvoiceController::class, 'destroyDetail'])->name('purchase-invoices.details.destroy');
     });
     Route::middleware('permission:purchase_invoices.delete')->delete('purchase-invoices/{purchaseInvoice}', [PurchaseInvoiceController::class, 'destroy'])->name('purchase-invoices.destroy');
+
+    Route::middleware('permission:sales_invoices.view')->group(function () {
+        Route::get('sales-invoices', [SalesInvoiceController::class, 'index'])->name('sales-invoices.index');
+        Route::get('sales-invoices/data', [SalesInvoiceController::class, 'getData'])->name('sales-invoices.data');
+        Route::get('sales-invoices/{salesInvoice}/pdf', [SalesInvoiceController::class, 'downloadPdf'])->name('sales-invoices.pdf');
+    });
+    Route::middleware('permission:sales_invoices.add')->group(function () {
+        Route::get('sales-invoices/create', [SalesInvoiceController::class, 'create'])->name('sales-invoices.create');
+        Route::post('sales-invoices', [SalesInvoiceController::class, 'store'])->name('sales-invoices.store');
+    });
+    Route::middleware('permission:sales_invoices.edit')->group(function () {
+        Route::get('sales-invoices/{salesInvoice}/edit', [SalesInvoiceController::class, 'edit'])->name('sales-invoices.edit');
+        Route::patch('sales-invoices/{salesInvoice}', [SalesInvoiceController::class, 'update'])->name('sales-invoices.update');
+        Route::get('sales-invoices/{salesInvoice}/navigate', [SalesInvoiceController::class, 'navigate'])->name('sales-invoices.navigate');
+    });
+    Route::middleware('permission:sales_invoices.delete')->delete('sales-invoices/{salesInvoice}', [SalesInvoiceController::class, 'destroy'])->name('sales-invoices.destroy');
 
     Route::middleware('permission:container_activities.view')->get('container-activities', [ContainerActivityController::class, 'index'])->name('container-activities.index');
     Route::middleware('permission:container_activities.add')->group(function () {

@@ -100,6 +100,8 @@ class CompanyProfileController extends Controller
             'pic_email',
             'pic_number',
             'message',
+            'billing_address',
+            'invoice_payment_instructions',
         ]));
 
         $profile->emails = CompanyProfile::normalizeEmails($request->input('emails', []));
