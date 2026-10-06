@@ -142,6 +142,126 @@ class SalesInvoiceTest extends TestCase
         $this->assertSame(0, SalesInvoiceDetail::count());
     }
 
+    public function test_due_date_must_not_precede_the_invoice_date(): void
+    {
+        $party = $this->customer();
+
+        $this->actingAs($this->superAdmin())
+            ->from(route('sales-invoices.create'))
+            ->post(route('sales-invoices.store'), $this->validPayload($party, [
+                'invoice_date' => '2026-10-20',
+                'due_date' => '2026-10-05',
+            ]))
+            ->assertSessionHasErrors(['due_date']);
+
+        $this->assertSame(0, SalesInvoice::count());
+    }
+
+    public function test_invoice_date_and_due_date_may_be_omitted_or_equal(): void
+    {
+        $party = $this->customer();
+        $user = $this->superAdmin();
+
+        $this->actingAs($user)
+            ->post(route('sales-invoices.store'), $this->validPayload($party, [
+                'invoice_date' => '2026-10-20',
+                'due_date' => '2026-10-20',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($user)
+            ->post(route('sales-invoices.store'), $this->validPayload($party, [
+                'invoice_date' => null,
+                'due_date' => null,
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(2, SalesInvoice::count());
+    }
+
+    public function test_amount_labels_track_the_selected_currency(): void
+    {
+        Currency::create([
+            'exchange_rate_date' => '2026-10-04',
+            'exchange_rate' => json_encode(['USD' => 1, 'AED' => 3.67]),
+        ]);
+        $party = $this->customer();
+
+        $this->actingAs($this->superAdmin())
+            ->post(route('sales-invoices.store'), $this->validPayload($party, ['currency_code' => 'AED']));
+
+        $invoice = SalesInvoice::firstOrFail();
+
+        $this->actingAs($this->superAdmin())
+            ->get(route('sales-invoices.edit', $invoice))
+            ->assertOk()
+            ->assertSee('js-amount-label', false)
+            ->assertSee('Amount (AED)');
+    }
+
+    public function test_index_filters_by_status(): void
+    {
+        $party = $this->customer();
+        $user = $this->superAdmin();
+        $this->actingAs($user)->post(route('sales-invoices.store'), $this->validPayload($party, ['status' => 'paid']));
+        $this->actingAs($user)->post(route('sales-invoices.store'), $this->validPayload($party, ['status' => 'unpaid']));
+
+        // "unpaid" contains "paid", so a substring column search cannot separate
+        // the two statuses. The search pane sends searchPanes[<column index>].
+        $paidOnly = $this->actingAs($user)->get(route('sales-invoices.data', [
+            'draw' => 1,
+            'start' => 0,
+            'length' => 10,
+            'columns' => [
+                ['data' => 'invoice_number', 'searchable' => 'true', 'orderable' => 'true'],
+                ['data' => 'customer', 'searchable' => 'false', 'orderable' => 'false'],
+                ['data' => 'invoice_date', 'searchable' => 'true', 'orderable' => 'true'],
+                ['data' => 'currency_code', 'searchable' => 'true', 'orderable' => 'true'],
+                ['data' => 'total_amount', 'searchable' => 'true', 'orderable' => 'true'],
+                ['data' => 'status', 'searchable' => 'false', 'orderable' => 'true'],
+                ['data' => 'actions', 'searchable' => 'false', 'orderable' => 'false'],
+            ],
+            'searchPanes' => [5 => ['paid']],
+        ]), ['X-Requested-With' => 'XMLHttpRequest']);
+
+        $paidOnly->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertJsonPath('data.0.status', 'paid')
+            ->assertJsonPath('searchPanes.options.5.unpaid', 'Unpaid');
+
+        $this->assertStringContainsString('Paid', $paidOnly->json('data')[0]['status_badge']);
+
+        $this->actingAs($user)->get(route('sales-invoices.data', [
+            'draw' => 1,
+            'start' => 0,
+            'length' => 10,
+            'searchPanes' => [5 => ['']],
+        ]), ['X-Requested-With' => 'XMLHttpRequest'])->assertOk()
+            ->assertJsonPath('recordsFiltered', 2);
+    }
+
+    public function test_invoice_number_is_stamped_on_create_without_an_extra_update(): void
+    {
+        $party = $this->customer();
+
+        $this->actingAs($this->superAdmin())
+            ->post(route('sales-invoices.store'), $this->validPayload($party));
+
+        $invoice = SalesInvoice::firstOrFail();
+        $this->assertSame('APX00000001', $invoice->invoice_number);
+        $this->assertTrue($invoice->created_at->equalTo($invoice->updated_at));
+    }
+
+    public function test_create_screen_defaults_the_invoice_date_to_today(): void
+    {
+        $this->customer();
+
+        $this->actingAs($this->superAdmin())
+            ->get(route('sales-invoices.create'))
+            ->assertOk()
+            ->assertSee(now()->format('Y-m-d'));
+    }
+
     public function test_company_profile_can_save_invoice_address_and_payment_instructions(): void
     {
         $company = CompanyProfile::current();
@@ -231,11 +351,19 @@ class SalesInvoiceTest extends TestCase
         $user = $this->superAdmin();
         $this->actingAs($user)->post(route('sales-invoices.store'), $this->validPayload($party, ['status' => 'paid']));
 
-        $this->actingAs($user)
+        $index = $this->actingAs($user)
             ->get(route('sales-invoices.index'))
             ->assertOk()
             ->assertSee('Sales Invoices')
             ->assertSee('+ Create Invoice');
+
+        // The status pane is only usable if the client bundle ships the
+        // SearchPanes extension and the column carries its options.
+        $html = $index->getContent();
+        $this->assertStringContainsString('searchPanes', $html);
+        $this->assertStringContainsString('unpaid', $html);
+        $this->assertStringContainsString('paid', $html);
+        $this->assertStringContainsString('status_badge', $html);
 
         $response = $this->actingAs($user)
             ->get(route('sales-invoices.data', ['draw' => 1, 'start' => 0, 'length' => 10]), ['X-Requested-With' => 'XMLHttpRequest'])

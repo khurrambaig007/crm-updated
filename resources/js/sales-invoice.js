@@ -59,12 +59,7 @@ $(document).ready(function () {
     $(document).on('change', '#currency_code', function () {
         const code = $(this).val() || 'PKR';
         $('#sales-invoice-page').data('currency-code', code);
-        $('.line-total, #invoice-subtotal, #invoice-vat-amount, #invoice-total').each(function () {
-            const parts = $(this).text().split(' ');
-            if (parts.length > 1) {
-                $(this).text(`${code} ${parts.slice(1).join(' ')}`);
-            }
-        });
+        $('.js-amount-label').text(`Amount (${code})`);
         $('#invoice-total-label').text(`Total ${code}`);
         recalculateInvoice();
     });

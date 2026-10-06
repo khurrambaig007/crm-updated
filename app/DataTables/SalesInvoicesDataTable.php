@@ -4,6 +4,7 @@ namespace App\DataTables;
 
 use App\Models\SalesInvoice;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
+use LogicException;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Facades\DataTables;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
@@ -12,6 +13,8 @@ use Yajra\DataTables\Services\DataTable;
 
 class SalesInvoicesDataTable extends DataTable
 {
+    private const STATUS_COLUMN = 'status';
+
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return DataTables::eloquent($query)
@@ -20,7 +23,20 @@ class SalesInvoicesDataTable extends DataTable
             ->addColumn('customer', fn (SalesInvoice $model) => $model->party?->name ?? '')
             ->addColumn('status_badge', fn (SalesInvoice $model) => $this->statusBadge($model))
             ->addColumn('actions', fn (SalesInvoice $model) => $this->actionsHtml($model))
-            ->rawColumns(['status_badge', 'actions']);
+            ->rawColumns(['status_badge', 'actions'])
+            ->searchPane(
+                $this->statusPaneKey(),
+                $this->statusPaneOptions(),
+                function (QueryBuilder $query, array $values): void {
+                    // ConvertEmptyStringsToNull turns the blank "All" option into null, so test
+                    // for a filled value rather than comparing against ''.
+                    $values = array_values(array_filter($values, filled(...)));
+
+                    if ($values !== []) {
+                        $query->whereIn(self::STATUS_COLUMN, $values);
+                    }
+                }
+            );
     }
 
     public function query(SalesInvoice $model): QueryBuilder
@@ -70,7 +86,12 @@ class SalesInvoicesDataTable extends DataTable
             Column::make('invoice_date')->title('Date')->responsivePriority(4),
             Column::make('currency_code')->title('Currency')->responsivePriority(6),
             Column::make('total_amount')->title('Total Amount')->responsivePriority(3),
-            Column::computed('status_badge')->title('Status')->orderable(false)->searchable(false)->responsivePriority(5),
+            Column::make(self::STATUS_COLUMN)
+                ->title('Status')
+                ->content('status_badge')
+                ->searchable(false)
+                ->searchPanes(['options' => $this->statusPaneOptions()])
+                ->responsivePriority(5),
             Column::computed('actions')
                 ->title('')
                 ->orderable(false)
@@ -80,6 +101,27 @@ class SalesInvoicesDataTable extends DataTable
                 ->responsivePriority(1)
                 ->addClass('text-right'),
         ];
+    }
+
+    /**
+     * Column index DataTables sends back as the searchPanes key. The panes API
+     * keys on position, so this must stay in step with getColumns().
+     */
+    private function statusPaneKey(): int
+    {
+        foreach ($this->getColumns() as $index => $column) {
+            if ($column->get('data') === self::STATUS_COLUMN) {
+                return $index;
+            }
+        }
+
+        throw new LogicException('The status column must exist in getColumns() for the search pane to work.');
+    }
+
+    /** @return array<string, string> */
+    private function statusPaneOptions(): array
+    {
+        return ['' => 'All'] + config('dropdowns.sales_invoices.status', []);
     }
 
     private function statusBadge(SalesInvoice $model): string

@@ -12,6 +12,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['currency_code', 'invoice_number', 'party_id', 'invoice_date', 'due_date', 'our_reference', 'customer_contact', 'remarks', 'vat_rate', 'subtotal', 'vat_amount', 'total_amount', 'status'])]
 final class SalesInvoice extends Model
 {
+    protected const INVOICE_NUMBER_PREFIX = 'APX';
+
+    protected const INVOICE_NUMBER_PAD = 8;
+
+    protected static function booted(): void
+    {
+        self::created(function (self $invoice): void {
+            $invoice->forceFill([
+                'invoice_number' => self::INVOICE_NUMBER_PREFIX.str_pad((string) $invoice->id, self::INVOICE_NUMBER_PAD, '0', STR_PAD_LEFT),
+            ])->saveQuietly();
+        });
+    }
+
     protected function casts(): array
     {
         return [

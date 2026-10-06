@@ -12,7 +12,7 @@
         }
     @endphp
 
-    <div class="mx-auto max-w-full space-y-6" id="sales-invoice-page" data-vat-rate="{{ old('vat_rate', $invoice->vat_rate ?? 0) }}" data-currency-code="{{ $currencyCode }}">
+    <div class="mx-auto max-w-full space-y-6" id="sales-invoice-page" data-currency-code="{{ $currencyCode }}">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-center gap-3">
                 @include('components.icons.receipt', ['classes' => 'h-7 w-7 text-primary-600'])
@@ -71,6 +71,12 @@
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-topbar-muted">⌄</div>
                         </div>
                         @error('status')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        {!! html()->label('&nbsp;', 'currency_placeholder_1')->class($labelClasses.' hidden') !!}
+                    </div>
+                    <div>
+                        {!! html()->label('&nbsp;', 'currency_placeholder_2')->class($labelClasses.' hidden') !!}
                     </div>
                 </div>
 
@@ -152,7 +158,7 @@
                                     @error("details.{$index}.container_number")<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                                 </div>
                                 <div>
-                                    {!! html()->label('Amount ('.$currencyCode.')', 'details_'.$index.'_amount')->class($labelClasses) !!}
+                                    {!! html()->label('Amount ('.$currencyCode.')', 'details_'.$index.'_amount')->class($labelClasses.' js-amount-label') !!}
                                     <input name="details[{{ $index }}][amount]" id="details_{{ $index }}_amount" type="number" min="0" step="0.01" value="{{ $detail['amount'] ?? '' }}" class="{{ $inputClasses }}" required>
                                     @error("details.{$index}.amount")<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                                 </div>
@@ -191,7 +197,7 @@
         <div class="sales-invoice-detail grid grid-cols-1 items-end gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <div><label class="block text-sm font-medium text-topbar-text">Description</label><textarea name="details[__INDEX__][description]" class="mt-1 block w-full rounded-md border-0 bg-card-bg px-3 py-2 text-sm text-topbar-text shadow-sm ring-1 ring-inset ring-card-border" rows="2" required></textarea></div>
             <div><label class="block text-sm font-medium text-topbar-text">Container Number</label><input name="details[__INDEX__][container_number]" class="mt-1 block w-full rounded-md border-0 bg-card-bg px-3 py-2 text-sm text-topbar-text shadow-sm ring-1 ring-inset ring-card-border"></div>
-            <div><label class="block text-sm font-medium text-topbar-text">Amount ({{ $currencyCode }})</label><input name="details[__INDEX__][amount]" type="number" min="0" step="0.01" class="mt-1 block w-full rounded-md border-0 bg-card-bg px-3 py-2 text-sm text-topbar-text shadow-sm ring-1 ring-inset ring-card-border" required></div>
+            <div><label class="block text-sm font-medium text-topbar-text js-amount-label">Amount ({{ $currencyCode }})</label><input name="details[__INDEX__][amount]" type="number" min="0" step="0.01" class="mt-1 block w-full rounded-md border-0 bg-card-bg px-3 py-2 text-sm text-topbar-text shadow-sm ring-1 ring-inset ring-card-border" required></div>
             <div class="flex items-center gap-4"><span class="line-total min-w-24 text-sm font-medium text-topbar-text">{{ $currencyCode }} 0.00</span><button type="button" class="remove-sales-invoice-detail rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-100">Remove</button></div>
         </div>
     </template>

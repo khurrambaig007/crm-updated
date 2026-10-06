@@ -19,12 +19,8 @@ use Illuminate\View\View;
 
 class SalesInvoiceController extends Controller
 {
-    public function index(SalesInvoicesDataTable $dataTable): mixed
+    public function index(SalesInvoicesDataTable $dataTable): View
     {
-        if (request()->ajax()) {
-            return $dataTable->ajax();
-        }
-
         return $dataTable->render('sales-invoices.index');
     }
 
@@ -35,7 +31,10 @@ class SalesInvoiceController extends Controller
 
     public function create(): View
     {
-        return view('sales-invoices.edit', $this->formData(new SalesInvoice, true));
+        $invoice = new SalesInvoice;
+        $invoice->invoice_date = today();
+
+        return view('sales-invoices.edit', $this->formData($invoice, true));
     }
 
     public function store(StoreSalesInvoiceRequest $request): RedirectResponse
@@ -47,7 +46,6 @@ class SalesInvoiceController extends Controller
 
             $totals = $this->calculateTotals($details, (float) $validated['vat_rate']);
             $invoice = SalesInvoice::create(array_merge($validated, $totals, ['invoice_number' => null]));
-            $invoice->update(['invoice_number' => 'APX'.str_pad((string) $invoice->id, 8, '0', STR_PAD_LEFT)]);
             $invoice->details()->createMany($details);
 
             return $invoice;

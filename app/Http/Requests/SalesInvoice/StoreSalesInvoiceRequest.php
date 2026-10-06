@@ -37,7 +37,7 @@ class StoreSalesInvoiceRequest extends FormRequest
             'status' => ['required', 'string', Rule::in(array_keys(config('dropdowns.sales_invoices.status', [])))],
             'party_id' => ['required', 'integer', 'exists:p_a_s,id'],
             'invoice_date' => ['nullable', 'date'],
-            'due_date' => ['nullable', 'date'],
+            'due_date' => ['nullable', 'date', 'after_or_equal:invoice_date'],
             'our_reference' => ['nullable', 'string', 'max:191'],
             'customer_contact' => ['nullable', 'string', 'max:191'],
             'remarks' => ['nullable', 'string', 'max:3000'],
