@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['currency_code', 'invoice_number', 'party_id', 'invoice_date', 'due_date', 'our_reference', 'customer_contact', 'remarks', 'vat_rate', 'subtotal', 'vat_amount', 'total_amount', 'status'])]
+#[Fillable(['currency_code', 'invoice_number', 'party_id', 'bank_account_id', 'invoice_date', 'due_date', 'our_reference', 'customer_contact', 'remarks', 'vat_rate', 'subtotal', 'vat_amount', 'total_amount', 'status'])]
 final class SalesInvoice extends Model
 {
     protected const INVOICE_NUMBER_PREFIX = 'APX';
@@ -42,6 +42,11 @@ final class SalesInvoice extends Model
     public function party(): BelongsTo
     {
         return $this->belongsTo(Party::class);
+    }
+
+    public function bankAccount(): BelongsTo
+    {
+        return $this->belongsTo(BankAccount::class);
     }
 
     public function details(): HasMany

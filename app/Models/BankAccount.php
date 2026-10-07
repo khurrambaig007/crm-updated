@@ -24,22 +24,25 @@ final class BankAccount extends Model
     }
 
     /**
-     * The only bank account in the system, or an unsaved instance when none exists yet.
+     * Text used for bank-account dropdown options across the app.
+     *
+     * Must match between the server-rendered selects and the
+     * bank-accounts.quick-create JSON label so option lists never drift.
+     */
+    public function optionLabel(): string
+    {
+        return trim(sprintf('%s — %s (%s)', $this->bank ?: $this->bank_name, $this->beneficiary_name, $this->account));
+    }
+
+    /**
+     * The first bank account row, or an unsaved instance when none exists yet.
+     *
+     * Fallback used by the sales invoice PDF until the invoice itself references a
+     * specific bank account via sales_invoices.bank_account_id.
      */
     public static function current(): self
     {
         return self::query()->first() ?? new self;
-    }
-
-    /**
-     * Whether a bank account record has been created yet.
-     *
-     * Named hasAccount() rather than exists() so it is never confused with
-     * Eloquent's $model->exists property.
-     */
-    public static function hasAccount(): bool
-    {
-        return self::query()->exists();
     }
 
     /**

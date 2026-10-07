@@ -94,14 +94,12 @@ class SalesInvoiceTest extends TestCase
             ->assertSee('UNR Test Logistics');
     }
 
-    public function test_user_can_update_invoice_lines_totals_and_navigation(): void
+    public function test_user_can_update_invoice_lines_and_totals(): void
     {
         $party = $this->customer();
         $user = $this->superAdmin();
         $this->actingAs($user)->post(route('sales-invoices.store'), $this->validPayload($party));
         $first = SalesInvoice::firstOrFail();
-        $this->actingAs($user)->post(route('sales-invoices.store'), $this->validPayload($party));
-        $second = SalesInvoice::latest('id')->firstOrFail();
 
         $this->actingAs($user)
             ->patch(route('sales-invoices.update', $first), $this->validPayload($party, [
@@ -115,14 +113,6 @@ class SalesInvoiceTest extends TestCase
         $this->assertSame('5.03', $first->vat_amount);
         $this->assertSame('105.53', $first->total_amount);
         $this->assertSame('Updated container charge', $first->details()->firstOrFail()->description);
-
-        $this->actingAs($user)
-            ->get(route('sales-invoices.navigate', $second))
-            ->assertOk()
-            ->assertJsonPath('invoice.invoice_number', $second->invoice_number)
-            ->assertJsonPath('prevId', $first->id)
-            ->assertJsonPath('current', 2)
-            ->assertJsonPath('total', 2);
     }
 
     public function test_invoice_requires_a_valid_customer_and_non_blank_detail_line(): void
@@ -215,19 +205,20 @@ class SalesInvoiceTest extends TestCase
             'columns' => [
                 ['data' => 'invoice_number', 'searchable' => 'true', 'orderable' => 'true'],
                 ['data' => 'customer', 'searchable' => 'false', 'orderable' => 'false'],
+                ['data' => 'bank', 'searchable' => 'false', 'orderable' => 'false'],
                 ['data' => 'invoice_date', 'searchable' => 'true', 'orderable' => 'true'],
                 ['data' => 'currency_code', 'searchable' => 'true', 'orderable' => 'true'],
                 ['data' => 'total_amount', 'searchable' => 'true', 'orderable' => 'true'],
                 ['data' => 'status', 'searchable' => 'false', 'orderable' => 'true'],
                 ['data' => 'actions', 'searchable' => 'false', 'orderable' => 'false'],
             ],
-            'searchPanes' => [5 => ['paid']],
+            'searchPanes' => [6 => ['paid']],
         ]), ['X-Requested-With' => 'XMLHttpRequest']);
 
         $paidOnly->assertOk()
             ->assertJsonPath('recordsFiltered', 1)
             ->assertJsonPath('data.0.status', 'paid')
-            ->assertJsonPath('searchPanes.options.5.unpaid', 'Unpaid');
+            ->assertJsonPath('searchPanes.options.6.unpaid', 'Unpaid');
 
         $this->assertStringContainsString('Paid', $paidOnly->json('data')[0]['status_badge']);
 
@@ -235,7 +226,7 @@ class SalesInvoiceTest extends TestCase
             'draw' => 1,
             'start' => 0,
             'length' => 10,
-            'searchPanes' => [5 => ['']],
+            'searchPanes' => [6 => ['']],
         ]), ['X-Requested-With' => 'XMLHttpRequest'])->assertOk()
             ->assertJsonPath('recordsFiltered', 2);
     }
@@ -331,6 +322,11 @@ class SalesInvoiceTest extends TestCase
         $response = $this->actingAs($this->superAdmin())->get(route('sales-invoices.pdf', $invoice));
         $response->assertOk()->assertHeader('content-type', 'application/pdf')->assertSee('%PDF', false);
         $this->assertStringContainsString('APX00000001.pdf', $response->headers->get('content-disposition'));
+
+        $viewed = $this->actingAs($this->superAdmin())->get(route('sales-invoices.pdf-view', $invoice));
+        $viewed->assertOk()->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString('inline', $viewed->headers->get('content-disposition'));
+        $this->assertStringContainsString('APX00000001.pdf', $viewed->headers->get('content-disposition'));
     }
 
     public function test_pdf_download_succeeds_without_optional_company_and_bank_values(): void
@@ -375,6 +371,7 @@ class SalesInvoiceTest extends TestCase
         $this->assertSame('UNR Test Logistics', $row['customer']);
         $this->assertSame('PKR 269,500.00', $row['total_amount']);
         $this->assertStringContainsString('Paid', $row['status_badge']);
+        $this->assertStringContainsString((string) route('sales-invoices.pdf-view', 1), $row['actions']);
     }
 
     public function test_currency_codes_come_from_the_latest_exchange_rate_snapshot(): void
@@ -428,5 +425,73 @@ class SalesInvoiceTest extends TestCase
             ->assertSessionHasErrors(['currency_code', 'status']);
 
         $this->assertSame(0, SalesInvoice::count());
+    }
+
+    public function test_invoice_stores_the_chosen_bank_account(): void
+    {
+        $party = $this->customer();
+        $first = BankAccount::create(['bank' => 'HBL', 'beneficiary_name' => 'First Beneficiary', 'account' => '111']);
+        $chosen = BankAccount::create(['bank' => 'MCB', 'beneficiary_name' => 'Second Beneficiary', 'account' => '222']);
+
+        $this->actingAs($this->superAdmin())
+            ->post(route('sales-invoices.store'), $this->validPayload($party, ['bank_account_id' => $chosen->id]))
+            ->assertSessionHasNoErrors();
+
+        $invoice = SalesInvoice::with('bankAccount')->firstOrFail();
+        $this->assertSame($chosen->id, $invoice->bank_account_id);
+        $this->assertSame($chosen->beneficiary_name, $invoice->bankAccount->beneficiary_name);
+
+        $this->actingAs($this->superAdmin())
+            ->get(route('sales-invoices.edit', $invoice))
+            ->assertOk()
+            ->assertSee('Second Beneficiary');
+    }
+
+    public function test_bank_account_id_must_reference_a_saved_account(): void
+    {
+        $party = $this->customer();
+
+        $this->actingAs($this->superAdmin())
+            ->post(route('sales-invoices.store'), $this->validPayload($party, ['bank_account_id' => 999999]))
+            ->assertSessionHasErrors(['bank_account_id']);
+
+        $this->assertSame(0, SalesInvoice::count());
+    }
+
+    public function test_pdf_prints_the_invoices_chosen_bank_account(): void
+    {
+        BankAccount::create([
+            'bank_name' => 'Mashreq Bank',
+            'beneficiary_name' => 'Test Beneficiary',
+            'account' => '1234567890',
+            'iban' => 'PK00TEST0000001234567890',
+        ]);
+        $chosen = BankAccount::create([
+            'bank' => 'MCB',
+            'bank_name' => 'MCB Bank',
+            'beneficiary_name' => 'Chosen Beneficiary',
+            'account' => '99999',
+            'iban' => 'PK00CHOSEN0000009999999999',
+        ]);
+        $party = $this->customer();
+        $this->actingAs($this->superAdmin())->post(route('sales-invoices.store'), $this->validPayload($party, ['bank_account_id' => $chosen->id]));
+
+        $invoice = SalesInvoice::with(['party', 'details', 'bankAccount'])->firstOrFail();
+
+        $this->view('sales-invoices.pdf', [
+            'invoice' => $invoice,
+            'company' => CompanyProfile::current(),
+            'bankAccount' => $invoice->bankAccount,
+            'brandLogoPath' => CompanyProfile::current()->logoPath(),
+            'brandLogoSize' => CompanyProfile::current()->logoDisplaySize(240, 125),
+        ])
+            ->assertSee('Chosen Beneficiary')
+            ->assertSee('PK00CHOSEN0000009999999999')
+            ->assertDontSee('Test Beneficiary');
+
+        $this->actingAs($this->superAdmin())
+            ->get(route('sales-invoices.pdf', $invoice))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
     }
 }

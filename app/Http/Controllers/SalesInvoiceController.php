@@ -11,7 +11,7 @@ use App\Models\Party;
 use App\Models\SalesInvoice;
 use App\Services\ExchangeRateService;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\JsonResponse;
+use Barryvdh\DomPDF\PDF as PdfDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -86,20 +86,24 @@ class SalesInvoiceController extends Controller
         return redirect()->route('sales-invoices.index')->with('status', 'Sales invoice deleted successfully.');
     }
 
-    public function navigate(SalesInvoice $salesInvoice): JsonResponse
-    {
-        $salesInvoice->load(['party', 'details']);
-
-        return response()->json(array_merge([
-            'invoice' => $salesInvoice,
-        ], $this->navigationData($salesInvoice)));
-    }
-
     public function downloadPdf(SalesInvoice $salesInvoice): Response
     {
-        $salesInvoice->load(['party', 'details']);
+        return $this->buildPdf($salesInvoice)->download($salesInvoice->invoice_number.'.pdf');
+    }
+
+    public function viewPdf(SalesInvoice $salesInvoice): Response
+    {
+        // Inline disposition renders the PDF in the browser instead of triggering a download.
+        return $this->buildPdf($salesInvoice)->stream($salesInvoice->invoice_number.'.pdf');
+    }
+
+    private function buildPdf(SalesInvoice $salesInvoice): PdfDocument
+    {
+        $salesInvoice->load(['party', 'details', 'bankAccount']);
         $profile = CompanyProfile::current();
-        $bankAccount = BankAccount::current();
+        // Prefer the account chosen on the invoice; fall back to the first saved
+        // account for invoices created before bank-account selection existed.
+        $bankAccount = $salesInvoice->bankAccount ?? BankAccount::current();
 
         return Pdf::loadView('sales-invoices.pdf', [
             'invoice' => $salesInvoice,
@@ -107,7 +111,7 @@ class SalesInvoiceController extends Controller
             'bankAccount' => $bankAccount,
             'brandLogoPath' => $profile->logoPath(),
             'brandLogoSize' => $profile->logoDisplaySize(240, 125),
-        ])->setPaper('a4', 'portrait')->download($salesInvoice->invoice_number.'.pdf');
+        ])->setPaper('a4', 'portrait');
     }
 
     /** @return array<string, mixed> */
@@ -115,27 +119,12 @@ class SalesInvoiceController extends Controller
     {
         $invoice->loadMissing(['party', 'details']);
 
-        return array_merge([
+        return [
             'invoice' => $invoice,
             'isNew' => $isNew,
             'parties' => Party::query()->orderBy('name')->get(),
+            'bankAccounts' => BankAccount::query()->orderBy('bank')->orderBy('account')->get(),
             'currencyCodes' => ExchangeRateService::availableCodes(),
-        ], $this->navigationData($invoice));
-    }
-
-    /** @return array<string, int|null> */
-    private function navigationData(SalesInvoice $invoice): array
-    {
-        $query = SalesInvoice::query();
-        $total = (clone $query)->count();
-
-        return [
-            'total' => $total,
-            'current' => $invoice->exists ? (clone $query)->where('id', '<=', $invoice->id)->count() : $total + 1,
-            'firstId' => (clone $query)->orderBy('id')->value('id'),
-            'lastId' => (clone $query)->orderByDesc('id')->value('id'),
-            'prevId' => $invoice->exists ? (clone $query)->where('id', '<', $invoice->id)->orderByDesc('id')->value('id') : null,
-            'nextId' => $invoice->exists ? (clone $query)->where('id', '>', $invoice->id)->orderBy('id')->value('id') : null,
         ];
     }
 

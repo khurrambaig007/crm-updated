@@ -34,3 +34,5 @@ import './booking-split';
 import './company-onboarding';
 import './container-purchase-tabs';
 import './container-purchase';
+import './bank-account';
+import './sales-invoice-bank-account';

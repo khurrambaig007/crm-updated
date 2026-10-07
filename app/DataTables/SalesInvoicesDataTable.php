@@ -21,6 +21,7 @@ class SalesInvoicesDataTable extends DataTable
             ->editColumn('invoice_date', fn (SalesInvoice $model) => $model->invoice_date?->format('Y-m-d') ?? '')
             ->editColumn('total_amount', fn (SalesInvoice $model) => $model->currency_code.' '.number_format((float) $model->total_amount, 2))
             ->addColumn('customer', fn (SalesInvoice $model) => $model->party?->name ?? '')
+            ->addColumn('bank', fn (SalesInvoice $model) => $model->bankAccount?->bank ?? '')
             ->addColumn('status_badge', fn (SalesInvoice $model) => $this->statusBadge($model))
             ->addColumn('actions', fn (SalesInvoice $model) => $this->actionsHtml($model))
             ->rawColumns(['status_badge', 'actions'])
@@ -41,7 +42,7 @@ class SalesInvoicesDataTable extends DataTable
 
     public function query(SalesInvoice $model): QueryBuilder
     {
-        return $model->newQuery()->with('party');
+        return $model->newQuery()->with(['party', 'bankAccount']);
     }
 
     public function html(): HtmlBuilder
@@ -83,6 +84,7 @@ class SalesInvoicesDataTable extends DataTable
         return [
             Column::make('invoice_number')->title('Invoice #')->responsivePriority(1),
             Column::computed('customer')->title('Customer')->orderable(false)->searchable(false)->responsivePriority(2),
+            Column::computed('bank')->title('Bank')->orderable(false)->searchable(false)->responsivePriority(7),
             Column::make('invoice_date')->title('Date')->responsivePriority(4),
             Column::make('currency_code')->title('Currency')->responsivePriority(6),
             Column::make('total_amount')->title('Total Amount')->responsivePriority(3),
@@ -144,15 +146,17 @@ class SalesInvoicesDataTable extends DataTable
         $canDelete = $user->isSuperAdmin() || $user->can('sales_invoices.delete');
 
         $edit = $canEdit
-            ? '<a href="'.e(route('sales-invoices.edit', $model)).'" class="group inline-flex h-8 w-8 items-center justify-center rounded-lg text-topbar-muted transition-colors hover:bg-primary-50 hover:text-primary-600" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 transition-colors group-hover:text-white"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg></a>'
+            ? '<a href="'.e(route('sales-invoices.edit', $model)).'" class="group inline-flex h-8 w-8 items-center justify-center rounded-lg text-topbar-muted transition-colors hover:bg-primary-50 hover:text-primary-600" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 transition-colors"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg></a>'
             : '';
 
-        $pdf = '<a href="'.e(route('sales-invoices.pdf', $model)).'" class="group inline-flex h-8 w-8 items-center justify-center rounded-lg text-topbar-muted transition-colors hover:bg-blue-50 hover:text-blue-600" title="Download PDF"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 transition-colors group-hover:text-white"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /><path d="M12 15V3" /></svg></a>';
+        $pdf = '<a href="'.e(route('sales-invoices.pdf', $model)).'" class="group inline-flex h-8 w-8 items-center justify-center rounded-lg text-topbar-muted transition-colors hover:bg-blue-50 hover:text-blue-600" title="Download PDF"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 transition-colors"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /><path d="M12 15V3" /></svg></a>';
+
+        $view = '<a href="'.e(route('sales-invoices.pdf-view', $model)).'" target="_blank" rel="noopener" class="group inline-flex h-8 w-8 items-center justify-center rounded-lg text-topbar-muted transition-colors hover:bg-blue-50 hover:text-blue-600" title="View PDF"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 transition-colors"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg></a>';
 
         $delete = $canDelete
-            ? '<form method="POST" action="'.e(route('sales-invoices.destroy', $model)).'" class="delete-form inline-block" data-confirm="Are you sure you want to delete this sales invoice?"><input type="hidden" name="_token" value="'.csrf_token().'"><input type="hidden" name="_method" value="DELETE"><button type="submit" class="group inline-flex h-8 w-8 items-center justify-center rounded-lg text-topbar-muted transition-colors hover:bg-red-500 hover:text-white" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 transition-colors group-hover:text-white"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg></button></form>'
+            ? '<form method="POST" action="'.e(route('sales-invoices.destroy', $model)).'" class="delete-form inline-block" data-confirm="Are you sure you want to delete this sales invoice?"><input type="hidden" name="_token" value="'.csrf_token().'"><input type="hidden" name="_method" value="DELETE"><button type="submit" class="group inline-flex h-8 w-8 items-center justify-center rounded-lg text-topbar-muted transition-colors hover:bg-red-50 hover:text-red-600" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 transition-colors"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg></button></form>'
             : '';
 
-        return '<div class="flex items-center justify-end gap-2">'.$edit.$pdf.$delete.'</div>';
+        return '<div class="flex items-center justify-end gap-2">'.$edit.$view.$pdf.$delete.'</div>';
     }
 }

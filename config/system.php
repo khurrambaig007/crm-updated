@@ -125,7 +125,7 @@ return [
                     'permission' => 'company_profiles.view',
                 ],
                 [
-                    'label' => 'Bank Account',
+                    'label' => 'Bank Accounts',
                     'route' => 'bank-accounts.index',
                     'icon' => 'landmark',
                     'permission' => 'bank_accounts.view',
@@ -228,7 +228,7 @@ return [
         ],
         'bank_accounts' => [
             'label' => 'Bank Account',
-            'permissions' => ['view', 'add', 'edit'],
+            'permissions' => ['view', 'add', 'edit', 'delete'],
         ],
         'costs' => [
             'label' => 'Cost',

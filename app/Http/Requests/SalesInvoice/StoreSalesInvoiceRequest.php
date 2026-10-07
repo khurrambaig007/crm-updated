@@ -36,6 +36,7 @@ class StoreSalesInvoiceRequest extends FormRequest
             'currency_code' => ['required', 'string', 'max:10', Rule::in(ExchangeRateService::availableCodes())],
             'status' => ['required', 'string', Rule::in(array_keys(config('dropdowns.sales_invoices.status', [])))],
             'party_id' => ['required', 'integer', 'exists:p_a_s,id'],
+            'bank_account_id' => ['nullable', 'integer', 'exists:bank_accounts,id'],
             'invoice_date' => ['nullable', 'date'],
             'due_date' => ['nullable', 'date', 'after_or_equal:invoice_date'],
             'our_reference' => ['nullable', 'string', 'max:191'],

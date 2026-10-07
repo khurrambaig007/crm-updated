@@ -1,6 +1,7 @@
-<x-app-layout :title="'Edit Bank Account'">
+<x-app-layout :title="'New Bank Account'">
     @php
-        $isNew = false;
+        $account = new App\Models\BankAccount;
+        $isNew = true;
         $labelClasses = 'block text-sm font-medium text-topbar-text';
         $inputClasses = 'mt-1.5 block w-full rounded-lg border-0 bg-card-bg px-3 py-2.5 text-topbar-text shadow-sm ring-1 ring-inset ring-card-border placeholder:text-topbar-muted focus:ring-2 focus:ring-inset focus:ring-primary-500 transition';
         $selectClasses = 'mt-1.5 block w-full rounded-lg border-0 bg-card-bg px-3 py-2.5 pr-10 text-topbar-text shadow-sm ring-1 ring-inset ring-card-border focus:ring-2 focus:ring-inset focus:ring-primary-500 transition';
@@ -12,8 +13,8 @@
             <div class="flex items-center gap-3">
                 @include('components.icons.landmark', ['classes' => 'h-7 w-7 text-primary-600'])
                 <div>
-                    <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">Edit Bank Account</h1>
-                    <p class="mt-1 text-sm text-topbar-muted">Update the details for {{ $account->beneficiary_name }}.</p>
+                    <h1 class="text-2xl font-semibold tracking-tight text-topbar-text">New Bank Account</h1>
+                    <p class="mt-1 text-sm text-topbar-muted">Add bank and beneficiary details.</p>
                 </div>
             </div>
             <a href="{{ route('bank-accounts.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">

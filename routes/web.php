@@ -193,6 +193,7 @@ Route::middleware('authenticated')->group(function () {
         Route::get('sales-invoices', [SalesInvoiceController::class, 'index'])->name('sales-invoices.index');
         Route::get('sales-invoices/data', [SalesInvoiceController::class, 'getData'])->name('sales-invoices.data');
         Route::get('sales-invoices/{salesInvoice}/pdf', [SalesInvoiceController::class, 'downloadPdf'])->name('sales-invoices.pdf');
+        Route::get('sales-invoices/{salesInvoice}/view', [SalesInvoiceController::class, 'viewPdf'])->name('sales-invoices.pdf-view');
     });
     Route::middleware('permission:sales_invoices.add')->group(function () {
         Route::get('sales-invoices/create', [SalesInvoiceController::class, 'create'])->name('sales-invoices.create');
@@ -201,7 +202,6 @@ Route::middleware('authenticated')->group(function () {
     Route::middleware('permission:sales_invoices.edit')->group(function () {
         Route::get('sales-invoices/{salesInvoice}/edit', [SalesInvoiceController::class, 'edit'])->name('sales-invoices.edit');
         Route::patch('sales-invoices/{salesInvoice}', [SalesInvoiceController::class, 'update'])->name('sales-invoices.update');
-        Route::get('sales-invoices/{salesInvoice}/navigate', [SalesInvoiceController::class, 'navigate'])->name('sales-invoices.navigate');
     });
     Route::middleware('permission:sales_invoices.delete')->delete('sales-invoices/{salesInvoice}', [SalesInvoiceController::class, 'destroy'])->name('sales-invoices.destroy');
 
@@ -488,10 +488,18 @@ Route::middleware('authenticated')->group(function () {
     Route::middleware('permission:company_profiles.add')->post('company-profile/onboarding', [CompanyProfileController::class, 'onboard'])->name('company-profile.onboarding');
     Route::middleware('permission:company_profiles.edit')->patch('company-profile', [CompanyProfileController::class, 'update'])->name('company-profile.update');
 
-    // Bank Account (singleton — one record for the whole installation)
-    Route::middleware('permission:bank_accounts.view')->get('bank-accounts', [BankAccountController::class, 'edit'])->name('bank-accounts.index');
-    Route::middleware('permission:bank_accounts.add')->post('bank-accounts', [BankAccountController::class, 'store'])->name('bank-accounts.store');
-    Route::middleware('permission:bank_accounts.edit')->patch('bank-accounts', [BankAccountController::class, 'update'])->name('bank-accounts.update');
+    // Bank Accounts (multi-record CRUD)
+    Route::middleware('permission:bank_accounts.view')->get('bank-accounts', [BankAccountController::class, 'index'])->name('bank-accounts.index');
+    Route::middleware('permission:bank_accounts.add')->group(function () {
+        Route::get('bank-accounts/create', [BankAccountController::class, 'create'])->name('bank-accounts.create');
+        Route::post('bank-accounts', [BankAccountController::class, 'store'])->name('bank-accounts.store');
+        Route::post('bank-accounts/quick-create', [BankAccountController::class, 'quickStore'])->name('bank-accounts.quick-create');
+    });
+    Route::middleware('permission:bank_accounts.edit')->group(function () {
+        Route::get('bank-accounts/{bankAccount}/edit', [BankAccountController::class, 'edit'])->name('bank-accounts.edit');
+        Route::patch('bank-accounts/{bankAccount}', [BankAccountController::class, 'update'])->name('bank-accounts.update');
+    });
+    Route::middleware('permission:bank_accounts.delete')->delete('bank-accounts/{bankAccount}', [BankAccountController::class, 'destroy'])->name('bank-accounts.destroy');
 
     Route::middleware('permission:profile.view')->group(function () {
         Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -2,7 +2,6 @@
     @php
         $labelClasses = 'block text-sm font-medium text-topbar-text';
         $inputClasses = 'mt-1 block w-full rounded-md border-0 bg-card-bg px-3 py-2 text-sm text-topbar-text shadow-sm ring-1 ring-inset ring-card-border focus:ring-2 focus:ring-inset focus:ring-primary-500';
-        $navClasses = 'rounded-md border border-card-border px-3 py-1.5 text-sm text-topbar-text hover:bg-primary-50 disabled:opacity-40';
         $currencyCode = old('currency_code', $invoice->currency_code ?? 'PKR');
         $details = old('details', $invoice->details->isNotEmpty()
             ? $invoice->details->map(fn ($detail) => $detail->only(['description', 'container_number', 'amount']))->all()
@@ -22,32 +21,16 @@
                 </div>
             </div>
             @if (! $isNew)
-                <a href="{{ route('sales-invoices.pdf', $invoice) }}" class="rounded-lg bg-primary-900 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700">Download PDF</a>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('sales-invoices.pdf-view', $invoice) }}" target="_blank" rel="noopener" class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary-900 ring-1 ring-inset ring-card-border hover:bg-primary-50">View PDF</a>
+                    <a href="{{ route('sales-invoices.pdf', $invoice) }}" class="rounded-lg bg-primary-900 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700">Download PDF</a>
+                </div>
             @endif
         </div>
 
         <div class="rounded-2xl bg-card-bg p-5 shadow-sm ring-1 ring-card-border sm:p-7">
-            <nav class="mb-6 flex flex-wrap items-center justify-center gap-2" aria-label="Invoice record navigation">
-                @foreach ([['First', $firstId], ['Prev', $prevId]] as [$label, $targetId])
-                    @if ($targetId)
-                        <a class="{{ $navClasses }}" href="{{ route('sales-invoices.edit', $targetId) }}">{{ $label }}</a>
-                    @else
-                        <span class="{{ $navClasses }} opacity-40">{{ $label }}</span>
-                    @endif
-                @endforeach
-                <a class="{{ $navClasses }}" href="{{ route('sales-invoices.create') }}">New</a>
-                <span class="px-2 text-sm text-topbar-muted">Record {{ $current }} of {{ $total }}</span>
-                @foreach ([['Next', $nextId], ['Last', $lastId]] as [$label, $targetId])
-                    @if ($targetId && ($isNew || $targetId !== $invoice->id))
-                        <a class="{{ $navClasses }}" href="{{ route('sales-invoices.edit', $targetId) }}">{{ $label }}</a>
-                    @else
-                        <span class="{{ $navClasses }} opacity-40">{{ $label }}</span>
-                    @endif
-                @endforeach
-            </nav>
-
             {!! html()->form($isNew ? 'POST' : 'PATCH', $isNew ? route('sales-invoices.store') : route('sales-invoices.update', $invoice))->id('sales-invoice-form')->class('space-y-6')->open() !!}
-                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     <div>
                         {!! html()->label('Currency', 'currency_code')->class($labelClasses) !!}
                         <div class="relative">
@@ -73,10 +56,24 @@
                         @error('status')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
                     <div>
-                        {!! html()->label('&nbsp;', 'currency_placeholder_1')->class($labelClasses.' hidden') !!}
-                    </div>
-                    <div>
-                        {!! html()->label('&nbsp;', 'currency_placeholder_2')->class($labelClasses.' hidden') !!}
+                        {!! html()->label('Bank Account', 'bank_account_id')->class($labelClasses) !!}
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1">
+                                <select id="bank_account_id" name="bank_account_id" class="{{ $inputClasses }} appearance-none pr-8">
+                                    <option value="">No bank account</option>
+                                    @foreach ($bankAccounts as $bankAccount)
+                                        <option value="{{ $bankAccount->id }}" @selected((string) old('bank_account_id', $invoice->bank_account_id) === (string) $bankAccount->id)>{{ $bankAccount->optionLabel() }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-topbar-muted">⌄</div>
+                            </div>
+                            @if (auth()->user()->isSuperAdmin() || auth()->user()->can('bank_accounts.add'))
+                                <button type="button" id="bank-account-quick-create-btn" data-modal-target="bank-account-quick-create-modal" title="Add bank account" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 transition-all hover:bg-emerald-500 hover:text-white">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                                </button>
+                            @endif
+                        </div>
+                        @error('bank_account_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
@@ -192,6 +189,10 @@
             @endunless
         </div>
     </div>
+
+    @if (auth()->user()->isSuperAdmin() || auth()->user()->can('bank_accounts.add'))
+        @include('bank-accounts._quick-create-modal')
+    @endif
 
     <template id="sales-invoice-detail-template">
         <div class="sales-invoice-detail grid grid-cols-1 items-end gap-5 sm:grid-cols-2 lg:grid-cols-4">

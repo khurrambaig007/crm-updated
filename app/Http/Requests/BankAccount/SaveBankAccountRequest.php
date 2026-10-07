@@ -4,7 +4,7 @@ namespace App\Http\Requests\BankAccount;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class SaveBankAccountRequest extends FormRequest
+abstract class SaveBankAccountRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -12,6 +12,10 @@ class SaveBankAccountRequest extends FormRequest
     }
 
     /**
+     * Blank custom-field rows do not need prepareForValidation() stripping:
+     * custom_fields carries no array-level required/min:1 rule, and unused rows
+     * are already discarded server-side by BankAccount::normalizeCustomFields().
+     *
      * @return array<string, array<int, mixed>>
      */
     public function rules(): array

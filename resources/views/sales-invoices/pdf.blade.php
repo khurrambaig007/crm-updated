@@ -113,7 +113,7 @@
     <div class="payment-page">
         <h2>Payment instructions</h2>
         <div>Currency: {{ $invoice->currency_code }}</div>
-        @if (filled($bankAccount->bank_name) || filled($bankAccount->bank))<div>PLEASE REMIT TO: Bank name: {{ $bankAccount->bank_name ?: $bankAccount->bank }}</div>@endif
+        @if (filled($bankAccount->bank_name) || filled($bankAccount->bank))<div>PLEASE REMIT TO: {{ $bankAccount->bank_name ?: $bankAccount->bank }}</div>@endif
         @if (filled($bankAccount->address))<div>Address: {{ $bankAccount->address }}</div>@endif
         @if (filled($bankAccount->iban))<div>IBAN: {{ $bankAccount->iban }}</div>@endif
         @if (filled($bankAccount->account))<div>Account: {{ $bankAccount->account }}</div>@endif
