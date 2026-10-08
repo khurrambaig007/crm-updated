@@ -132,6 +132,20 @@ return [
         ],
     ],
 
+    // BL Info screen
+    'bl_info' => [
+        'booking_si_status' => [
+            1 => 'Draft',
+            2 => 'Final',
+        ],
+        'booking_info_carrier' => [
+            1 => 'Cntr Owner',
+            2 => 'Principal',
+            3 => 'Shipper Carrier',
+            4 => 'Agent',
+        ],
+    ],
+
     // Container Release Order screen
     'container_release_orders' => [
         'cntr_owner' => [

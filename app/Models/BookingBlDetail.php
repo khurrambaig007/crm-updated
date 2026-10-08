@@ -25,4 +25,21 @@ final class BookingBlDetail extends Model
     {
         return $this->belongsTo(Booking::class);
     }
+
+    /**
+     * Next BL number in the global "BL000001" sequence.
+     *
+     * Parsed in PHP rather than SQL so the same code path works on MySQL and
+     * the SQLite test connection.
+     */
+    public static function nextBlNumber(): string
+    {
+        $max = self::query()
+            ->where('bl_info_bl_number', 'like', 'BL%')
+            ->pluck('bl_info_bl_number')
+            ->map(fn (?string $number): int => (int) preg_replace('/\D/', '', (string) $number))
+            ->max() ?? 0;
+
+        return 'BL'.str_pad((string) ($max + 1), 6, '0', STR_PAD_LEFT);
+    }
 }

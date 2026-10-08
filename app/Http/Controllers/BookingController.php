@@ -7,6 +7,7 @@ use App\Http\Requests\BookingRequest;
 use App\Http\Requests\SplitBookingRequest;
 use App\Models\Agent;
 use App\Models\Booking;
+use App\Models\BookingBlDetail;
 use App\Models\BookingCost;
 use App\Models\BookingInfoEquipment;
 use App\Models\BookingRevenue;
@@ -399,6 +400,10 @@ class BookingController extends Controller
                     ['booking_id' => $booking->id],
                     $this->croAttributesFromBooking($booking),
                 );
+
+                // BL Info is created once on approval. Re-approving must not
+                // overwrite details the user has since filled in on that screen.
+                $booking->blDetail()->firstOrCreate([], $this->blDetailAttributesFromBooking($booking));
             }
         });
 
@@ -424,6 +429,30 @@ class BookingController extends Controller
             'dg_status' => $booking->non_dg,
             'pol_id' => $booking->pol,
             'pofd_id' => $booking->pofd,
+        ];
+    }
+
+    /**
+     * Seed a booking's BL Info record from the booking header on first approval.
+     *
+     * @return array<string, mixed>
+     */
+    private function blDetailAttributesFromBooking(Booking $booking): array
+    {
+        return [
+            'bl_info_booking_no' => $booking->booking_no,
+            'bl_info_sailing_date' => $booking->sailing_date?->format('Y-m-d'),
+            'bl_info_bl_number' => BookingBlDetail::nextBlNumber(),
+            'booking_info_pol' => $booking->pol,
+            'booking_info_pofd' => $booking->pofd,
+            'booking_info_pot_1' => $booking->pot_1,
+            'booking_info_pot_2' => $booking->pot_2,
+            'booking_info_shipper_bp' => $booking->shipper_bp,
+            'booking_info_consignee' => $booking->consignee,
+            'booking_info_agent_pofd' => $booking->agent_pofd,
+            'booking_info_agent_1' => $booking->agent_1,
+            'booking_info_agent_2' => $booking->agent_2,
+            'booking_info_reference' => $booking->reference_no,
         ];
     }
 

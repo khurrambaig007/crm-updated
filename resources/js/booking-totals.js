@@ -54,6 +54,7 @@ $(function () {
                 } else {
                     $btn.addClass('bg-primary-600 text-white shadow-primary-600/25 hover:bg-primary-700');
                 }
+                $('#booking-bl-info-link').toggleClass('hidden', !approved);
                 window.Alerts.toast(response.message, approved ? 'success' : 'info');
             },
             error: function () {

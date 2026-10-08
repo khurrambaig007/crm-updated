@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BankAccountController;
+use App\Http\Controllers\BlInfoController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CarrierController;
 use App\Http\Controllers\ChargeController;
@@ -98,6 +99,18 @@ Route::middleware('authenticated')->group(function () {
         Route::post('bookings/{booking}/split', [BookingController::class, 'split'])->name('bookings.split.store');
     });
     Route::middleware('permission:bookings.delete')->delete('bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
+
+    // BL Info — reached only from an approved booking, not shown in the sidebar.
+    Route::middleware('permission:bl_info.view')->group(function () {
+        Route::get('bookings/{booking}/bl-info', [BlInfoController::class, 'index'])->name('bl-info.index');
+        Route::get('bookings/{booking}/bl-info/booking-info', [BlInfoController::class, 'bookingInfo'])->name('bl-info.booking-info');
+        Route::get('bookings/{booking}/bl-info/release-instructions', [BlInfoController::class, 'releaseInstructions'])->name('bl-info.release-instructions');
+        Route::get('bookings/{booking}/bl-info/delivery-order', [BlInfoController::class, 'deliveryOrder'])->name('bl-info.delivery-order');
+        Route::get('bookings/{booking}/bl-info/lock-info', [BlInfoController::class, 'lockInfo'])->name('bl-info.lock-info');
+        Route::get('bookings/{booking}/bl-info/authorization', [BlInfoController::class, 'authorization'])->name('bl-info.authorization');
+    });
+    Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info', [BlInfoController::class, 'update'])->name('bl-info.update');
+    Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/booking-info', [BlInfoController::class, 'updateBookingInfo'])->name('bl-info.booking-info.update');
 
     // Container Release Order (CRO)
     Route::middleware('permission:container_release_orders.view')->get('container-release-orders', [ContainerReleaseOrderController::class, 'index'])->name('container-release-orders.index');

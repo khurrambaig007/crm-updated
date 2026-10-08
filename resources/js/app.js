@@ -26,6 +26,7 @@ import './purchase-invoice-grid';
 import './sales-invoice';
 import './container-activity-details-grid';
 import './booking-details';
+import './bl-info';
 import './booking-equipment-grid';
 import './booking-revenue-grid';
 import './booking-cost-grid';

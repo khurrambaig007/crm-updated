@@ -198,6 +198,10 @@ return [
             'label' => 'Container Release Order',
             'permissions' => ['view', 'add', 'edit', 'delete'],
         ],
+        'bl_info' => [
+            'label' => 'BL Info',
+            'permissions' => ['view', 'edit'],
+        ],
         'users' => [
             'label' => 'Users',
             'permissions' => ['view', 'add', 'edit', 'delete'],

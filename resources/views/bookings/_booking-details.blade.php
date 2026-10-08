@@ -31,6 +31,7 @@
         $netTotal = $revenueTotal - $costTotal;
         $fmt = fn ($n) => number_format((float) $n, 2);
         $canApprove = auth()->user()->isSuperAdmin() || auth()->user()->can('bookings.edit');
+        $canViewBlInfo = auth()->user()->isSuperAdmin() || auth()->user()->can('bl_info.view');
     @endphp
 
     <div class="rounded-2xl bg-card-bg p-6 shadow-sm ring-1 ring-card-border sm:p-8">
@@ -47,7 +48,7 @@
                 {!! html()->label('Net', 'booking-net-total')->class('block text-sm font-medium text-topbar-text') !!}
                 {!! html()->text('booking_net_total', $fmt($netTotal))->id('booking-net-total')->class('mt-1.5 block w-full rounded-lg border-0 bg-topbar-muted/5 px-3 py-2.5 text-topbar-text shadow-sm ring-1 ring-inset ring-card-border focus:ring-2 focus:ring-inset focus:ring-primary-500 transition')->attribute('readonly', 'readonly') !!}
             </div>
-            <div class="flex items-end">
+            <div class="flex flex-col justify-end gap-2">
                 @if ($canApprove)
                     <button type="button" id="booking-approve-btn" data-booking-id="{{ $booking->id }}" data-approved="{{ $booking->approved ? 1 : 0 }}"
                         class="inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold shadow-lg transition-all {{ $booking->approved ? 'bg-emerald-600 text-white shadow-emerald-600/25 hover:bg-emerald-700' : 'bg-primary-600 text-white shadow-primary-600/25 hover:bg-primary-700' }}">
@@ -57,6 +58,14 @@
                     <span class="inline-flex w-full items-center justify-center rounded-xl bg-topbar-muted/10 px-5 py-2.5 text-sm font-semibold text-topbar-muted">
                         {{ $booking->approved ? 'Approved' : 'Pending' }}
                     </span>
+                @endif
+
+                @if ($canViewBlInfo)
+                    <a href="{{ route('bl-info.index', $booking) }}" id="booking-bl-info-link"
+                        class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-5 py-2.5 text-sm font-semibold text-primary-700 shadow-sm transition-all hover:bg-primary-100 hover:-translate-y-0.5 {{ $booking->approved ? '' : 'hidden' }}">
+                        @include('components.icons.package', ['classes' => 'h-4 w-4'])
+                        BL Info
+                    </a>
                 @endif
             </div>
         </div>
