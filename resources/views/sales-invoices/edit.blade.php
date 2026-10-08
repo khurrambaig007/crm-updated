@@ -68,7 +68,7 @@
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-topbar-muted">⌄</div>
                             </div>
                             @if (auth()->user()->isSuperAdmin() || auth()->user()->can('bank_accounts.add'))
-                                <button type="button" id="bank-account-quick-create-btn" data-modal-target="bank-account-quick-create-modal" title="Add bank account" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 transition-all hover:bg-emerald-500 hover:text-white">
+                                <button type="button" id="bank-account-quick-create-btn" data-modal-target="bank-account-quick-create-modal" title="Add bank account" aria-label="Add bank account" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-900 text-white shadow-sm transition-all hover:bg-primary-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-900">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                                 </button>
                             @endif

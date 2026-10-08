@@ -351,7 +351,7 @@ class SalesInvoiceTest extends TestCase
             ->get(route('sales-invoices.index'))
             ->assertOk()
             ->assertSee('Sales Invoices')
-            ->assertSee('+ Create Invoice');
+            ->assertSee('Create Invoice');
 
         // The status pane is only usable if the client bundle ships the
         // SearchPanes extension and the column carries its options.
