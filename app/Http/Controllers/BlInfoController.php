@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BlInfo\ContainerInfoRequest;
 use App\Http\Requests\BlInfo\UpdateBlDetailRequest;
 use App\Http\Requests\BlInfo\UpdateBlInfoRequest;
 use App\Http\Requests\BlInfo\UpdateBookingInfoRequest;
@@ -10,14 +11,18 @@ use App\Http\Requests\BlInfo\UpdateLockInfoRequest;
 use App\Http\Requests\BlInfo\UpdateReleaseInstructionsRequest;
 use App\Models\Agent;
 use App\Models\Booking;
+use App\Models\BookingBlContainerInfo;
 use App\Models\BookingBlDetail;
 use App\Models\Carrier;
 use App\Models\Party;
 use App\Models\Pod;
 use App\Models\Pol;
 use App\Models\ShipperBp;
+use App\Models\SlotTerm;
 use App\Models\VesselVoyage;
+use App\Services\BlContainerInfoSync;
 use App\Services\BlDetailPdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
@@ -93,6 +98,102 @@ class BlInfoController extends Controller
             'Approvals and sign-off for this bill of lading.',
             placeholder: true,
         );
+    }
+
+    public function containerInfo(Booking $booking): View
+    {
+        abort_unless($booking->approved, 404);
+
+        // Repairs any row missed by an equipment change made before approval.
+        app(BlContainerInfoSync::class)->syncForBooking($booking);
+
+        return $this->render(
+            $booking,
+            'container-info',
+            'Container Info',
+            'One row per equipment line, carried over from the booking.',
+            view: 'bl-info.container-info',
+        );
+    }
+
+    public function storeContainerInfo(ContainerInfoRequest $request, Booking $booking): JsonResponse
+    {
+        abort_unless($booking->approved, 404);
+
+        $row = $booking->blContainerInfos()->create($request->validated());
+
+        return response()->json([
+            'message' => 'Container saved successfully.',
+            'row' => $this->containerInfoRow($row),
+        ], 201);
+    }
+
+    public function updateContainerInfo(
+        ContainerInfoRequest $request,
+        Booking $booking,
+        BookingBlContainerInfo $containerInfo,
+    ): JsonResponse {
+        abort_unless($booking->approved, 404);
+        abort_unless($containerInfo->booking_id === $booking->id, 404);
+
+        $containerInfo->update($request->validated());
+        $containerInfo->refresh();
+
+        return response()->json([
+            'message' => 'Container updated successfully.',
+            'row' => $this->containerInfoRow($containerInfo),
+        ]);
+    }
+
+    public function destroyContainerInfo(Booking $booking, BookingBlContainerInfo $containerInfo): JsonResponse
+    {
+        abort_unless($booking->approved, 404);
+        abort_unless($containerInfo->booking_id === $booking->id, 404);
+
+        $containerInfo->delete();
+
+        return response()->json([
+            'message' => 'Container deleted successfully.',
+        ]);
+    }
+
+    /**
+     * Shape a row for the grid, resolving the three slot labels.
+     *
+     * @return array<string, mixed>
+     */
+    private function containerInfoRow(BookingBlContainerInfo $containerInfo): array
+    {
+        $slots = SlotTerm::whereIn('id', array_filter([
+            $containerInfo->container_info_slot_operator,
+            $containerInfo->container_info_slot_operator_ts1,
+            $containerInfo->container_info_slot_operator_ts2,
+        ]))->pluck('term', 'id');
+
+        return [
+            'id' => $containerInfo->id,
+            'cntr_owner' => $containerInfo->container_info_cntr_owner,
+            'size' => $containerInfo->container_info_size,
+            'container_no' => $containerInfo->container_info_container_no,
+            'seal_no' => $containerInfo->container_info_seal_no,
+            'seal2_no' => $containerInfo->container_info_seal2_no,
+            'load_type' => $containerInfo->container_info_load_type,
+            'gross_weight' => $containerInfo->container_info_gross_weight,
+            'net_weight' => $containerInfo->container_info_net_weight,
+            'cbm' => $containerInfo->container_info_cbm,
+            'packages' => $containerInfo->container_info_packages,
+            'unit' => $containerInfo->container_info_unit,
+            'temperature' => $containerInfo->container_info_temperature,
+            'slot_operator' => $containerInfo->container_info_slot_operator,
+            'slot_operator_ts1' => $containerInfo->container_info_slot_operator_ts1,
+            'slot_operator_ts2' => $containerInfo->container_info_slot_operator_ts2,
+            'slot_operator_label' => $slots->get($containerInfo->container_info_slot_operator),
+            'slot_operator_ts1_label' => $slots->get($containerInfo->container_info_slot_operator_ts1),
+            'slot_operator_ts2_label' => $slots->get($containerInfo->container_info_slot_operator_ts2),
+            'imo_class' => $containerInfo->container_info_imo_class,
+            'un_number' => $containerInfo->container_info_un_number,
+            'remarks' => $containerInfo->container_info_remarks,
+        ];
     }
 
     public function update(UpdateBlInfoRequest $request, Booking $booking): RedirectResponse
@@ -206,6 +307,10 @@ class BlInfoController extends Controller
             'releaseTypes' => config('dropdowns.bl_info.release_type'),
             'units' => config('dropdowns.bl_info.units'),
             'freightTypes' => config('dropdowns.bookings.freight_type'),
+            'cntrOwners' => config('dropdowns.bookings.cntr_owner'),
+            // The Container Info grid stores slot ids but edits labels, the same
+            // id/label shape BookingController::formData() hands the cost grid.
+            'slotTerms' => SlotTerm::orderBy('term')->get()->map(fn ($s) => ['id' => $s->id, 'label' => $s->term])->values()->all(),
         ];
     }
 

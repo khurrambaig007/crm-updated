@@ -2,6 +2,7 @@
 paths:
   - 'resources/js/**'
   - resources/js/app.js
+  - resources/js/bl-container-info-grid.js
 ---
 
 # Js
@@ -17,3 +18,6 @@ agGrid v33+ infers a column's cellDataType ONCE from rowData[0] only (getInitial
 
 ## jQuery 4 find(':scope > …') returns an empty set — use .children()
 On jQuery 4.0 the app bundles, $parent.find(':scope > .child') matches ZERO elements while parent.querySelector(':scope > .child') finds them, so class toggles silently no-op while aria/chevron updates still run (this broke the BL Info nav dropdown). Use $parent.children('.child') or $parent.find('> .child') replacements — never ':scope' inside jQuery traversal. Verified 2026-10: .children('.absolute') => 1, find(':scope > .absolute') => 0.
+
+## Blank dropdown/null must not turn into 0 or NaN on save
+In the Container Info grid, `Number(null) === 0` when guarding only ' ' and undefined sent slot_operator 0 to the server, failing exists:slot_terms and silently leaving the row unsaved. Blank guards must cover null too — see idOrNull/emptyToNull in bl-container-info-grid.js, same class of bug as the numOrNull rule. Dropdown lookup columns need a valueGetter that maps id to label, because valueFormatter-only shows the raw id.

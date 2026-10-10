@@ -10,7 +10,6 @@
     ];
 
     $futureItems = [
-        'container-info' => ['label' => 'Container Info', 'icon' => 'box'],
         'refnos' => ['label' => "Ref NO's", 'icon' => 'tag'],
         'stamps' => ['label' => 'Stamps', 'icon' => 'landmark'],
     ];
@@ -70,6 +69,18 @@
                 @include('components.icons.receipt', ['classes' => 'h-4 w-4'])
             </span>
             <span class="whitespace-nowrap">BL Detail</span>
+        </a>
+
+        <div class="mx-1 h-6 w-px bg-card-border"></div>
+
+        {{-- Sibling entity: the container list --}}
+        <a href="{{ route('bl-info.container-info', $booking) }}"
+            aria-current="{{ $activeTab === 'container-info' ? 'page' : 'false' }}"
+            class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ $activeTab === 'container-info' ? 'bg-primary-50 text-primary-700' : 'text-topbar-text hover:bg-page-bg' }}">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600 {{ $activeTab === 'container-info' ? 'ring-1 ring-primary-200' : '' }}">
+                @include('components.icons.box', ['classes' => 'h-4 w-4'])
+            </span>
+            <span class="whitespace-nowrap">Container Info</span>
         </a>
 
         <div class="mx-1 h-6 w-px bg-card-border"></div>

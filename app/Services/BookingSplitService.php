@@ -248,7 +248,7 @@ class BookingSplitService
                     'quantity' => $allocation['quantity'],
                     'gross_weight' => $this->stringOrNull($row['gross_weight'] ?? null),
                     'packages' => $this->stringOrNull($row['packages'] ?? null),
-                    'unit' => isset($row['unit']) && $row['unit'] !== '' ? (int) $row['unit'] : null,
+                    'unit' => $this->stringOrNull($row['unit'] ?? null),
                     'cargo_volumn' => $this->stringOrNull($row['cargo_volumn'] ?? null),
                     'approval_status' => $row['approval_status'] ?? $source->approval_status,
                 ]);

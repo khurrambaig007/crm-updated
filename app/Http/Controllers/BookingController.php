@@ -24,11 +24,13 @@ use App\Models\Pol;
 use App\Models\ShipperBp;
 use App\Models\SlotTerm;
 use App\Models\VesselVoyage;
+use App\Services\BlContainerInfoSync;
 use App\Services\BookingSplitService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class BookingController extends Controller
@@ -156,6 +158,9 @@ class BookingController extends Controller
         $equipment = $booking->equipments()->create($validated);
         $equipment->load('containerSize', 'containerType');
 
+        // Container Info mirrors the equipment list, so a new line needs a row.
+        app(BlContainerInfoSync::class)->syncForEquipment($equipment);
+
         return response()->json([
             'message' => 'Equipment saved successfully.',
             'row' => $this->equipmentRow($equipment),
@@ -172,6 +177,9 @@ class BookingController extends Controller
         $equipment->refresh();
         $equipment->load('containerSize', 'containerType');
 
+        // Backfills the Container Info row; user-entered values are left alone.
+        app(BlContainerInfoSync::class)->syncForEquipment($equipment);
+
         return response()->json([
             'message' => 'Equipment updated successfully.',
             'row' => $this->equipmentRow($equipment),
@@ -183,6 +191,9 @@ class BookingController extends Controller
         abort_unless($equipment->booking_id === $booking->id, 404);
 
         $equipment->delete();
+
+        // A row with a dangling equipment_id would reappear as an orphan.
+        app(BlContainerInfoSync::class)->removeForEquipment($equipment);
 
         return response()->json([
             'message' => 'Equipment deleted successfully.',
@@ -198,7 +209,7 @@ class BookingController extends Controller
             'approval_status' => ['required', 'integer', 'in:'.implode(',', array_keys(config('dropdowns.bookings.approval_status')))],
             'gross_weight' => ['nullable', 'string', 'max:191'],
             'packages' => ['nullable', 'string', 'max:191'],
-            'unit' => ['nullable', 'integer'],
+            'unit' => ['nullable', 'string', Rule::in(array_keys(config('dropdowns.bl_info.units')))],
             'cargo_volumn' => ['nullable', 'string', 'max:191'],
         ]);
     }
@@ -404,6 +415,9 @@ class BookingController extends Controller
                 // BL Info is created once on approval. Re-approving must not
                 // overwrite details the user has since filled in on that screen.
                 $booking->blDetail()->firstOrCreate([], $this->blDetailAttributesFromBooking($booking));
+
+                // Equipment saved before approval never got a Container Info row.
+                app(BlContainerInfoSync::class)->syncForBooking($booking);
             }
         });
 

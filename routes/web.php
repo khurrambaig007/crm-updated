@@ -111,6 +111,7 @@ Route::middleware('authenticated')->group(function () {
         Route::get('bookings/{booking}/bl-info/bl-detail/pdf', [BlInfoController::class, 'viewBlDetailPdf'])->name('bl-info.bl-detail.pdf-view');
         Route::get('bookings/{booking}/bl-info/bl-detail/pdf/download', [BlInfoController::class, 'downloadBlDetailPdf'])->name('bl-info.bl-detail.pdf');
         Route::get('bookings/{booking}/bl-info/authorization', [BlInfoController::class, 'authorization'])->name('bl-info.authorization');
+        Route::get('bookings/{booking}/bl-info/container-info', [BlInfoController::class, 'containerInfo'])->name('bl-info.container-info');
     });
     Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info', [BlInfoController::class, 'update'])->name('bl-info.update');
     Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/booking-info', [BlInfoController::class, 'updateBookingInfo'])->name('bl-info.booking-info.update');
@@ -118,6 +119,14 @@ Route::middleware('authenticated')->group(function () {
     Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/delivery-order', [BlInfoController::class, 'updateDeliveryOrder'])->name('bl-info.delivery-order.update');
     Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/lock-info', [BlInfoController::class, 'updateLockInfo'])->name('bl-info.lock-info.update');
     Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/bl-detail', [BlInfoController::class, 'updateBlDetail'])->name('bl-info.bl-detail.update');
+
+    // Container Info grid rows. AJAX-only, so they sit outside the form routes
+    // and answer with JSON.
+    Route::middleware('permission:bl_info.edit')->group(function () {
+        Route::post('bookings/{booking}/bl-info/container-info', [BlInfoController::class, 'storeContainerInfo'])->name('bl-info.container-info.store');
+        Route::patch('bookings/{booking}/bl-info/container-info/{containerInfo}', [BlInfoController::class, 'updateContainerInfo'])->name('bl-info.container-info.update');
+        Route::delete('bookings/{booking}/bl-info/container-info/{containerInfo}', [BlInfoController::class, 'destroyContainerInfo'])->name('bl-info.container-info.destroy');
+    });
 
     // Container Release Order (CRO)
     Route::middleware('permission:container_release_orders.view')->get('container-release-orders', [ContainerReleaseOrderController::class, 'index'])->name('container-release-orders.index');

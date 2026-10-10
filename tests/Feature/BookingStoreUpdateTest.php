@@ -92,6 +92,68 @@ class BookingStoreUpdateTest extends BaseTestCase
                 'updated_at' => now(),
             ],
         );
+
+        \DB::table('container_sizes')->updateOrInsert(
+            ['id' => 1],
+            ['size' => "20'", 'created_at' => now(), 'updated_at' => now()],
+        );
+
+        \DB::table('container_types')->updateOrInsert(
+            ['id' => 1],
+            ['name' => 'Dry Van', 'created_at' => now(), 'updated_at' => now()],
+        );
+    }
+
+    public function test_equipment_unit_saves_a_unit_code(): void
+    {
+        $booking = Booking::create($this->validPayload());
+
+        $response = $this->postJson(route('bookings.equipments.store', $booking), [
+            'size' => 1,
+            'type' => 1,
+            'quantity' => 12,
+            'approval_status' => 1,
+            'unit' => 'MT',
+        ]);
+
+        $response->assertCreated()->assertJsonPath('row.unit', 'MT');
+
+        $this->assertSame('MT', $booking->equipments()->first()->unit);
+    }
+
+    public function test_equipment_unit_is_rejected_when_outside_the_configured_list(): void
+    {
+        $booking = Booking::create($this->validPayload());
+
+        // The column used to be an int with an integer rule, so any text (and
+        // therefore "KGS") was rejected with a 422 and nothing ever saved.
+        $this->postJson(route('bookings.equipments.store', $booking), [
+            'size' => 1,
+            'type' => 1,
+            'quantity' => 12,
+            'approval_status' => 1,
+            'unit' => 'FURLONGS',
+        ])->assertSessionHasErrors(['unit']);
+
+        $this->postJson(route('bookings.equipments.store', $booking), [
+            'size' => 1,
+            'type' => 1,
+            'quantity' => 12,
+            'approval_status' => 1,
+            'unit' => 'KGS',
+        ])->assertSessionHasNoErrors();
+    }
+
+    public function test_booking_edit_exposes_the_unit_list_to_the_equipment_grid(): void
+    {
+        $booking = Booking::create($this->validPayload());
+
+        $response = $this->get(route('bookings.edit', $booking));
+
+        $response->assertOk();
+        // The grid builds its select editor from this payload.
+        $response->assertSee('"units":[{"id":"KGS","label":"KGS"}', escape: false);
+        $response->assertSee('id="eq-unit"', escape: false);
     }
 
     protected function validPayload(array $overrides = []): array

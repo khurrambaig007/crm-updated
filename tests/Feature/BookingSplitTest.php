@@ -330,7 +330,7 @@ class BookingSplitTest extends BaseTestCase
                     'gross_weight' => '4400',
                     'packages' => '42',
                     'cargo_volumn' => '90.5',
-                    'unit' => 7,
+                    'unit' => 'KGS',
                     'approval_status' => 2,
                 ]),
             ],
@@ -342,7 +342,8 @@ class BookingSplitTest extends BaseTestCase
         $this->assertSame('4400', $equipment->gross_weight);
         $this->assertSame('42', $equipment->packages);
         $this->assertSame('90.5', $equipment->cargo_volumn);
-        $this->assertSame(7, $equipment->unit);
+        // Unit is a code carried through the split verbatim, not a number.
+        $this->assertSame('KGS', $equipment->unit);
         $this->assertSame(2, $equipment->approval_status);
     }
 

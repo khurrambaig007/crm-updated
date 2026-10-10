@@ -3,6 +3,7 @@ paths:
   - app/Services/PermissionSyncService.php
   - app/Services/BookingSplitService.php
   - app/Services/BlDetailPdf.php
+  - app/Services/BlContainerInfoSync.php
 ---
 
 # Services
@@ -21,3 +22,6 @@ The ZONES coordinates are PDF points on A4 (595.3x841.9), derived from the templ
 
 ## BL Detail PDF: measure caption-to-value gaps, don't eyeball them
 Several boxes print their caption INSIDE the cell (Shipper, Consignee, Notify party, Bill of Lading No.), so the value must start below the caption, not just below the cell's top rule — at y=124 the Shipper value sat 1.2pt under the caption and read as touching. Every captioned field now clears its caption by ~6.0-7.0pt; verify by rendering at 300dpi and comparing the caption's last ink row against the value's first ink row, not by eyeballing a screenshot or trusting the ZONES y value (y is text-box top, ink starts ~1.8pt lower). The particulars columns are different: their captions sit in the header row ABOVE the rule at y 375.6, so values clear the rule instead.
+
+## Container Info syncs one row per equipment line, null-only
+BL Info > Container Info lives in `booking_bl_container_infos` (created 2026-10-10), one row per booking_info_equipments line keyed by a unique `equipment_id`; it is NOT the legacy `bl_container_infos` table, which stays untouched holding longText blobs for the unbuilt Ref NO's / Stamps screens. Row endpoints in BlInfoController must keep their JSON 422 via ContainerInfoRequest::failedValidation (non-api AJAX otherwise 302s).

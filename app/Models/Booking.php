@@ -114,6 +114,11 @@ final class Booking extends Model
         return $this->hasMany(BookingInfoEquipment::class);
     }
 
+    public function blContainerInfos(): HasMany
+    {
+        return $this->hasMany(BookingBlContainerInfo::class);
+    }
+
     public function revenues(): HasMany
     {
         return $this->hasMany(BookingRevenue::class);

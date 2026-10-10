@@ -20,7 +20,6 @@ final class BookingInfoEquipment extends Model
     {
         return [
             'quantity' => 'float',
-            'unit' => 'integer',
             'approval_status' => 'integer',
         ];
     }

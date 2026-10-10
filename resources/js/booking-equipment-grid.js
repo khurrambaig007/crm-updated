@@ -62,17 +62,6 @@ function numberFormatter(params) {
     return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function integerFormatter(params) {
-    if (params.value === null || params.value === undefined || params.value === '') {
-        return '';
-    }
-    var num = parseFloat(params.value);
-    if (isNaN(num)) {
-        return String(params.value);
-    }
-    return String(Math.round(num));
-}
-
 function buildPayload(data) {
     return {
         size: sizeMap[data.size],
@@ -81,7 +70,7 @@ function buildPayload(data) {
         approval_status: parseInt(data.approval_status, 10) || 1,
         gross_weight: data.gross_weight || null,
         packages: data.packages || null,
-        unit: data.unit === '' || data.unit === undefined || data.unit === null ? null : parseInt(data.unit, 10),
+        unit: data.unit === '' || data.unit === undefined ? null : String(data.unit),
         cargo_volumn: data.cargo_volumn || null,
     };
 }
@@ -204,7 +193,7 @@ window.BEG = {
             approval_status: parseInt($('#eq-approval-status').val(), 10) || 1,
             gross_weight: '',
             packages: '',
-            unit: '',
+            unit: $('#eq-unit').val() || '',
             cargo_volumn: '',
         };
 
@@ -294,9 +283,12 @@ $(function () {
             headerName: 'Unit',
             flex: 1,
             minWidth: 90,
-            cellEditor: 'agNumberCellEditor',
-            cellEditorParams: { min: 0, precision: 0 },
-            valueFormatter: integerFormatter,
+            // Unit is a code (KGS/MT/LBS), not a number — a number editor here
+            // is what made text impossible to save.
+            cellEditor: 'agSelectCellEditor',
+            cellEditorParams: {
+                values: (config.units || []).map(function (u) { return u.id; }),
+            },
         },
         {
             field: 'cargo_volumn',

@@ -17,8 +17,9 @@
     }
 </style>
 <div class="space-y-5">
-    {{-- Row 1: Equipment input row --}}
-    <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    {{-- Row 1: Equipment input row. Five related fields, so this row widens past the
+         usual four columns rather than orphaning Approval Status on a second row. --}}
+    <div class="mb-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
         <div>
             {!! html()->label('Size', 'eq-size')->class($labelClasses) !!}
             <div class="relative">
@@ -50,6 +51,20 @@
         <div>
             {!! html()->label('Quantity', 'eq-quantity')->class($labelClasses) !!}
             {!! html()->number('eq_quantity', old('eq_quantity'))->id('eq-quantity')->class($inputClasses)->attribute('step', 'any')->attribute('min', '0') !!}
+        </div>
+        <div>
+            {!! html()->label('Unit', 'eq-unit')->class($labelClasses) !!}
+            <div class="relative">
+                <select name="eq_unit" id="eq-unit" class="{{ $selectClasses }}">
+                    <option value="">Select Unit</option>
+                    @foreach (config('dropdowns.bl_info.units') as $unitValue => $unitLabel)
+                        <option value="{{ $unitValue }}">{{ $unitLabel }}</option>
+                    @endforeach
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-topbar-muted">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+            </div>
         </div>
         <div>
             {!! html()->label('Approval Status', 'eq-approval-status')->class($labelClasses) !!}
@@ -97,6 +112,10 @@
             'bookingId' => $booking->id,
             'sizes' => $containerSizes->map(fn ($s) => ['id' => $s->id, 'label' => $s->size])->values()->all(),
             'types' => $containerTypes->map(fn ($t) => ['id' => $t->id, 'label' => $t->name])->values()->all(),
+            'units' => collect(config('dropdowns.bl_info.units'))
+                ->map(fn ($label, $id) => ['id' => $id, 'label' => $label])
+                ->values()
+                ->all(),
             'rows' => $equipmentRows,
         ];
     @endphp

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SplitBookingRequest extends FormRequest
 {
@@ -25,7 +26,7 @@ class SplitBookingRequest extends FormRequest
             'equipment.*.quantity' => ['nullable', 'numeric', 'min:0'],
             'equipment.*.gross_weight' => ['nullable', 'string', 'max:191'],
             'equipment.*.packages' => ['nullable', 'string', 'max:191'],
-            'equipment.*.unit' => ['nullable', 'integer'],
+            'equipment.*.unit' => ['nullable', 'string', Rule::in(array_keys(config('dropdowns.bl_info.units')))],
             'equipment.*.cargo_volumn' => ['nullable', 'string', 'max:191'],
             'equipment.*.approval_status' => ['nullable', 'integer', 'in:'.$approvalStatuses],
         ];
@@ -61,13 +62,14 @@ class SplitBookingRequest extends FormRequest
             'equipment' => array_values(array_map(function ($row) {
                 $row = (array) $row;
 
-                foreach (['quantity', 'unit'] as $numeric) {
-                    if (isset($row[$numeric]) && $row[$numeric] !== '') {
-                        $row[$numeric] = (float) $row[$numeric];
-                    } else {
-                        $row[$numeric] = null;
-                    }
+                if (isset($row['quantity']) && $row['quantity'] !== '') {
+                    $row['quantity'] = (float) $row['quantity'];
+                } else {
+                    $row['quantity'] = null;
                 }
+
+                // unit is a unit code (KGS/MT/LBS), not a number — only trim it.
+                $row['unit'] = isset($row['unit']) ? (trim((string) $row['unit']) ?: null) : null;
 
                 return $row;
             }, $rows)),

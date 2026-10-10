@@ -4,8 +4,11 @@ namespace Tests\Feature;
 
 use App\Http\Middleware\PermissionMiddleware;
 use App\Models\Booking;
+use App\Models\BookingBlContainerInfo;
 use App\Models\BookingBlDetail;
+use App\Models\BookingInfoEquipment;
 use App\Models\User;
+use App\Services\BlContainerInfoSync;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
@@ -77,6 +80,26 @@ class BlInfoTest extends BaseTestCase
         \DB::table('carriers')->updateOrInsert(
             ['id' => 2],
             ['name' => 'Second Carrier', 'created_at' => now(), 'updated_at' => now()],
+        );
+
+        \DB::table('container_sizes')->updateOrInsert(
+            ['id' => 9],
+            ['size' => "20'", 'created_at' => now(), 'updated_at' => now()],
+        );
+
+        \DB::table('container_types')->updateOrInsert(
+            ['id' => 1],
+            ['name' => 'Dry Van', 'created_at' => now(), 'updated_at' => now()],
+        );
+
+        \DB::table('slot_terms')->updateOrInsert(
+            ['id' => 1],
+            ['term' => 'Term A', 'created_at' => now(), 'updated_at' => now()],
+        );
+
+        \DB::table('slot_terms')->updateOrInsert(
+            ['id' => 2],
+            ['term' => 'Term B', 'created_at' => now(), 'updated_at' => now()],
         );
     }
 
@@ -462,6 +485,252 @@ class BlInfoTest extends BaseTestCase
     /**
      * @param  array<string, mixed>  $overrides
      */
+    /* ---------------------------------------------------------------- Container Info */
+
+    /**
+     * @param  array<int, array<string, mixed>>  $equipment  raw booking_info_equipments attributes
+     */
+    private function addEquipment(Booking $booking, array $equipment): BookingInfoEquipment
+    {
+        return $booking->equipments()->create(array_merge([
+            'size' => 9,
+            'type' => 1,
+            'quantity' => 3,
+            'approval_status' => 1,
+        ], $equipment));
+    }
+
+    /**
+     * The existing approvedBooking() helper makes a booking that CAN be
+     * approved, it does not approve it — everything below needs a live screen,
+     * so this runs the toggle and returns the approved booking.
+     */
+    private function makeApprovedBooking(array $overrides = []): Booking
+    {
+        $booking = $this->approvedBooking($overrides);
+
+        $this->patchJson(route('bookings.approve', $booking))
+            ->assertJson(['approved' => true]);
+
+        return $booking->refresh();
+    }
+
+    public function test_approving_a_booking_syncs_container_rows_from_equipment(): void
+    {
+        $booking = $this->approvedBooking(['cntr_owner' => 2]);
+
+        $this->addEquipment($booking, [
+            'gross_weight' => '15000',
+            'packages' => '1500',
+            'cargo_volumn' => '87.21',
+            'unit' => 'KGS',
+        ]);
+
+        $this->assertDatabaseCount('booking_bl_container_infos', 0);
+
+        // Equipment saved while unapproved has no row yet; approving fills them in.
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => true]);
+
+        $row = BookingBlContainerInfo::query()->sole();
+
+        $this->assertSame(2, $row->container_info_cntr_owner);
+        $this->assertSame("20' Dry Van", $row->container_info_size);
+        $this->assertSame('15000', $row->container_info_gross_weight);
+        $this->assertSame('1500', $row->container_info_packages);
+        $this->assertSame('87.21', $row->container_info_cbm);
+        $this->assertSame('KGS', $row->container_info_unit);
+        // Nothing invents values the booking never had.
+        $this->assertNull($row->container_info_container_no);
+        $this->assertNull($row->container_info_seal_no);
+        $this->assertNull($row->container_info_net_weight);
+    }
+
+    public function test_saving_equipment_on_an_approved_booking_creates_the_row_immediately(): void
+    {
+        $booking = $this->makeApprovedBooking(['cntr_owner' => 1]);
+
+        $this->postJson(route('bookings.equipments.store', $booking), [
+            'size' => 9,
+            'type' => 1,
+            'quantity' => 2,
+            'approval_status' => 1,
+            'gross_weight' => '6400',
+            'unit' => 'MT',
+        ])->assertCreated();
+
+        $row = BookingBlContainerInfo::query()->sole();
+
+        $this->assertSame($booking->id, $row->booking_id);
+        $this->assertSame(1, $row->container_info_cntr_owner);
+        $this->assertSame("20' Dry Van", $row->container_info_size);
+        $this->assertSame('6400', $row->container_info_gross_weight);
+        $this->assertSame('MT', $row->container_info_unit);
+    }
+
+    public function test_container_row_backfill_never_overwrites_user_values(): void
+    {
+        // No unit on the line to begin with, so nothing was seeded on the row.
+        $booking = $this->approvedBooking(['cntr_owner' => 1]);
+        $equipment = $this->addEquipment($booking, ['gross_weight' => '6000']);
+
+        // Approval seeds the row exactly as equipment left it.
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => true]);
+
+        $row = BookingBlContainerInfo::query()->sole();
+        $this->assertNull($row->container_info_unit);
+
+        // The user enters values the sync never filled in.
+        $row->update([
+            'container_info_container_no' => 'MSCU1234567',
+            'container_info_gross_weight' => '999',
+        ]);
+
+        // A later equipment edit backfills only the still-empty fields.
+        $equipment->update([
+            'gross_weight' => '6400',
+            'unit' => 'MT',
+        ]);
+        app(BlContainerInfoSync::class)->syncForEquipment($equipment);
+
+        $row->refresh();
+        $this->assertSame('MSCU1234567', $row->container_info_container_no);
+        $this->assertSame('999', $row->container_info_gross_weight);
+        $this->assertSame('MT', $row->container_info_unit);
+    }
+
+    public function test_deleting_equipment_removes_its_container_row(): void
+    {
+        $booking = $this->approvedBooking();
+        $equipment = $this->addEquipment($booking, []);
+
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => true]);
+        $this->assertDatabaseCount('booking_bl_container_infos', 1);
+
+        $this->deleteJson(route('bookings.equipments.destroy', [$booking, $equipment]))->assertOk();
+
+        $this->assertDatabaseCount('booking_bl_container_infos', 0);
+    }
+
+    public function test_container_row_endpoints_round_trip_every_field(): void
+    {
+        $booking = $this->makeApprovedBooking();
+
+        $store = $this->postJson(route('bl-info.container-info.store', $booking), $this->containerPayload());
+        $store->assertCreated();
+        $row = BookingBlContainerInfo::query()->sole();
+
+        $payload = $this->containerPayload([
+            'container_info_container_no' => 'MSCU9998887',
+            'container_info_net_weight' => '5400',
+            'container_info_slot_operator' => 2,
+            'container_info_slot_operator_ts1' => null,
+        ]);
+        $update = $this->patchJson(route('bl-info.container-info.update', [$booking, $row]), $payload);
+        $update->assertOk();
+
+        $row->refresh();
+        $this->assertSame('MSCU9998887', $row->container_info_container_no);
+        $this->assertNull($row->container_info_slot_operator_ts1);
+        $this->assertSame(2, $row->container_info_slot_operator_ts2);
+        $this->assertSame(1, $row->container_info_cntr_owner);
+
+        $this->deleteJson(route('bl-info.container-info.destroy', [$booking, $row]))->assertOk();
+        $this->assertDatabaseCount('booking_bl_container_infos', 0);
+    }
+
+    public function test_container_row_endpoints_answer_validation_as_json(): void
+    {
+        $booking = $this->makeApprovedBooking();
+
+        // These routes are off api/, so a bare ValidationException would 302 and
+        // the grid would never see an error object.
+        $this->postJson(route('bl-info.container-info.store', $booking), $this->containerPayload([
+            'container_info_cntr_owner' => 9,
+        ]))->assertStatus(422)->assertJsonValidationErrors(['container_info_cntr_owner']);
+
+        $this->postJson(route('bl-info.container-info.store', $booking), $this->containerPayload([
+            'container_info_slot_operator' => 77,
+        ]))->assertStatus(422)->assertJsonValidationErrors(['container_info_slot_operator']);
+    }
+
+    public function test_container_info_screen_renders_the_grid_and_its_payload(): void
+    {
+        // The view reads the permission directly from the user, so the route
+        // middleware being disabled is not enough for an editable grid.
+        Permission::findOrCreate('bl_info.edit');
+        auth()->user()->givePermissionTo('bl_info.edit');
+
+        $booking = $this->makeApprovedBooking(['cntr_owner' => 3]);
+        $this->addEquipment($booking, ['gross_weight' => '1200', 'unit' => 'LBS']);
+
+        $response = $this->get(route('bl-info.container-info', $booking));
+
+        $response->assertOk();
+        $response->assertSee('id="container-info-grid"', escape: false);
+        $response->assertSee('id="container-info-grid-config"', escape: false);
+        $response->assertSee('Add Container', false);
+        // Editable, because the viewer holds bl_info.edit.
+        $response->assertSee('"canEdit":true', escape: false);
+        // The grid's option lists and the prefilled equipment row both arrive
+        // via the JSON config tag. Column headers live in the JS bundle, so
+        // they are checked against the bundle rather than this HTML.
+        $response->assertSee('"slots":[{"id":1,"label":"Term A"}', escape: false);
+        $response->assertSee('"cntr_owner":3', escape: false);
+        $response->assertSee('"gross_weight":"1200"', escape: false);
+        $response->assertSee('"unit":"LBS"', escape: false);
+        $response->assertSee('nav aria-label="Bill of lading sections"', false);
+    }
+
+    public function test_container_info_screen_is_not_accessible_for_an_unapproved_booking(): void
+    {
+        $booking = $this->approvedBooking();
+
+        $this->get(route('bl-info.container-info', $booking))->assertNotFound();
+        $this->postJson(route('bl-info.container-info.store', $booking))->assertNotFound();
+    }
+
+    public function test_rows_without_equipment_survive_a_booking_sync(): void
+    {
+        $booking = $this->makeApprovedBooking();
+
+        // A manually added row has no equipment_id and must survive any sync.
+        $this->postJson(route('bl-info.container-info.store', $booking), $this->containerPayload());
+
+        app(BlContainerInfoSync::class)->syncForBooking($booking);
+        app(BlContainerInfoSync::class)->removeForEquipment($this->addEquipment($booking, []));
+
+        $this->assertDatabaseCount('booking_bl_container_infos', 1);
+        $this->assertNull(BookingBlContainerInfo::sole()->equipment_id);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function containerPayload(array $overrides = []): array
+    {
+        return array_merge([
+            'container_info_cntr_owner' => 1,
+            'container_info_size' => "20' Dry Van",
+            'container_info_container_no' => 'MSCU1234567',
+            'container_info_seal_no' => 'SEAL-1',
+            'container_info_seal2_no' => 'SEAL-2',
+            'container_info_load_type' => 'FCL',
+            'container_info_gross_weight' => '6400',
+            'container_info_net_weight' => '6000',
+            'container_info_cbm' => '33.10',
+            'container_info_packages' => '40',
+            'container_info_unit' => 'KGS',
+            'container_info_temperature' => '',
+            'container_info_slot_operator' => 1,
+            'container_info_slot_operator_ts1' => 2,
+            'container_info_slot_operator_ts2' => 2,
+            'container_info_imo_class' => '',
+            'container_info_un_number' => '',
+            'container_info_remarks' => '',
+        ], $overrides);
+    }
+
     private function approvedBooking(array $overrides = []): Booking
     {
         return Booking::create(array_merge([
