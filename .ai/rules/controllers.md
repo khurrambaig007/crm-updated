@@ -3,6 +3,7 @@ paths:
   - app/Http/Controllers/ContainerPurchaseController.php
   - 'app/Http/Controllers/**'
   - app/Http/Controllers/BookingController.php
+  - app/Http/Controllers/BlInfoController.php
 ---
 
 # Controllers
@@ -33,3 +34,6 @@ $request->string('role') returns an Illuminate\Support\Stringable. spatie getSto
 
 ## Approving a booking auto-creates one Container Release Order
 BookingController::approve() wraps the approved toggle + CRO sync in DB::transaction. On approve it does $booking->containerReleaseOrder()->updateOrCreate(['booking_id' => ...], $this->croAttributesFromBooking($booking)) so there is exactly ONE CRO per booking and re-approval re-syncs changed booking fields instead of duplicating. Un-approving never touches the CRO (retained for audit). No permission gate on CRO creation — it is a side effect of the bookings.edit-gated route. Field mapping: commodity->commodity_id, non_dg->dg_status (both 0=NON DG/1=DG), pol->pol_id, pofd->pofd_id, cntr_owner copied as-is (1/2/3 match on both screens); notes left null. Soft-deleted CROs are excluded from the lookup, so they are re-created. Locked by 4 tests in BookingStoreUpdateTest.
+
+## BL Info "Carrier" is the Carrier model, not cntr_owner config
+The Booking Info tab (under BL Info) field labeled "Carrier" is stored in the misleadingly-named column `booking_info_cntr_owner`, but its values come from the `Carrier` model (same list as the main Booking screen's `carrier` field), NOT from a static config list. It is seeded on approval from `$booking->carrier` in `BookingController::blDetailAttributesFromBooking()` and validated with `exists:carriers,id`. Do not reintroduce `dropdowns.bl_info.booking_info_carrier`.

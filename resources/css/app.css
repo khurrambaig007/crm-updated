@@ -340,12 +340,6 @@ table.dataTable td.dataTables_empty {
     transform: scaleY(1);
 }
 
-/* TEST: force all text to text-xs (0.75rem) — remove when testing done */
-body,
-body *:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6) {
-    font-size: 0.75rem !important;
-}
-
 /* DataTables Responsive — collapse low-priority columns into a + control on small screens */
 table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control,
 table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control {

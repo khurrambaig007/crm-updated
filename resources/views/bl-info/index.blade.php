@@ -9,15 +9,20 @@
         $chevron = '<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-topbar-muted"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="m6 9 6 6 6-6"/></svg></div>';
     @endphp
 
-    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         @include('bl-info._header', ['headerSubtitle' => 'Bill of lading header for booking'])
 
         @include('bl-info._nav')
 
-        <div class="rounded bg-card-bg p-6 shadow-sm ring-1 ring-card-border sm:p-8">
+        <div class="rounded-2xl bg-card-bg p-6 shadow-sm ring-1 ring-card-border transition-shadow hover:shadow-md sm:p-8">
             <div class="mb-6 flex items-center gap-3">
-                @include('components.icons.package', ['classes' => 'h-5 w-5 text-primary-600'])
-                <h2 class="text-lg font-semibold text-topbar-text">Bl Info</h2>
+                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 text-primary-600">
+                    @include('components.icons.package', ['classes' => 'h-5 w-5'])
+                </div>
+                <div>
+                    <h2 class="text-lg font-semibold text-topbar-text">BL Info</h2>
+                    <p class="text-xs text-topbar-muted">Basic bill of lading details</p>
+                </div>
             </div>
 
             {!! html()->form('PATCH', route('bl-info.update', $booking))->id('bl-info-form')->class('space-y-5')->open() !!}

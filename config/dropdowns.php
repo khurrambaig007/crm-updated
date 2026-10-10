@@ -138,11 +138,26 @@ return [
             1 => 'Draft',
             2 => 'Final',
         ],
-        'booking_info_carrier' => [
-            1 => 'Cntr Owner',
-            2 => 'Principal',
-            3 => 'Shipper Carrier',
-            4 => 'Agent',
+        'release_status' => [
+            0 => 'None',
+            1 => 'Release',
+            2 => 'Stop',
+        ],
+        'release_type' => [
+            0 => 'None',
+            1 => 'Original BL',
+            2 => 'Telex Release',
+            3 => 'Express Release',
+            4 => 'Sea Waybill (SWB)',
+            5 => 'Electronic Release',
+            6 => 'Letter of Guarantee',
+            7 => 'Surrendered BL',
+        ],
+        // Weight units stated on the BL Detail cargo particulars block.
+        'units' => [
+            'KGS' => 'KGS',
+            'MT' => 'MT',
+            'LBS' => 'LBS',
         ],
     ],
 

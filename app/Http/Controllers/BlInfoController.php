@@ -2,17 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BlInfo\UpdateBlDetailRequest;
 use App\Http\Requests\BlInfo\UpdateBlInfoRequest;
 use App\Http\Requests\BlInfo\UpdateBookingInfoRequest;
+use App\Http\Requests\BlInfo\UpdateDeliveryOrderRequest;
+use App\Http\Requests\BlInfo\UpdateLockInfoRequest;
+use App\Http\Requests\BlInfo\UpdateReleaseInstructionsRequest;
 use App\Models\Agent;
 use App\Models\Booking;
 use App\Models\BookingBlDetail;
+use App\Models\Carrier;
 use App\Models\Party;
 use App\Models\Pod;
 use App\Models\Pol;
 use App\Models\ShipperBp;
 use App\Models\VesselVoyage;
+use App\Services\BlDetailPdf;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class BlInfoController extends Controller
@@ -29,7 +36,7 @@ class BlInfoController extends Controller
             'booking-info',
             'Booking Info',
             'Routing, parties and references carried over from the booking.',
-            'bl-info.booking-info',
+            view: 'bl-info.booking-info',
         );
     }
 
@@ -40,7 +47,7 @@ class BlInfoController extends Controller
             'release-instructions',
             'Release Instructions',
             'Release authorization details for this bill of lading.',
-            placeholder: true,
+            view: 'bl-info.release-instructions',
         );
     }
 
@@ -51,7 +58,7 @@ class BlInfoController extends Controller
             'delivery-order',
             'Delivery Order',
             'Delivery order details and the party the cargo is released to.',
-            placeholder: true,
+            view: 'bl-info.delivery-order',
         );
     }
 
@@ -62,7 +69,18 @@ class BlInfoController extends Controller
             'lock-info',
             'Lock Info',
             'Where and when each leg of the routing was locked.',
-            placeholder: true,
+            view: 'bl-info.lock-info',
+        );
+    }
+
+    public function blDetail(Booking $booking): View
+    {
+        return $this->render(
+            $booking,
+            'bl-detail',
+            'BL Detail',
+            'Cargo particulars as they appear on the bill of lading.',
+            view: 'bl-info.bl-detail',
         );
     }
 
@@ -91,6 +109,62 @@ class BlInfoController extends Controller
 
         return redirect()->route('bl-info.booking-info', $booking)
             ->with('status', 'Booking Info updated successfully.');
+    }
+
+    public function updateReleaseInstructions(UpdateReleaseInstructionsRequest $request, Booking $booking): RedirectResponse
+    {
+        $this->detailFor($booking)->update($request->validated());
+
+        return redirect()->route('bl-info.release-instructions', $booking)
+            ->with('status', 'Release Instructions updated successfully.');
+    }
+
+    public function updateDeliveryOrder(UpdateDeliveryOrderRequest $request, Booking $booking): RedirectResponse
+    {
+        $this->detailFor($booking)->update($request->validated());
+
+        return redirect()->route('bl-info.delivery-order', $booking)
+            ->with('status', 'Delivery Order updated successfully.');
+    }
+
+    public function updateLockInfo(UpdateLockInfoRequest $request, Booking $booking): RedirectResponse
+    {
+        $this->detailFor($booking)->update($request->validated());
+
+        return redirect()->route('bl-info.lock-info', $booking)
+            ->with('status', 'Lock Info updated successfully.');
+    }
+
+    public function updateBlDetail(UpdateBlDetailRequest $request, Booking $booking): RedirectResponse
+    {
+        $this->detailFor($booking)->update($request->validated());
+
+        return redirect()->route('bl-info.bl-detail', $booking)
+            ->with('status', 'BL Detail updated successfully.');
+    }
+
+    public function viewBlDetailPdf(Booking $booking): Response
+    {
+        // Inline disposition renders the PDF in the browser instead of downloading it.
+        return response($this->buildBlDetailPdf($booking), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="BL-'.$booking->booking_no.'.pdf"',
+        ]);
+    }
+
+    public function downloadBlDetailPdf(Booking $booking): Response
+    {
+        return response($this->buildBlDetailPdf($booking), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="BL-'.$booking->booking_no.'.pdf"',
+        ]);
+    }
+
+    private function buildBlDetailPdf(Booking $booking): string
+    {
+        $detail = $this->detailFor($booking);
+
+        return (new BlDetailPdf(resource_path('pdf/bl-detail-template.pdf')))->render($detail);
     }
 
     private function render(
@@ -127,7 +201,11 @@ class BlInfoController extends Controller
             'pofds' => Pod::orderBy('city')->get(),
             'shipperBps' => ShipperBp::orderBy('name')->get(),
             'parties' => Party::orderBy('name')->get(),
-            'carriers' => config('dropdowns.bl_info.booking_info_carrier'),
+            'carriers' => Carrier::orderBy('name')->get(),
+            'releaseStatuses' => config('dropdowns.bl_info.release_status'),
+            'releaseTypes' => config('dropdowns.bl_info.release_type'),
+            'units' => config('dropdowns.bl_info.units'),
+            'freightTypes' => config('dropdowns.bookings.freight_type'),
         ];
     }
 
@@ -140,10 +218,34 @@ class BlInfoController extends Controller
     {
         abort_unless($booking->approved, 404);
 
-        return $booking->blDetail()->firstOrCreate([], [
+        $detail = $booking->blDetail()->firstOrCreate([], [
             'bl_info_booking_no' => $booking->booking_no,
             'bl_info_sailing_date' => $booking->sailing_date?->format('Y-m-d'),
             'bl_info_bl_number' => BookingBlDetail::nextBlNumber(),
         ]);
+
+        $this->backfillFromBooking($detail, $booking);
+
+        return $detail;
+    }
+
+    /**
+     * Fill any empty BL Info fields from the booking header. This heals records
+     * created before a field was seeded (or lazily created by a direct visit)
+     * without ever overwriting values the user has entered.
+     */
+    private function backfillFromBooking(BookingBlDetail $detail, Booking $booking): void
+    {
+        $fill = [];
+
+        foreach (BookingBlDetail::fromBooking($booking) as $column => $value) {
+            if ($detail->{$column} === null && $value !== null) {
+                $fill[$column] = $value;
+            }
+        }
+
+        if ($fill !== []) {
+            $detail->update($fill);
+        }
     }
 }

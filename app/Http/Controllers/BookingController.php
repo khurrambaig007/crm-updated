@@ -439,21 +439,11 @@ class BookingController extends Controller
      */
     private function blDetailAttributesFromBooking(Booking $booking): array
     {
-        return [
+        return array_merge([
             'bl_info_booking_no' => $booking->booking_no,
             'bl_info_sailing_date' => $booking->sailing_date?->format('Y-m-d'),
             'bl_info_bl_number' => BookingBlDetail::nextBlNumber(),
-            'booking_info_pol' => $booking->pol,
-            'booking_info_pofd' => $booking->pofd,
-            'booking_info_pot_1' => $booking->pot_1,
-            'booking_info_pot_2' => $booking->pot_2,
-            'booking_info_shipper_bp' => $booking->shipper_bp,
-            'booking_info_consignee' => $booking->consignee,
-            'booking_info_agent_pofd' => $booking->agent_pofd,
-            'booking_info_agent_1' => $booking->agent_1,
-            'booking_info_agent_2' => $booking->agent_2,
-            'booking_info_reference' => $booking->reference_no,
-        ];
+        ], BookingBlDetail::fromBooking($booking));
     }
 
     private function nextBookingNo(?int $polId, ?int $pofdId): string

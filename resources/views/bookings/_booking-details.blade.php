@@ -31,7 +31,6 @@
         $netTotal = $revenueTotal - $costTotal;
         $fmt = fn ($n) => number_format((float) $n, 2);
         $canApprove = auth()->user()->isSuperAdmin() || auth()->user()->can('bookings.edit');
-        $canViewBlInfo = auth()->user()->isSuperAdmin() || auth()->user()->can('bl_info.view');
     @endphp
 
     <div class="rounded-2xl bg-card-bg p-6 shadow-sm ring-1 ring-card-border sm:p-8">
@@ -58,14 +57,6 @@
                     <span class="inline-flex w-full items-center justify-center rounded-xl bg-topbar-muted/10 px-5 py-2.5 text-sm font-semibold text-topbar-muted">
                         {{ $booking->approved ? 'Approved' : 'Pending' }}
                     </span>
-                @endif
-
-                @if ($canViewBlInfo)
-                    <a href="{{ route('bl-info.index', $booking) }}" id="booking-bl-info-link"
-                        class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-5 py-2.5 text-sm font-semibold text-primary-700 shadow-sm transition-all hover:bg-primary-100 hover:-translate-y-0.5 {{ $booking->approved ? '' : 'hidden' }}">
-                        @include('components.icons.package', ['classes' => 'h-4 w-4'])
-                        BL Info
-                    </a>
                 @endif
             </div>
         </div>

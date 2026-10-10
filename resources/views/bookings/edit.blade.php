@@ -30,6 +30,19 @@
                         Split Booking
                     </a>
                 @endif
+
+                {{-- Only offered once approved: BlInfoController::detailFor() aborts with a
+                     404 until then, so showing the link earlier would be a dead end.
+                     This must be a render condition, not a `hidden` class — the link
+                     carries `inline-flex`, and Tailwind emits that display utility after
+                     `hidden`, so `hidden` never wins the cascade. --}}
+                @if ($booking->approved && (auth()->user()->isSuperAdmin() || auth()->user()->can('bl_info.view')))
+                    <a href="{{ route('bl-info.index', $booking) }}" id="booking-bl-info-link" class="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-primary-900 ring-1 ring-inset ring-card-border transition-colors hover:bg-primary-50">
+                        @include('components.icons.package', ['classes' => 'h-4 w-4'])
+                        BL Info
+                    </a>
+                @endif
+
                 <a href="{{ route('bookings.index') }}" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-topbar-muted transition-colors hover:text-topbar-text">Cancel</a>
             </div>
         </div>

@@ -107,10 +107,17 @@ Route::middleware('authenticated')->group(function () {
         Route::get('bookings/{booking}/bl-info/release-instructions', [BlInfoController::class, 'releaseInstructions'])->name('bl-info.release-instructions');
         Route::get('bookings/{booking}/bl-info/delivery-order', [BlInfoController::class, 'deliveryOrder'])->name('bl-info.delivery-order');
         Route::get('bookings/{booking}/bl-info/lock-info', [BlInfoController::class, 'lockInfo'])->name('bl-info.lock-info');
+        Route::get('bookings/{booking}/bl-info/bl-detail', [BlInfoController::class, 'blDetail'])->name('bl-info.bl-detail');
+        Route::get('bookings/{booking}/bl-info/bl-detail/pdf', [BlInfoController::class, 'viewBlDetailPdf'])->name('bl-info.bl-detail.pdf-view');
+        Route::get('bookings/{booking}/bl-info/bl-detail/pdf/download', [BlInfoController::class, 'downloadBlDetailPdf'])->name('bl-info.bl-detail.pdf');
         Route::get('bookings/{booking}/bl-info/authorization', [BlInfoController::class, 'authorization'])->name('bl-info.authorization');
     });
     Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info', [BlInfoController::class, 'update'])->name('bl-info.update');
     Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/booking-info', [BlInfoController::class, 'updateBookingInfo'])->name('bl-info.booking-info.update');
+    Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/release-instructions', [BlInfoController::class, 'updateReleaseInstructions'])->name('bl-info.release-instructions.update');
+    Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/delivery-order', [BlInfoController::class, 'updateDeliveryOrder'])->name('bl-info.delivery-order.update');
+    Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/lock-info', [BlInfoController::class, 'updateLockInfo'])->name('bl-info.lock-info.update');
+    Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/bl-detail', [BlInfoController::class, 'updateBlDetail'])->name('bl-info.bl-detail.update');
 
     // Container Release Order (CRO)
     Route::middleware('permission:container_release_orders.view')->get('container-release-orders', [ContainerReleaseOrderController::class, 'index'])->name('container-release-orders.index');

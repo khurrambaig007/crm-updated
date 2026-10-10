@@ -10,6 +10,8 @@
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
+        "setasign/fpdf": "^1.9",
+        "setasign/fpdi": "^2.6",
         "spatie/laravel-html": "^3.13",
         "spatie/laravel-permission": "^8.3",
         "yajra/laravel-datatables": "^13.0",
