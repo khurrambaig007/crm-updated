@@ -4,6 +4,7 @@ paths:
   - 'app/Http/Controllers/**'
   - app/Http/Controllers/BookingController.php
   - app/Http/Controllers/BlInfoController.php
+  - app/Http/Controllers/StampController.php
 ---
 
 # Controllers
@@ -37,3 +38,6 @@ BookingController::approve() wraps the approved toggle + CRO sync in DB::transac
 
 ## BL Info "Carrier" is the Carrier model, not cntr_owner config
 The Booking Info tab (under BL Info) field labeled "Carrier" is stored in the misleadingly-named column `booking_info_cntr_owner`, but its values come from the `Carrier` model (same list as the main Booking screen's `carrier` field), NOT from a static config list. It is seeded on approval from `$booking->carrier` in `BookingController::blDetailAttributesFromBooking()` and validated with `exists:carriers,id`. Do not reintroduce `dropdowns.bl_info.booking_info_carrier`.
+
+## System Operations CRUD screens are a deliberate copy family, and uploads must clean up
+The 19 System Operations config screens (Container Size, Carrier, Slot, Stamps Info, …) are intentionally near-identical copies, NOT an abstraction: each has its own controller (index ajax/render, create, store, edit, update, destroy with a QueryException guard), its own duplicated Store/Update request pair in app/Http/Requests/{Model}/, its own DataTable extending Yajra's DataTable directly (there is no shared base class or trait — the html()/actionsHtml() boilerplate is copy-pasted), and views/{plural}/index|create|edit. A new screen must also add config/system.php screens + navigation entries and then run permissions:sync. Screens holding an uploaded file (Stamps) additionally store on the public disk and MUST delete the file on replace, remove_image and destroy — a row delete that leaves the file behind silently accumulates orphans.

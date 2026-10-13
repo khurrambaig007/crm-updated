@@ -17,6 +17,7 @@ use App\Models\Pol;
 use App\Models\SettlementType;
 use App\Models\ShipperBp;
 use App\Models\SlotTerm;
+use App\Models\Stamp;
 use App\Models\SubCompany;
 use App\Models\Supplier;
 use App\Models\VesselVoyage;
@@ -42,6 +43,7 @@ class SystemOperationsController extends Controller
                 'charges' => Charge::count(),
                 'currencies' => Currency::count(),
                 'slots' => SlotTerm::count(),
+                'stamps' => Stamp::count(),
                 'investors' => Investor::count(),
                 'parties' => Party::count(),
                 'settlement_types' => SettlementType::count(),

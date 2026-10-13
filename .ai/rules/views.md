@@ -6,6 +6,9 @@ paths:
 
 # Views
 
+## Any file/image upload field must follow .ai/rules/uploads.md
+Do not write a bare `<input type="file">` with `file:` pseudo-element styling. The drop-zone pattern (markup, states, data hooks, server contract) is specified in .ai/rules/uploads.md; reference implementation is `stamps/_image-field.blade.php` + `resources/js/stamps.js`.
+
 ## Never nest a delete form inside the main form
 HTML forbids nesting <form> inside <form>. The browser drops the nested form's opening tag, so its @method('DELETE') hidden input leaks into the outer form. When both _method=PATCH (added by spatie for the main form) and _method=DELETE are POSTed, PHP keeps the LAST one (DELETE), so clicking Save routes to destroy and DELETES the record. Put action buttons (Delete/New/Save) as a sibling after closing the main form; the Save button submits via the form="cp-form" attribute. Guard edits with a DOM-based test asserting cp-form contains exactly one _method=PATCH and a standalone DELETE form routes to destroy.
 

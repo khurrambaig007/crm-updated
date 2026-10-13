@@ -100,6 +100,7 @@ return [
                         ['label' => 'Shipper / BP', 'route' => 'shipper-bps.index', 'icon' => 'package', 'permission' => 'shipper_bps.view'],
                         ['label' => 'Suppliers', 'route' => 'suppliers.index', 'icon' => 'truck', 'permission' => 'suppliers.view'],
                         ['label' => 'Sub Companies', 'route' => 'sub-companies.index', 'icon' => 'landmark', 'permission' => 'sub_companies.view'],
+                        ['label' => 'Stamps Info', 'route' => 'stamps.index', 'icon' => 'stamp', 'permission' => 'stamps.view'],
                     ],
                 ],
             ],
@@ -312,6 +313,10 @@ return [
         ],
         'slots' => [
             'label' => 'Slot',
+            'permissions' => ['view', 'add', 'edit', 'delete'],
+        ],
+        'stamps' => [
+            'label' => 'Stamps Info',
             'permissions' => ['view', 'add', 'edit', 'delete'],
         ],
         'investors' => [

@@ -2,6 +2,7 @@
 paths:
   - app/Models/Booking.php
   - app/Models/BookingInfoEquipment.php
+  - app/Models/BookingBlDetail.php
 ---
 
 # Models
@@ -14,3 +15,6 @@ A split child is a full Booking row: inherits every header column (via getAttrib
 
 ## Equipment `unit` is a unit code, not a number
 `booking_info_equipments.unit` holds KGS / MT / LBS and is sourced from `config('dropdowns.bl_info.units')` so the Equipments grid and the BL Detail screen agree. It was an int with an integer cast, an `integer` validation rule and an `agNumberCellEditor`; text was impossible to enter and the only storable values were meaningless integers. Never reintroduce a numeric editor, `(int)` cast, or `parseInt` on it — the grid cell is an `agSelectCellEditor` fed from `config.units` in `#equipment-grid-config`.
+
+## Every BL Info tab's fields live on booking_bl_details under a screen prefix
+booking_bl_details is one row per booking and holds the fields for ALL BL Info tabs, each under a screen prefix: bl_info_, booking_info_, release_instruction_, delivery_order_, lock_info_, bl_detail_, and now refno_ (added 2026-10-13 for Ref NO's). Do not give a singleton tab its own table — Container Info is the only exception, because it is repeating per-equipment data. A tab that wants a value seeded from the booking adds one entry to fromBooking(); backfillFromBooking() then fills it only while null, so user edits are never overwritten.

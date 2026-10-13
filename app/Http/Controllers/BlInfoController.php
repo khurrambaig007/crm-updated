@@ -8,7 +8,9 @@ use App\Http\Requests\BlInfo\UpdateBlInfoRequest;
 use App\Http\Requests\BlInfo\UpdateBookingInfoRequest;
 use App\Http\Requests\BlInfo\UpdateDeliveryOrderRequest;
 use App\Http\Requests\BlInfo\UpdateLockInfoRequest;
+use App\Http\Requests\BlInfo\UpdateRefnosRequest;
 use App\Http\Requests\BlInfo\UpdateReleaseInstructionsRequest;
+use App\Http\Requests\BlInfo\UpdateStampsRequest;
 use App\Models\Agent;
 use App\Models\Booking;
 use App\Models\BookingBlContainerInfo;
@@ -19,6 +21,7 @@ use App\Models\Pod;
 use App\Models\Pol;
 use App\Models\ShipperBp;
 use App\Models\SlotTerm;
+use App\Models\Stamp;
 use App\Models\VesselVoyage;
 use App\Services\BlContainerInfoSync;
 use App\Services\BlDetailPdf;
@@ -114,6 +117,32 @@ class BlInfoController extends Controller
             'One row per equipment line, carried over from the booking.',
             view: 'bl-info.container-info',
         );
+    }
+
+    public function refnos(Booking $booking): View
+    {
+        return $this->render(
+            $booking,
+            'refnos',
+            'Ref NO\'s',
+            'Invoice, export, contact and letter-of-credit references.',
+            view: 'bl-info.refnos',
+        );
+    }
+
+    public function stamps(Booking $booking): View
+    {
+        $detail = $this->detailFor($booking);
+
+        return view('bl-info.stamps', [
+            'booking' => $booking,
+            'blDetail' => $detail,
+            'activeTab' => 'stamps',
+            'tabTitle' => 'Stamps',
+            'tabDescription' => 'Select the stamps to apply to this bill of lading.',
+            'stamps' => Stamp::orderBy('name')->get(),
+            'selectedStampIds' => $detail->stamps()->pluck('stamps.id')->all(),
+        ]);
     }
 
     public function storeContainerInfo(ContainerInfoRequest $request, Booking $booking): JsonResponse
@@ -242,6 +271,22 @@ class BlInfoController extends Controller
 
         return redirect()->route('bl-info.bl-detail', $booking)
             ->with('status', 'BL Detail updated successfully.');
+    }
+
+    public function updateRefnos(UpdateRefnosRequest $request, Booking $booking): RedirectResponse
+    {
+        $this->detailFor($booking)->update($request->validated());
+
+        return redirect()->route('bl-info.refnos', $booking)
+            ->with('status', 'Ref NO\'s updated successfully.');
+    }
+
+    public function updateStamps(UpdateStampsRequest $request, Booking $booking): RedirectResponse
+    {
+        $this->detailFor($booking)->stamps()->sync($request->validated('stamp_ids') ?? []);
+
+        return redirect()->route('bl-info.stamps', $booking)
+            ->with('status', 'Stamps updated successfully.');
     }
 
     public function viewBlDetailPdf(Booking $booking): Response

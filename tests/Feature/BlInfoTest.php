@@ -7,12 +7,15 @@ use App\Models\Booking;
 use App\Models\BookingBlContainerInfo;
 use App\Models\BookingBlDetail;
 use App\Models\BookingInfoEquipment;
+use App\Models\CompanyProfile;
+use App\Models\Stamp;
 use App\Models\User;
 use App\Services\BlContainerInfoSync;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Permission;
 
 class BlInfoTest extends BaseTestCase
@@ -515,6 +518,249 @@ class BlInfoTest extends BaseTestCase
         return $booking->refresh();
     }
 
+    /* ------------------------------------------------------------------- Ref NO's */
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function refnosPayload(array $overrides = []): array
+    {
+        return array_merge([
+            'refno_invoice_no' => 'INV-9001',
+            'refno_invoice_date' => '2026-09-01',
+            'refno_export_no' => 'EXP-4471',
+            'refno_export_date' => '2026-09-05',
+            'refno_contact_no' => 'CNT-2210',
+            'refno_contact_date' => '2026-09-10',
+            'refno_lc_no' => 'LC-778812',
+            'refno_lc_date' => '2026-09-12',
+            'refno_shipper_ref' => 'SHP-55',
+            'refno_client_ref' => 'CLI-9090',
+        ], $overrides);
+    }
+
+    public function test_refnos_screen_renders_every_field(): void
+    {
+        $booking = $this->makeApprovedBooking();
+
+        $response = $this->get(route('bl-info.refnos', $booking));
+
+        $response->assertOk();
+        $response->assertSee('id="refnos-form"', escape: false);
+
+        foreach ([
+            'refno_invoice_no', 'refno_invoice_date',
+            'refno_export_no', 'refno_export_date',
+            'refno_contact_no', 'refno_contact_date',
+            'refno_lc_no', 'refno_lc_date',
+            'refno_shipper_ref', 'refno_client_ref',
+        ] as $field) {
+            $response->assertSee('name="'.$field.'"', escape: false);
+        }
+
+        // The date captions are disambiguated; four inputs captioned "Date"
+        // would be ambiguous on one row.
+        foreach (['Invoice Date', 'Export Date', 'Contact Date', 'L/C Date'] as $label) {
+            $response->assertSee($label, false);
+        }
+    }
+
+    public function test_refnos_update_persists_every_field(): void
+    {
+        $booking = $this->makeApprovedBooking();
+
+        $this->patch(route('bl-info.refnos.update', $booking), $this->refnosPayload())
+            ->assertRedirect(route('bl-info.refnos', $booking))
+            ->assertSessionHas('status');
+
+        $detail = $booking->blDetail()->first();
+
+        $this->assertSame('INV-9001', $detail->refno_invoice_no);
+        $this->assertSame('2026-09-01', (string) $detail->refno_invoice_date);
+        $this->assertSame('EXP-4471', $detail->refno_export_no);
+        $this->assertSame('2026-09-05', (string) $detail->refno_export_date);
+        $this->assertSame('CNT-2210', $detail->refno_contact_no);
+        $this->assertSame('2026-09-10', (string) $detail->refno_contact_date);
+        $this->assertSame('LC-778812', $detail->refno_lc_no);
+        $this->assertSame('2026-09-12', (string) $detail->refno_lc_date);
+        $this->assertSame('SHP-55', $detail->refno_shipper_ref);
+        $this->assertSame('CLI-9090', $detail->refno_client_ref);
+    }
+
+    public function test_refnos_are_all_optional(): void
+    {
+        $booking = $this->makeApprovedBooking();
+
+        // Nothing is mandatory: a booking can have an export number long
+        // before it has a letter of credit.
+        $this->patch(route('bl-info.refnos.update', $booking), [])->assertSessionHasNoErrors();
+
+        $this->assertNull($booking->blDetail()->first()->refno_invoice_no);
+    }
+
+    public function test_refnos_update_rejects_a_bad_date_and_an_over_length_number(): void
+    {
+        $booking = $this->makeApprovedBooking();
+
+        $this->patch(route('bl-info.refnos.update', $booking), $this->refnosPayload([
+            'refno_invoice_date' => 'not-a-date',
+        ]))->assertSessionHasErrors(['refno_invoice_date']);
+
+        $this->patch(route('bl-info.refnos.update', $booking), $this->refnosPayload([
+            'refno_export_no' => str_repeat('A', 192),
+        ]))->assertSessionHasErrors(['refno_export_no']);
+
+        $this->patch(route('bl-info.refnos.update', $booking), $this->refnosPayload([
+            'refno_lc_date' => '2026-13-45',
+        ]))->assertSessionHasErrors(['refno_lc_date']);
+    }
+
+    public function test_client_ref_is_seeded_from_the_booking_reference_on_approval(): void
+    {
+        $booking = $this->approvedBooking(['reference_no' => 'REF-CLIENT-42']);
+
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => true]);
+
+        $this->assertSame('REF-CLIENT-42', $booking->blDetail()->first()->refno_client_ref);
+    }
+
+    public function test_refnos_backfill_never_overwrites_user_values(): void
+    {
+        $booking = $this->makeApprovedBooking(['reference_no' => 'REF-CLIENT-42']);
+        $detail = $booking->blDetail()->first();
+
+        $detail->update(['refno_client_ref' => 'MY-OWN-REF']);
+
+        // A later screen visit re-runs the backfill; it must leave the
+        // user-entered value alone.
+        $this->get(route('bl-info.refnos', $booking))->assertOk();
+
+        $this->assertSame('MY-OWN-REF', $detail->refresh()->refno_client_ref);
+    }
+
+    public function test_refnos_screen_is_not_accessible_for_an_unapproved_booking(): void
+    {
+        $booking = $this->approvedBooking();
+
+        $this->get(route('bl-info.refnos', $booking))->assertNotFound();
+        $this->patch(route('bl-info.refnos.update', $booking), $this->refnosPayload())->assertNotFound();
+    }
+
+    /* ------------------------------------------------------------------- Stamps */
+
+    public function test_stamps_screen_renders_checkbox_grid_with_selection_state(): void
+    {
+        $booking = $this->makeApprovedBooking();
+
+        $first = Stamp::create(['name' => 'Vessel Stamp']);
+        $second = Stamp::create(['name' => 'Signature Stamp']);
+
+        // Pre-selected on an earlier save.
+        $booking->blDetail()->first()->stamps()->sync([$first->id]);
+
+        $response = $this->get(route('bl-info.stamps', $booking));
+
+        $response->assertOk();
+        $response->assertSee('id="stamps-form"', escape: false);
+        $response->assertSee('data-stamp-picker', escape: false);
+        // The sibling pill is live, not a "Soon" placeholder.
+        $response->assertSee(route('bl-info.stamps', $booking), false);
+
+        // Both stamps render as checkboxes; only the selected one is checked.
+        // @checked renders a minimized "checked>", and Blade keeps the
+        // newlines of the source attribute list, so assert identity + count.
+        $response->assertSee('name="stamp_ids[]" value="'.$first->id.'"', false);
+        $response->assertSee('name="stamp_ids[]" value="'.$second->id.'"', false);
+        $this->assertSame(1, substr_count($response->getContent(), 'checked>'));
+    }
+
+    public function test_stamps_update_persists_multiple_selection_and_replaces_on_resave(): void
+    {
+        $booking = $this->makeApprovedBooking();
+
+        $first = Stamp::create(['name' => 'Vessel Stamp']);
+        $second = Stamp::create(['name' => 'Signature Stamp']);
+        $third = Stamp::create(['name' => 'Freight Stamp']);
+
+        $this->patch(route('bl-info.stamps.update', $booking), [
+            'stamp_ids' => [$first->id, $third->id],
+        ])->assertRedirect(route('bl-info.stamps', $booking))
+            ->assertSessionHas('status');
+
+        $this->assertSame(
+            [$first->id, $third->id],
+            $booking->blDetail()->first()->stamps()->pluck('stamps.id')->all(),
+        );
+
+        // A second save replaces the set; selections never accumulate.
+        $this->patch(route('bl-info.stamps.update', $booking), [
+            'stamp_ids' => [$second->id],
+        ])->assertRedirect(route('bl-info.stamps', $booking));
+
+        $this->assertSame(
+            [$second->id],
+            $booking->blDetail()->first()->stamps()->pluck('stamps.id')->all(),
+        );
+    }
+
+    public function test_stamps_update_can_clear_every_selection(): void
+    {
+        $booking = $this->makeApprovedBooking();
+        $stamp = Stamp::create(['name' => 'Vessel Stamp']);
+
+        $detail = $booking->blDetail()->first();
+        $detail->stamps()->sync([$stamp->id]);
+
+        // No stamp_ids key arrives when every checkbox is unticked.
+        $this->patch(route('bl-info.stamps.update', $booking), [])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('bl-info.stamps', $booking));
+
+        $this->assertCount(0, $detail->stamps()->get());
+    }
+
+    public function test_stamps_update_rejects_unknown_and_duplicate_stamp_ids(): void
+    {
+        $booking = $this->makeApprovedBooking();
+
+        $this->patch(route('bl-info.stamps.update', $booking), ['stamp_ids' => [999]])
+            ->assertSessionHasErrors('stamp_ids.0');
+
+        $this->patch(route('bl-info.stamps.update', $booking), ['stamp_ids' => [1, 1]])
+            ->assertSessionHasErrors('stamp_ids.1');
+    }
+
+    public function test_stamps_screen_shows_an_empty_state_and_gates_the_library_link(): void
+    {
+        $booking = $this->makeApprovedBooking();
+
+        // Without stamps.view the empty state still explains what to do, but the
+        // shortcut into a screen the user could not open is withheld.
+        $this->get(route('bl-info.stamps', $booking))
+            ->assertOk()
+            ->assertSee('No stamps in the library yet')
+            ->assertDontSee(route('stamps.index'), false)
+            ->assertDontSee('data-stamp-picker', false)
+            // ...and there is nothing to save.
+            ->assertDontSee('Save Stamps');
+
+        // Granting the permission reveals the link; the gate itself is what the
+        // first half above proves.
+        auth()->user()->givePermissionTo(Permission::findOrCreate('stamps.view'));
+
+        $this->get(route('bl-info.stamps', $booking))
+            ->assertOk()
+            ->assertSee(route('stamps.index'), false);
+    }
+
+    public function test_stamps_screen_is_not_accessible_for_an_unapproved_booking(): void
+    {
+        $booking = $this->approvedBooking();
+
+        $this->get(route('bl-info.stamps', $booking))->assertNotFound();
+        $this->patch(route('bl-info.stamps.update', $booking), [])->assertNotFound();
+    }
+
     public function test_approving_a_booking_syncs_container_rows_from_equipment(): void
     {
         $booking = $this->approvedBooking(['cntr_owner' => 2]);
@@ -965,6 +1211,99 @@ class BlInfoTest extends BaseTestCase
      * and the document is well formed. Field placement is verified against the
      * rendered output rather than the byte stream.
      */
+    public function test_bl_detail_pdf_embeds_the_company_profile_logo(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('company-profile/acme.png', $this->solidLogoBytes(400, 400));
+
+        CompanyProfile::create([
+            'name' => 'Acme Logistics',
+            'logo' => 'company-profile/acme.png',
+            'emails' => ['info@acme.test'],
+        ]);
+
+        $booking = $this->approvedBooking();
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => true]);
+
+        // Asserted on the endpoint output rather than the service, so the
+        // wiring through view/download is covered too.
+        $body = $this->get(route('bl-info.bl-detail.pdf-view', $booking))->getContent();
+
+        $this->assertValidPdf($body);
+        // The logo baked into the artwork is 1800x2170, so these dimensions
+        // can only be the profile logo stamped in over it.
+        $this->assertStringContainsString('/Width 400', $body);
+        $this->assertStringContainsString('/Height 400', $body);
+    }
+
+    public function test_bl_detail_pdf_converts_a_webp_logo_before_embedding_it(): void
+    {
+        Storage::fake('public');
+
+        $webp = imagecreatetruecolor(360, 240);
+        imagefill($webp, 0, 0, imagecolorallocate($webp, 10, 80, 200));
+        ob_start();
+        imagewebp($webp);
+        $webpBytes = (string) ob_get_clean();
+        imagedestroy($webp);
+
+        Storage::disk('public')->put('company-profile/acme.webp', $webpBytes);
+
+        CompanyProfile::create([
+            'name' => 'Acme Logistics',
+            'logo' => 'company-profile/acme.webp',
+            'emails' => ['info@acme.test'],
+        ]);
+
+        $booking = $this->approvedBooking();
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => true]);
+
+        // FPDF reads JPEG and PNG only, so a webp logo must be re-encoded
+        // through GD or the render dies with "Unsupported image type".
+        $body = $this->get(route('bl-info.bl-detail.pdf', $booking))->getContent();
+
+        $this->assertValidPdf($body);
+        $this->assertStringContainsString('/Width 360', $body);
+        $this->assertStringContainsString('/Height 240', $body);
+    }
+
+    public function test_bl_detail_pdf_renders_when_the_profile_has_no_logo(): void
+    {
+        Storage::fake('public');
+
+        CompanyProfile::create([
+            'name' => 'Acme Logistics',
+            'emails' => ['info@acme.test'],
+        ]);
+
+        $booking = $this->approvedBooking();
+        $this->patchJson(route('bookings.approve', $booking))->assertJson(['approved' => true]);
+
+        $body = $this->get(route('bl-info.bl-detail.pdf-view', $booking))->getContent();
+
+        // The artwork's hardcoded logo must never resurface, so nothing is
+        // stamped: the box is covered and left blank.
+        $this->assertValidPdf($body);
+        $this->assertStringNotContainsString('/Width 400', $body);
+    }
+
+    /**
+     * A solid red square as raw PNG bytes — distinguishable from the artwork's
+     * own logo purely by its pixel dimensions.
+     */
+    private function solidLogoBytes(int $width, int $height): string
+    {
+        $image = imagecreatetruecolor($width, $height);
+        imagefill($image, 0, 0, imagecolorallocate($image, 255, 0, 0));
+
+        ob_start();
+        imagepng($image);
+        $bytes = (string) ob_get_clean();
+        imagedestroy($image);
+
+        return $bytes;
+    }
+
     private function assertValidPdf(string $body): void
     {
         $this->assertStringStartsWith('%PDF-', $body);

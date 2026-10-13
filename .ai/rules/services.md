@@ -25,3 +25,6 @@ Several boxes print their caption INSIDE the cell (Shipper, Consignee, Notify pa
 
 ## Container Info syncs one row per equipment line, null-only
 BL Info > Container Info lives in `booking_bl_container_infos` (created 2026-10-10), one row per booking_info_equipments line keyed by a unique `equipment_id`; it is NOT the legacy `bl_container_infos` table, which stays untouched holding longText blobs for the unbuilt Ref NO's / Stamps screens. Row endpoints in BlInfoController must keep their JSON 422 via ContainerInfoRequest::failedValidation (non-api AJAX otherwise 302s).
+
+## BL Detail PDF covers the artwork's baked-in logo and stamps the Company Profile one
+resources/pdf/bl-detail-template.pdf has a logo hardcoded into it (the only image on page 1: an 1800x2170 raster at Rect(44.53, 42.55, 101.62, 111.28), which is why the file is 60MB). BlDetailPdf::applyLogo() fills that exact box white and stamps CompanyProfile::current()'s logo centred and scaled via logoDisplaySize(). The cover rect must stay tight — the outlined header glyphs sit ~4pt above it. FPDF embeds JPEG/PNG only, so a webp logo (the profile accepts one) is re-encoded through GD in embeddableLogo(); without that it throws "Unsupported image type". With no profile logo the box is left blank, never the hardcoded one.

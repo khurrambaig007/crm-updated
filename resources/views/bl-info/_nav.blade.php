@@ -9,10 +9,15 @@
         'authorization' => ['label' => 'Authorization', 'route' => 'bl-info.authorization', 'icon' => 'users'],
     ];
 
-    $futureItems = [
-        'refnos' => ['label' => "Ref NO's", 'icon' => 'tag'],
-        'stamps' => ['label' => 'Stamps', 'icon' => 'landmark'],
+    // Entities that sit beside the dropdown rather than inside it.
+    $siblingItems = [
+        'bl-detail' => ['key' => 'bl-detail', 'label' => 'BL Detail', 'route' => 'bl-info.bl-detail', 'icon' => 'receipt'],
+        'container-info' => ['key' => 'container-info', 'label' => 'Container Info', 'route' => 'bl-info.container-info', 'icon' => 'box'],
+        'refnos' => ['key' => 'refnos', 'label' => "Ref NO's", 'route' => 'bl-info.refnos', 'icon' => 'tag'],
+        'stamps' => ['key' => 'stamps', 'label' => 'Stamps', 'route' => 'bl-info.stamps', 'icon' => 'landmark'],
     ];
+
+    $futureItems = [];
 
     $hasActiveChild = array_key_exists($activeTab, $blChildren);
     $parentActive = $activeTab === 'index';
@@ -61,28 +66,23 @@
 
         <div class="mx-1 h-6 w-px bg-card-border"></div>
 
-        {{-- Sibling entity: the bill of lading particulars document --}}
-        <a href="{{ route('bl-info.bl-detail', $booking) }}"
-            aria-current="{{ $activeTab === 'bl-detail' ? 'page' : 'false' }}"
-            class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ $activeTab === 'bl-detail' ? 'bg-primary-50 text-primary-700' : 'text-topbar-text hover:bg-page-bg' }}">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600 {{ $activeTab === 'bl-detail' ? 'ring-1 ring-primary-200' : '' }}">
-                @include('components.icons.receipt', ['classes' => 'h-4 w-4'])
-            </span>
-            <span class="whitespace-nowrap">BL Detail</span>
-        </a>
-
+        {{-- Sibling entity tabs: documents and lists that sit beside the BL Info
+         dropdown rather than inside it. Labels go through {{ }} so an
+         apostrophe ("Ref NO's") is escaped consistently with $futureItems. --}}
+    @foreach ($siblingItems as $sibling)
         <div class="mx-1 h-6 w-px bg-card-border"></div>
 
-        {{-- Sibling entity: the container list --}}
-        <a href="{{ route('bl-info.container-info', $booking) }}"
-            aria-current="{{ $activeTab === 'container-info' ? 'page' : 'false' }}"
-            class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ $activeTab === 'container-info' ? 'bg-primary-50 text-primary-700' : 'text-topbar-text hover:bg-page-bg' }}">
-            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600 {{ $activeTab === 'container-info' ? 'ring-1 ring-primary-200' : '' }}">
-                @include('components.icons.box', ['classes' => 'h-4 w-4'])
+        <a href="{{ route($sibling['route'], $booking) }}"
+            aria-current="{{ $activeTab === $sibling['key'] ? 'page' : 'false' }}"
+            class="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors {{ $activeTab === $sibling['key'] ? 'bg-primary-50 text-primary-700' : 'text-topbar-text hover:bg-page-bg' }}">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-600 {{ $activeTab === $sibling['key'] ? 'ring-1 ring-primary-200' : '' }}">
+                @include('components.icons.'.$sibling['icon'], ['classes' => 'h-4 w-4'])
             </span>
-            <span class="whitespace-nowrap">Container Info</span>
+            <span class="whitespace-nowrap">{{ $sibling['label'] }}</span>
         </a>
+    @endforeach
 
+    @if (! empty($futureItems))
         <div class="mx-1 h-6 w-px bg-card-border"></div>
 
         {{-- Future top-level entities --}}
@@ -93,5 +93,6 @@
                 <span class="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200">Soon</span>
             </div>
         @endforeach
+    @endif
     </div>
 </nav>

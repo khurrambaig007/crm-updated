@@ -7,14 +7,15 @@ Before planning or editing, find the row whose globs match the file's path and r
 | bootstrap/app.php | .ai/rules/bootstrap.md |
 | resources/views/components/*layout*.blade.php | .ai/rules/components.md |
 | resources/views/container-purchases/** | .ai/rules/container-purchases.md |
-| app/Http/Controllers/ContainerPurchaseController.php, app/Http/Controllers/**, app/Http/Controllers/BookingController.php, app/Http/Controllers/BlInfoController.php | .ai/rules/controllers.md |
+| app/Http/Controllers/ContainerPurchaseController.php, app/Http/Controllers/**, app/Http/Controllers/BookingController.php, app/Http/Controllers/BlInfoController.php, app/Http/Controllers/StampController.php | .ai/rules/controllers.md |
 | tests/Feature/** | .ai/rules/feature.md |
 | .htaccess | .ai/rules/general.md |
-| resources/js/**, resources/js/app.js, resources/js/bl-container-info-grid.js | .ai/rules/js.md |
+| resources/js/**, resources/js/app.js, resources/js/bl-container-info-grid.js, resources/js/stamps.js | .ai/rules/js.md |
 | database/migrations/** | .ai/rules/migrations.md |
-| app/Models/Booking.php, app/Models/BookingInfoEquipment.php | .ai/rules/models.md |
+| app/Models/Booking.php, app/Models/BookingInfoEquipment.php, app/Models/BookingBlDetail.php | .ai/rules/models.md |
 | resources/pdf/** | .ai/rules/pdf.md |
 | app/Http/Requests/**/*.php | .ai/rules/requests.md |
 | app/Http/Controllers/SalesInvoiceController.php, app/Models/SalesInvoice.php, app/DataTables/SalesInvoicesDataTable.php, resources/views/sales-invoices/**, app/Http/Requests/SalesInvoice/** | .ai/rules/sales-invoice.md |
 | app/Services/PermissionSyncService.php, app/Services/BookingSplitService.php, app/Services/BlDetailPdf.php, app/Services/BlContainerInfoSync.php | .ai/rules/services.md |
+| any file/image upload field — resources/views/**/*.blade.php, resources/js/**, app/Http/Requests/** | .ai/rules/uploads.md |
 | resources/views/**/*.blade.php, resources/views/** | .ai/rules/views.md |

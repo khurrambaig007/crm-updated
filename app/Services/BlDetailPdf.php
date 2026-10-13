@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Agent;
 use App\Models\BookingBlDetail;
+use App\Models\CompanyProfile;
 use App\Models\Party;
 use App\Models\Pod;
 use App\Models\Pol;
@@ -24,6 +25,10 @@ use setasign\Fpdi\Fpdi;
  * is imported as-is and values are stamped on top at absolute coordinates.
  *
  * Page 2 is the terms and conditions reverse side and is never written to.
+ *
+ * The artwork has a logo baked into it, which would be a hardcoded logo that
+ * no longer matches the company using the application. It is covered and
+ * replaced by the Company Profile logo on every render.
  *
  * All coordinates are PDF points measured from the top-left of an A4 portrait
  * page (595.3 x 841.9pt). They were read off the template's own ruled lines, so
@@ -82,7 +87,26 @@ class BlDetailPdf extends Fpdi
         'original_bls' => [46.0, 750.0, 110.0, 14.0, 8.0],
     ];
 
+    /**
+     * The logo box on page 1: x, y, width, height in PDF points.
+     *
+     * Measured from the artwork's own embedded logo (the only image on page 1,
+     * a 1800x2170 raster placed at Rect(44.53, 42.55, 101.62, 111.28)). The
+     * cover rect must stay this tight: the outlined header glyphs sit about 4pt
+     * above it and would otherwise be erased.
+     *
+     * @var array{float, float, float, float}
+     */
+    private const LOGO_BOX = [44.53, 42.55, 57.09, 68.73];
+
     private int $pageCount = 0;
+
+    /**
+     * Re-encoded logo copies awaiting cleanup after Output().
+     *
+     * @var array<int, string>
+     */
+    private array $temporaryLogos = [];
 
     public function __construct(private readonly string $templatePath)
     {
@@ -99,6 +123,7 @@ class BlDetailPdf extends Fpdi
         $this->AddPage();
         $this->useTemplate($this->importPage(1));
 
+        $this->applyLogo();
         $this->stamp($detail);
 
         // Page 2 is the terms and conditions reverse side — imported untouched.
@@ -107,7 +132,100 @@ class BlDetailPdf extends Fpdi
             $this->useTemplate($this->importPage(2));
         }
 
-        return $this->Output('S', 'bl-detail.pdf');
+        try {
+            return $this->Output('S', 'bl-detail.pdf');
+        } finally {
+            $this->discardTemporaryLogos();
+        }
+    }
+
+    /**
+     * Cover the artwork's baked-in logo and stamp the Company Profile logo
+     * into the same box, scaled to fit and centred.
+     *
+     * The cover is unconditional: a stale logo in the artwork must never
+     * survive. With no usable logo on the profile the box is simply left blank
+     * rather than falling back to the hardcoded one.
+     */
+    private function applyLogo(): void
+    {
+        [$x, $y, $width, $height] = self::LOGO_BOX;
+
+        $this->SetFillColor(255, 255, 255);
+        $this->Rect($x, $y, $width, $height, 'F');
+
+        $profile = CompanyProfile::current();
+
+        // logoDisplaySize fits the box while preserving aspect ratio; sizing it
+        // here rather than via a max-* rule is what keeps a tall logo from
+        // collapsing to a sliver.
+        $size = $profile->logoDisplaySize((int) round($width), (int) round($height));
+        $path = $size === null ? null : $this->embeddableLogo($profile->logoPath());
+
+        if ($size === null || $path === null) {
+            return;
+        }
+
+        $this->Image(
+            $path,
+            $x + (($width - $size['width']) / 2),
+            $y + (($height - $size['height']) / 2),
+            $size['width'],
+            $size['height'],
+        );
+    }
+
+    /**
+     * Resolve a logo path FPDF can actually embed.
+     *
+     * FPDF reads JPEG and PNG only. The profile accepts webp as well, which
+     * would raise "Unsupported image type", so it is re-encoded through GD.
+     */
+    private function embeddableLogo(?string $path): ?string
+    {
+        if ($path === null || ! is_file($path)) {
+            return null;
+        }
+
+        $type = @getimagesize($path)[2] ?? null;
+
+        if ($type === IMAGETYPE_JPEG || $type === IMAGETYPE_PNG) {
+            return $path;
+        }
+
+        $contents = @file_get_contents($path);
+        $image = $contents === false ? false : @imagecreatefromstring($contents);
+
+        if ($image === false) {
+            return null;
+        }
+
+        $scratch = tempnam(sys_get_temp_dir(), 'bl-logo-');
+
+        if ($scratch === false) {
+            imagedestroy($image);
+
+            return null;
+        }
+
+        $png = $scratch.'.png';
+        rename($scratch, $png);
+
+        imagepng($image, $png);
+        imagedestroy($image);
+
+        $this->temporaryLogos[] = $png;
+
+        return $png;
+    }
+
+    private function discardTemporaryLogos(): void
+    {
+        foreach ($this->temporaryLogos as $path) {
+            @unlink($path);
+        }
+
+        $this->temporaryLogos = [];
     }
 
     private function prepare(): void

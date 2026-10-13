@@ -34,6 +34,7 @@ use App\Http\Controllers\SalesInvoiceController;
 use App\Http\Controllers\SettlementTypeController;
 use App\Http\Controllers\ShipperBpController;
 use App\Http\Controllers\SlotTermController;
+use App\Http\Controllers\StampController;
 use App\Http\Controllers\SubCompanyController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SystemOperationsController;
@@ -112,6 +113,8 @@ Route::middleware('authenticated')->group(function () {
         Route::get('bookings/{booking}/bl-info/bl-detail/pdf/download', [BlInfoController::class, 'downloadBlDetailPdf'])->name('bl-info.bl-detail.pdf');
         Route::get('bookings/{booking}/bl-info/authorization', [BlInfoController::class, 'authorization'])->name('bl-info.authorization');
         Route::get('bookings/{booking}/bl-info/container-info', [BlInfoController::class, 'containerInfo'])->name('bl-info.container-info');
+        Route::get('bookings/{booking}/bl-info/refnos', [BlInfoController::class, 'refnos'])->name('bl-info.refnos');
+        Route::get('bookings/{booking}/bl-info/stamps', [BlInfoController::class, 'stamps'])->name('bl-info.stamps');
     });
     Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info', [BlInfoController::class, 'update'])->name('bl-info.update');
     Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/booking-info', [BlInfoController::class, 'updateBookingInfo'])->name('bl-info.booking-info.update');
@@ -119,6 +122,8 @@ Route::middleware('authenticated')->group(function () {
     Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/delivery-order', [BlInfoController::class, 'updateDeliveryOrder'])->name('bl-info.delivery-order.update');
     Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/lock-info', [BlInfoController::class, 'updateLockInfo'])->name('bl-info.lock-info.update');
     Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/bl-detail', [BlInfoController::class, 'updateBlDetail'])->name('bl-info.bl-detail.update');
+    Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/refnos', [BlInfoController::class, 'updateRefnos'])->name('bl-info.refnos.update');
+    Route::middleware('permission:bl_info.edit')->patch('bookings/{booking}/bl-info/stamps', [BlInfoController::class, 'updateStamps'])->name('bl-info.stamps.update');
 
     // Container Info grid rows. AJAX-only, so they sit outside the form routes
     // and answer with JSON.
@@ -357,6 +362,19 @@ Route::middleware('authenticated')->group(function () {
             Route::patch('slots/{slotTerm}', [SlotTermController::class, 'update'])->name('slots.update');
         });
         Route::middleware('permission:slots.delete')->delete('slots/{slotTerm}', [SlotTermController::class, 'destroy'])->name('slots.destroy');
+
+        Route::middleware('permission:stamps.view')->group(function () {
+            Route::get('stamps', [StampController::class, 'index'])->name('stamps.index');
+        });
+        Route::middleware('permission:stamps.add')->group(function () {
+            Route::get('stamps/create', [StampController::class, 'create'])->name('stamps.create');
+            Route::post('stamps', [StampController::class, 'store'])->name('stamps.store');
+        });
+        Route::middleware('permission:stamps.edit')->group(function () {
+            Route::get('stamps/{stamp}/edit', [StampController::class, 'edit'])->name('stamps.edit');
+            Route::patch('stamps/{stamp}', [StampController::class, 'update'])->name('stamps.update');
+        });
+        Route::middleware('permission:stamps.delete')->delete('stamps/{stamp}', [StampController::class, 'destroy'])->name('stamps.destroy');
 
         Route::middleware('permission:investors.view')->group(function () {
             Route::get('investors', [InvestorController::class, 'index'])->name('investors.index');

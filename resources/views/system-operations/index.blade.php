@@ -228,6 +228,21 @@
                 </a>
             @endif
 
+            @if ($user->isSuperAdmin() || $user->can('stamps.view'))
+                <a href="{{ route('stamps.index') }}" class="group rounded-2xl bg-card-bg p-6 shadow-sm ring-1 ring-card-border transition-all hover:shadow-md hover:-translate-y-0.5">
+                    <div class="flex flex-col items-center text-center gap-3">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg transition-transform group-hover:scale-105">
+                            @include('components.icons.stamp', ['classes' => 'h-7 w-7'])
+                        </div>
+                        <div>
+                            <div class="text-sm font-semibold text-topbar-text">Stamps Info</div>
+                            <div class="mt-1 text-xs text-topbar-muted">{{ $stats['stamps'] }} records</div>
+                        </div>
+                        <span class="text-xs font-medium text-primary-600 transition-colors group-hover:text-primary-700">View Details &rarr;</span>
+                    </div>
+                </a>
+            @endif
+
             @if ($user->isSuperAdmin() || $user->can('investors.view'))
                 <a href="{{ route('investors.index') }}" class="group rounded-2xl bg-card-bg p-6 shadow-sm ring-1 ring-card-border transition-all hover:shadow-md hover:-translate-y-0.5">
                     <div class="flex flex-col items-center text-center gap-3">
